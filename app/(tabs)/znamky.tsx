@@ -3,8 +3,10 @@ import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import { Dimensions, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Chip, Divider, Modal as PaperModal, Portal, Text, useTheme } from 'react-native-paper';
-import type { Grade, SubjectGrades } from '../../api/SpseJecnaClient';
+import type { Grade as GradeBase, PochvalaDetail, SubjectGrades } from '../../api/SpseJecnaClient';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
+
+type Grade = GradeBase & { href?: string };
 
 const gradeColor = (value: number | 'N') => {
   if (value === 'N') return 'rgb(189,189,189)'; // gray
@@ -15,27 +17,30 @@ const gradeColor = (value: number | 'N') => {
     [255, 152, 0],  // 4: #FF9800
     [244, 67, 54],  // 5: #F44336
   ];
-  const idx = Math.round(value) - 1;
+  const idx = Math.round(value as number) - 1;
   const c = colors[idx] || [189, 189, 189];
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 };
 
-const GradeSquare = ({ grade, subject, onPress }: { grade: Grade; subject: string; onPress: () => void }) => (
-  <Pressable onPress={onPress} style={({ pressed }) => [
-    styles.gradeSquare,
-    {
-      backgroundColor: gradeColor(grade.value),
-      opacity: 1,
-      width: 44,
-      height: grade.weight === 0.5 ? 22 : 44,
-    },
-  ]}>
-    <Text style={[
-      styles.gradeText,
-      grade.value === 'N' ? { color: '#333', fontSize: 16 } : (grade.weight === 0.5 ? { fontSize: 14 } : {}),
-    ]}>{String(grade.value)}</Text>
-  </Pressable>
-);
+const GradeSquare = ({ grade, subject, onPress }: { grade: Grade; subject: string; onPress: () => void }) => {
+  if (grade.value === 'Pochvala') return null;
+  return (
+    <Pressable onPress={onPress} style={({ pressed }) => [
+      styles.gradeSquare,
+      {
+        backgroundColor: gradeColor(grade.value as number | 'N'),
+        opacity: 1,
+        width: 44,
+        height: grade.weight === 0.5 ? 22 : 44,
+      },
+    ]}>
+      <Text style={[
+        styles.gradeText,
+        grade.value === 'N' ? { color: '#333', fontSize: 16 } : (grade.weight === 0.5 ? { fontSize: 14 } : {}),
+      ]}>{String(grade.value)}</Text>
+    </Pressable>
+  );
+};
 
 function GradeDetailModal({ visible, onClose, grade, subject }: {
   visible: boolean;
@@ -86,6 +91,9 @@ export default function ZnamkyScreen() {
     enabled: !!client,
   });
   const [modal, setModal] = useState<{ grade: Grade; subject: string } | null>(null);
+  const [pochvalaModal, setPochvalaModal] = useState<{ href: string; label: string } | null>(null);
+  const [pochvalaDetail, setPochvalaDetail] = useState<PochvalaDetail | null>(null);
+  const [pochvalaLoading, setPochvalaLoading] = useState(false);
   const theme = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [plannerMode, setPlannerMode] = useState(false);
@@ -224,7 +232,32 @@ export default function ZnamkyScreen() {
                   <View style={styles.gradesRowContainer}>
                     <View style={styles.gradesRow}>
                       {split.grades.map((grade, i) => (
-                        <GradeSquare grade={grade} subject={subject.subject} key={i} onPress={() => setModal({ grade, subject: subject.subject })} />
+                        subject.subject === 'Chování' && grade.value === 'Pochvala' ? (
+                          <Chip
+                            key={i}
+                            style={{ marginRight: 6, marginBottom: 6, backgroundColor: '#4CAF50' }}
+                            textStyle={{ color: '#fff', fontWeight: 'bold' }}
+                            icon="star"
+                            onPress={async () => {
+                              const href = (grade as any).href;
+                              if (!href || !client) return;
+                              setPochvalaModal({ href, label: grade.note || 'Pochvala' });
+                              setPochvalaDetail(null);
+                              setPochvalaLoading(true);
+                              try {
+                                const detail = await client.getPochvalaDetail(href);
+                                setPochvalaDetail(detail);
+                              } catch (e) {
+                                setPochvalaDetail({ type: '', date: '', message: 'Chyba při načítání detailu.' });
+                              }
+                              setPochvalaLoading(false);
+                            }}
+                          >
+                            {grade.note || 'Pochvala'}
+                          </Chip>
+                        ) : (
+                          <GradeSquare grade={grade} subject={subject.subject} key={i} onPress={() => setModal({ grade, subject: subject.subject })} />
+                        )
                       ))}
                     </View>
                   </View>
@@ -288,6 +321,25 @@ export default function ZnamkyScreen() {
         grade={modal?.grade || null}
         subject={modal?.subject || ''}
       />
+      {/* Pochvala detail modal */}
+      <Portal>
+        <PaperModal
+          visible={!!pochvalaModal}
+          onDismiss={() => { setPochvalaModal(null); setPochvalaDetail(null); }}
+          contentContainerStyle={[styles.paperModalContent, { backgroundColor: theme.colors.surfaceVariant }]}
+        >
+          <Text variant="titleLarge" style={{ marginBottom: 8 }}>{pochvalaModal?.label || 'Pochvala'}</Text>
+          {pochvalaLoading && <ActivityIndicator style={{ marginVertical: 16 }} />}
+          {pochvalaDetail && (
+            <>
+              <Text>Typ: <Text style={{ fontWeight: 'bold' }}>{pochvalaDetail.type}</Text></Text>
+              <Text>Datum: <Text style={{ fontWeight: 'bold' }}>{pochvalaDetail.date}</Text></Text>
+              <Text>Sdělení: <Text style={{ fontWeight: 'bold' }}>{pochvalaDetail.message}</Text></Text>
+            </>
+          )}
+          <Button mode="contained" onPress={() => setPochvalaModal(null)} style={{ marginTop: 16 }}>Zavřít</Button>
+        </PaperModal>
+      </Portal>
     </View>
   );
 }

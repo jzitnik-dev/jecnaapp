@@ -3,16 +3,23 @@ import type { Element } from 'domhandler';
 import { parseDocument } from 'htmlparser2';
 
 export type Grade = {
-  value: number | 'N'; // 1-5 or 'N' (absence, no grade)
-  weight: number; // 1 for normal, 0.5 for small
+  value: number | 'N' | 'Pochvala'; // 1-5, 'N' (absence), or 'Pochvala'
+  weight: number; // 1 for normal, 0.5 for small, 0 for pochvala
   date?: string;
   note?: string;
   teacher?: string;
+  href?: string;
 };
 export type SubjectGrades = {
   subject: string;
   splits: { label: string; grades: Grade[] }[];
   finalGrade?: number | string;
+};
+
+export type PochvalaDetail = {
+  type: string;
+  date: string;
+  message: string;
 };
 
 export class SpseJecnaClient {
@@ -116,43 +123,65 @@ export class SpseJecnaClient {
         let currentLabel = '';
         let currentGrades: Grade[] = [];
         const tdChildren = tds[0].children;
-        for (let i = 0; i < tdChildren.length; i++) {
-          const node = tdChildren[i];
-          if (node.type === 'tag' && node.name === 'strong' && node.attribs && node.attribs.class === 'subjectPart') {
-            if (currentGrades.length > 0 || currentLabel) {
-              splits.push({ label: currentLabel || 'Bez rozdělení', grades: currentGrades });
+        // Special handling for Chování: look for Pochvala
+        if (subject === 'Chování') {
+          // Find all <a class="link"> with label containing 'Pochvala'
+          const pochvaly: Grade[] = [];
+          for (let i = 0; i < tdChildren.length; i++) {
+            const node = tdChildren[i];
+            if (node.type === 'tag' && node.name === 'span' && node.attribs && node.attribs.style && node.attribs.style.includes('float: left')) {
+              // This span contains the <a class="link"> for Pochvala
+              const a = (node.children || []).find(c => c.type === 'tag' && c.name === 'a' && c.attribs && c.attribs.class === 'link') as Element | undefined;
+              if (a) {
+                const labelSpan = (a.children || []).find(c => c.type === 'tag' && c.name === 'span' && c.attribs && c.attribs.class === 'label') as Element | undefined;
+                const label = labelSpan && labelSpan.children.find(c => c.type === 'text')?.data?.trim();
+                const href = a.attribs && a.attribs.href;
+                if (label && label.includes('Pochvala')) {
+                  pochvaly.push({ value: 'Pochvala', weight: 0, note: label, href });
+                }
+              }
             }
-            currentLabel = node.children.find(c => c.type === 'text')?.data?.replace(':', '').trim() || '';
-            currentGrades = [];
-          } else if (node.type === 'tag' && node.name === 'a' && node.attribs && node.attribs.class && node.attribs.class.includes('score')) {
-            const classAttr = node.attribs.class || '';
-            const valueSpan = selectAll('span.value', [node]) as Element[];
-            const valueText = valueSpan[0]?.children.find(c => c.type === 'text')?.data?.trim();
-            let value: number | 'N' | undefined;
-            if (valueText === 'N') {
-              value = 'N';
-            } else {
-              const parsed = valueText ? parseInt(valueText, 10) : undefined;
-              if (!parsed || isNaN(parsed) || parsed < 1 || parsed > 5) continue;
-              value = parsed;
-            }
-            let weight = 1;
-            if (classAttr.includes('scoreSmall')) weight = 0.5;
-            let date, note, teacher;
-            if (node.attribs && node.attribs.title) {
-              const str = node.attribs.title;
-              const index = str.lastIndexOf('(');
-              const firstPart = str.slice(0, index);
-              const secondPart = str.slice(index).replace('(', '').replace(')', '').split(',');
-              note = firstPart.trim();
-              teacher = secondPart[1]?.trim();
-              date = secondPart[0]?.trim();
-            }
-            currentGrades.push({ value, weight, date, note: note, teacher });
           }
-        }
-        if (currentGrades.length > 0 || currentLabel) {
-          splits.push({ label: currentLabel || 'Bez rozdělení', grades: currentGrades });
+          splits.push({ label: '', grades: pochvaly });
+        } else {
+          for (let i = 0; i < tdChildren.length; i++) {
+            const node = tdChildren[i];
+            if (node.type === 'tag' && node.name === 'strong' && node.attribs && node.attribs.class === 'subjectPart') {
+              if (currentGrades.length > 0 || currentLabel) {
+                splits.push({ label: currentLabel || 'Bez rozdělení', grades: currentGrades });
+              }
+              currentLabel = node.children.find(c => c.type === 'text')?.data?.replace(':', '').trim() || '';
+              currentGrades = [];
+            } else if (node.type === 'tag' && node.name === 'a' && node.attribs && node.attribs.class && node.attribs.class.includes('score')) {
+              const classAttr = node.attribs.class || '';
+              const valueSpan = selectAll('span.value', [node]) as Element[];
+              const valueText = valueSpan[0]?.children.find(c => c.type === 'text')?.data?.trim();
+              let value: number | 'N' | 'Pochvala' | undefined;
+              if (valueText === 'N') {
+                value = 'N';
+              } else {
+                const parsed = valueText ? parseInt(valueText, 10) : undefined;
+                if (!parsed || isNaN(parsed) || parsed < 1 || parsed > 5) continue;
+                value = parsed;
+              }
+              let weight = 1;
+              if (classAttr.includes('scoreSmall')) weight = 0.5;
+              let date, note, teacher;
+              if (node.attribs && node.attribs.title) {
+                const str = node.attribs.title;
+                const index = str.lastIndexOf('(');
+                const firstPart = str.slice(0, index);
+                const secondPart = str.slice(index).replace('(', '').replace(')', '').split(',');
+                note = firstPart.trim();
+                teacher = secondPart[1]?.trim();
+                date = secondPart[0]?.trim();
+              }
+              currentGrades.push({ value, weight, date, note: note, teacher });
+            }
+          }
+          if (currentGrades.length > 0 || currentLabel) {
+            splits.push({ label: currentLabel || 'Bez rozdělení', grades: currentGrades });
+          }
         }
         let finalGrade: number | string | undefined = undefined;
         if (tds.length > 1) {
@@ -190,5 +219,27 @@ export class SpseJecnaClient {
       credentials: 'include',
     });
     this.cookies = '';
+  }
+
+  public async getPochvalaDetail(path: string): Promise<PochvalaDetail> {
+    // path is like '/user-student/record?userStudentRecordId=7540'
+    const html = await this.fetchHtml(path);
+    const document = parseDocument(html);
+    const table = selectAll('table.userprofile', document.children)[0] as Element | undefined;
+    let type = '', date = '', message = '';
+    if (table) {
+      const rows = selectAll('tr', [table]) as Element[];
+      for (const row of rows) {
+        const th = selectAll('th', [row])[0];
+        const td = selectAll('td', [row])[0];
+        const label = th && selectAll('span.label', [th])[0]?.children.find(c => c.type === 'text')?.data?.trim();
+        const value = td && selectAll('span.value', [td])[0]?.children.find(c => c.type === 'text')?.data?.trim();
+        console.log(label, value)
+        if (label === 'Typ') type = value || '';
+        if (label === 'Datum') date = value || '';
+        if (label === 'Sdělení') message = value || '';
+      }
+    }
+    return { type, date, message };
   }
 } 
