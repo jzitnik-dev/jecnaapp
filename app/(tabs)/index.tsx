@@ -1,5 +1,9 @@
 import { Image } from 'expo-image';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import { Platform, StyleSheet } from 'react-native';
+import { Button } from 'react-native-paper';
+import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 
 import { HelloWave } from '@/components/HelloWave';
 import ParallaxScrollView from '@/components/ParallaxScrollView';
@@ -7,6 +11,22 @@ import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
 export default function HomeScreen() {
+  const { client, logout: globalLogout } = useSpseJecnaClient();
+  const router = useRouter();
+  const handleLogout = async () => {
+    if (client) {
+      try {
+        await client.logout();
+      } catch (e) {
+        // ignore errors
+      }
+    }
+    await SecureStore.deleteItemAsync('username');
+    await SecureStore.deleteItemAsync('password');
+    globalLogout();
+    router.replace('/login');
+  };
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -51,6 +71,9 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
+      <Button mode="outlined" onPress={handleLogout} style={{ margin: 24 }}>
+        Logout
+      </Button>
     </ParallaxScrollView>
   );
 }
