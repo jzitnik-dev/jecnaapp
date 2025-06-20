@@ -95,6 +95,7 @@ export class SpseJecnaClient {
   }
 
   private async getLoginToken(): Promise<string> {
+    await fetch(`${this.baseUrl}/user/role?role=student`);
     const response = await fetch(`${this.baseUrl}/`, {
       method: 'GET',
       headers: {
@@ -104,7 +105,8 @@ export class SpseJecnaClient {
       credentials: 'include',
     });
     const html = await response.text();
-    
+    console.log(response);
+    console.log(html);
     this.updateCookies(response);
     const token = this.extractToken3(html);
     if (!token) throw new Error('Login token not found');
@@ -120,7 +122,8 @@ export class SpseJecnaClient {
       },
       credentials: 'include',
     });
-    return !response.url.includes('/user/need-login');
+    const html = await response.text();
+    return !response.url.includes('/user/need-login') && !html.includes("Pro další postup je vyžadováno přihlášení uživatele.") && response.status !== 403;
   }
 
   public async login(username: string, password: string): Promise<boolean> {

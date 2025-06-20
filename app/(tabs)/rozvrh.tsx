@@ -55,6 +55,7 @@ export default function RozvrhScreen() {
     return (
       <View style={styles.centered}>
         <Text style={{ color: 'red', marginTop: 24 }}>{String(error)}</Text>
+        <Button mode="contained" onPress={() => { setSelectedYear(undefined); setSelectedPeriod(undefined); refetch(); }} style={{ marginTop: 16 }}>Resetovat výběr</Button>
       </View>
     );
   }
@@ -110,8 +111,8 @@ export default function RozvrhScreen() {
         <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
           <Surface style={[styles.table, { backgroundColor: tableBg, borderRadius: 18, borderColor }]} elevation={3}>
             {/* Header row */}
-            <View style={[styles.row, styles.stickyHeader, Platform.OS === 'web' ? { position: 'sticky', top: 0, zIndex: 10 } : {}]}> 
-              <View style={[styles.headerCell, { width: cellWidth, backgroundColor: headerBg, borderTopLeftRadius: 18, borderColor, borderRightWidth: 1 }]}> 
+            <View style={[styles.row, styles.stickyHeader, Platform.OS === 'web' ? { position: 'sticky', top: 0, zIndex: 10 } : {}]}>
+              <View style={[styles.headerCell, { width: cellWidth, backgroundColor: headerBg, borderTopLeftRadius: 18, borderColor, borderRightWidth: 1 }]}>
                 <Text style={[styles.headerText, { color: textColor }]}> </Text>
               </View>
               {data.periods.map((period, idx) => (
@@ -124,7 +125,7 @@ export default function RozvrhScreen() {
                     borderColor,
                     borderRightWidth: idx === data.periods.length - 1 ? 0 : 1,
                   }
-                ]}> 
+                ]}>
                   <Text style={[styles.headerText, { color: textColor }]}>{period.number}</Text>
                   <Text style={[styles.timeText, { color: isDark ? '#aaa' : '#888' }]}>{period.time}</Text>
                 </View>
@@ -134,7 +135,7 @@ export default function RozvrhScreen() {
             {/* Day rows */}
             {data.days.map((day, dayIdx) => (
               <View key={day.day + dayIdx} style={styles.row}>
-                <View style={[styles.dayCell, { width: cellWidth, backgroundColor: headerBg, borderBottomLeftRadius: dayIdx === data.days.length - 1 ? 18 : 0, borderColor }]}> 
+                <View style={[styles.dayCell, { width: cellWidth, backgroundColor: headerBg, borderBottomLeftRadius: dayIdx === data.days.length - 1 ? 18 : 0, borderColor }]}>
                   <Text style={[styles.dayText, { color: textColor }]}>{day.day}</Text>
                 </View>
                 {day.cells.map((cell, periodIdx) => {
@@ -179,7 +180,7 @@ export default function RozvrhScreen() {
                           ]}
                         >
                           <View style={{ position: 'absolute', top: 6, left: 6, right: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <Text style={[styles.teacherSquare, { 
+                            <Text style={[styles.teacherSquare, {
                               color: isDark ? '#90caf9' : '#4a6fa5',
                               fontSize: 12,
                               flex: 1,
@@ -190,7 +191,7 @@ export default function RozvrhScreen() {
                                 justifyContent: 'center',
                                 alignItems: 'center',
                               }}>
-                                <Text style={[styles.roomSquare, { 
+                                <Text style={[styles.roomSquare, {
                                   color: isDark ? '#bbb' : '#888',
                                   fontSize: 11,
                                   fontWeight: '500'
@@ -199,14 +200,14 @@ export default function RozvrhScreen() {
                             ) : null}
                           </View>
                           <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                            <Text style={[styles.subjectSquare, { 
+                            <Text style={[styles.subjectSquare, {
                               color: textColor,
                               fontSize: 15,
                               fontWeight: '600',
                               textAlign: 'center'
                             }]} numberOfLines={1} ellipsizeMode="tail">{lesson.subject}</Text>
                             {lesson.group ? (
-                              <Text style={[styles.groupSquare, { 
+                              <Text style={[styles.groupSquare, {
                                 color: isDark ? '#aaa' : '#666',
                                 fontSize: 11,
                                 marginTop: 2,
