@@ -445,8 +445,12 @@ export class SpseJecnaClient {
       const tds = selectAll('td', [row]);
       const cells: (TimetableCell | null)[] = [];
       for (const td of tds) {
+        let colspan = 1;
+        if (td.type === 'tag' && td.attribs && td.attribs.colspan) {
+          colspan = parseInt(td.attribs.colspan, 10);
+        }
         if (td.type === 'tag' && td.attribs && td.attribs.class && td.attribs.class.includes('empty')) {
-          cells.push(null);
+          for (let i = 0; i < colspan; i++) cells.push(null);
           continue;
         }
         // Each cell may have multiple lessons (splits/groups)
@@ -498,7 +502,7 @@ export class SpseJecnaClient {
           }
           lessons.push({ subject, subjectLong, teacher, teacherFull, room, group, className });
         }
-        cells.push(lessons);
+        for (let i = 0; i < colspan; i++) cells.push(lessons);
       }
       days.push({ day, cells });
     }
@@ -621,8 +625,12 @@ export class SpseJecnaClient {
         const tds = selectAll('td', [row]);
         const cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] = [];
         for (const td of tds) {
+          let colspan = 1;
+          if (td.type === 'tag' && td.attribs && td.attribs.colspan) {
+            colspan = parseInt(td.attribs.colspan, 10);
+          }
           if (td.type === 'tag' && td.attribs && td.attribs.class && td.attribs.class.includes('empty')) {
-            cells.push(null);
+            for (let i = 0; i < colspan; i++) cells.push(null);
             continue;
           }
           // Each cell may have multiple lessons (splits/groups)
@@ -674,7 +682,7 @@ export class SpseJecnaClient {
             }
             lessons.push({ subject, subjectLong, teacher, teacherFull, room, group, className });
           }
-          cells.push(lessons);
+          for (let i = 0; i < colspan; i++) cells.push(lessons);
         }
         days.push({ day, cells });
       }
@@ -811,8 +819,12 @@ export class SpseJecnaClient {
         const tds = selectAll('td', [row]);
         const cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] = [];
         for (const td of tds) {
+          let colspan = 1;
+          if (td.type === 'tag' && td.attribs && td.attribs.colspan) {
+            colspan = parseInt(td.attribs.colspan, 10);
+          }
           if (td.type === 'tag' && td.attribs && td.attribs.class && td.attribs.class.includes('empty')) {
-            cells.push(null);
+            for (let i = 0; i < colspan; i++) cells.push(null);
             continue;
           }
           // Each cell may have multiple lessons (splits/groups)
@@ -864,7 +876,7 @@ export class SpseJecnaClient {
             }
             lessons.push({ subject, subjectLong, teacher, teacherFull, room, group, className });
           }
-          cells.push(lessons);
+          for (let i = 0; i < colspan; i++) cells.push(lessons);
         }
         days.push({ day, cells });
       }
