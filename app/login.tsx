@@ -59,6 +59,9 @@ export default function LoginScreen() {
         }
       }
     } catch (e: any) {
+      if (e.message == "Login token not found") {
+        await client.logout();
+      }
       setError(e.message || 'Unknown error');
       if (!silent) {
         await SecureStore.deleteItemAsync('username');
