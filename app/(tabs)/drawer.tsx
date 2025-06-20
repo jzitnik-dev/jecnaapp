@@ -7,6 +7,7 @@ import React from 'react';
 import { Button } from 'react-native-paper';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 import HomeScreen from './home';
+import PrichodyScreen from './prichody';
 import RoomsListScreen from './rooms-list';
 import RozvrhScreen from './rozvrh';
 import TeachersListScreen from './teachers-list';
@@ -87,6 +88,16 @@ export default function DrawerLayout() {
           title: 'Učebny',
           drawerIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="door" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="prichody"
+        component={PrichodyScreen}
+        options={{
+          title: 'Příchody a odchody',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="login-variant" color={color} size={size} />
           ),
         }}
       />

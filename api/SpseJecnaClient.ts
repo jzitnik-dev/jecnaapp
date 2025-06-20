@@ -928,4 +928,94 @@ export class SpseJecnaClient {
     }
     return rooms;
   }
+
+  /**
+   * Fetches arrivals and departures from /absence/passing-student
+   */
+  public async getPrichody(yearId?: string, monthId?: string): Promise<{
+    years: { id: string, label: string }[];
+    selectedYearId: string;
+    months: { id: string, label: string }[];
+    selectedMonthId: string;
+    days: { date: string, events: { type: 'Příchod' | 'Odchod', time: string }[] }[];
+  }> {
+    let url = '/absence/passing-student';
+    const params = new URLSearchParams();
+    if (yearId) params.append('schoolYearId', yearId);
+    if (monthId) params.append('schoolYearPartMonthId', monthId);
+    if ([...params].length > 0) url += '?' + params.toString();
+    const html = await this.fetchHtml(url);
+    const document = parseDocument(html);
+    // Year select
+    const yearSelect = selectAll('select#schoolYearId', document.children)[0] as Element | undefined;
+    const years: { id: string, label: string }[] = [];
+    let selectedYearId = '';
+    if (yearSelect) {
+      const options = selectAll('option', [yearSelect]) as Element[];
+      for (const opt of options) {
+        const id = opt.attribs.value;
+        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const selected = !!opt.attribs.selected;
+        if (selected) selectedYearId = id;
+        years.push({ id, label });
+      }
+    }
+    // Month select
+    const monthSelect = selectAll('select#schoolYearPartMonthId', document.children)[0] as Element | undefined;
+    const months: { id: string, label: string }[] = [];
+    let selectedMonthId = '';
+    if (monthSelect) {
+      const options = selectAll('option', [monthSelect]) as Element[];
+      for (const opt of options) {
+        const id = opt.attribs.value;
+        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const selected = !!opt.attribs.selected;
+        if (selected) selectedMonthId = id;
+        months.push({ id, label });
+      }
+    }
+    // Table rows
+    const rows = selectAll('table.absence-list tr', document.children) as Element[];
+    const days: { date: string, events: { type: 'Příchod' | 'Odchod', time: string }[] }[] = [];
+    for (const row of rows) {
+      const dateTd = selectAll('td.date', [row])[0] as Element | undefined;
+      const contentTd = selectAll('td', [row])[1] as Element | undefined;
+      if (!dateTd) continue;
+      const date = dateTd.children.find(c => c.type === 'text')?.data?.replace(/\s+/g, ' ').trim() || '';
+      const events: { type: 'Příchod' | 'Odchod', time: string }[] = [];
+      if (contentTd) {
+        // There may be multiple arrivals/departures in <p> or as text
+        const ps = selectAll('p', [contentTd]);
+        if (ps.length > 0) {
+          for (const p of ps) {
+            // Collect all text from text nodes and span nodes
+            let text = '';
+            for (const c of p.children) {
+              if (c.type === 'text') text += c.data;
+              if (c.type === 'tag' && c.name === 'span' && c.children.length > 0) {
+                for (const sc of c.children) {
+                  if (sc.type === 'text') text += sc.data;
+                }
+              }
+            }
+            text = text.trim();
+            // Split by comma, e.g. "Příchod 8:56, Odchod 14:27"
+            for (const part of text.split(', ')) {
+              const m = part.split(" ");
+              if (m) events.push({ type: m[0] as 'Příchod' | 'Odchod', time: m[1] });
+            }
+          }
+        } else {
+          // Sometimes just text
+          const text = contentTd.children.map(c => c.type === 'text' ? c.data : '').join('').trim();
+          for (const part of text.split(',')) {
+            const m = part.match(/(Příchod|Odchod)\s+(\d{1,2}:\d{2})/);
+            if (m) events.push({ type: m[1] as 'Příchod' | 'Odchod', time: m[2] });
+          }
+        }
+      }
+      days.push({ date, events });
+    }
+    return { years, selectedYearId, months, selectedMonthId, days };
+  }
 } 
