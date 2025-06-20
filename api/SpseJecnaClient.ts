@@ -75,6 +75,28 @@ export class SpseJecnaClient {
   private readonly baseUrl = 'https://www.spsejecna.cz';
   private cookies: string = '';
 
+  // This is for the fucking iOS people, who are not able to use the same headers as Android. Fucking idiots. The stupid spsejecna website is blocking requests on iOS just randomly probably because If-Modified-Since is not set or is not set correctly.
+  // I hate them so much. This stupid shit, why did I choose to make it also for iOS. And if some of you fucking idiots will say that it does not work 100% I will find you and tickle you on your feet in the middle of the night.
+  // Yes you can report a bug on iOS but PLEASE be cooperative. I don't own any Apple device (yeah I'm Arch user btw), so I have no real way to test it.
+  private buildHeaders(extraHeaders?: Record<string, string>): HeadersInit {
+    function toHttpDate(date: Date) {
+      return date.toUTCString();
+    }
+
+    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+    const ifModifiedSince = toHttpDate(oneDayAgo);
+
+    // TODO: This will need more testing on iOS
+    return {
+      ...(this.cookies ? { 'Cookie': this.cookies } : {}),
+      'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
+      'Accept-Encoding': 'gzip',
+      'Cookie': 'WTDGUID=10',
+      'If-Modified-Since': 'Fri, 20 Jun 2025 07:45:34 GMT',
+      ...extraHeaders,
+    };
+  }
+
   private extractToken3(html: string): string | null {
     const document = parseDocument(html);
     const inputs = selectAll('input[name="token3"]', document.children) as Element[];
@@ -95,18 +117,17 @@ export class SpseJecnaClient {
   }
 
   private async getLoginToken(): Promise<string> {
-    await fetch(`${this.baseUrl}/user/role?role=student`);
     const response = await fetch(`${this.baseUrl}/`, {
       method: 'GET',
-      headers: {
-        'Cookie': 'WTDGUID=10',
-        'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
-      },
+      headers: this.buildHeaders({
+        'Accept-Encoding': 'gzip',
+        // No hardcoded If-Modified-Since here
+      }),
       credentials: 'include',
     });
     const html = await response.text();
     console.log(response);
-    console.log(html);
+    console.log(html)
     this.updateCookies(response);
     const token = this.extractToken3(html);
     if (!token) throw new Error('Login token not found');
@@ -116,17 +137,14 @@ export class SpseJecnaClient {
   public async isLoggedIn(): Promise<boolean> {
     const response = await fetch(`${this.baseUrl}/score/student`, {
       method: 'GET',
-      headers: {
-        ...(this.cookies ? { 'Cookie': this.cookies } : {}),
-        'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
-      },
+      headers: this.buildHeaders(),
       credentials: 'include',
     });
     const html = await response.text();
-    return !response.url.includes('/user/need-login') && !html.includes("Pro další postup je vyžadováno přihlášení uživatele.") && response.status !== 403;
+    return !response.url.includes('/user/need-login') && !html.includes("Pro další postup je vyžadováno přihlášení uživatele.");
   }
 
-  public async login(username: string, password: string): Promise<boolean> {
+    public async login(username: string, password: string): Promise<boolean> {
     const token3 = await this.getLoginToken();
     const form = new URLSearchParams();
     form.append('user', username);
@@ -136,11 +154,9 @@ export class SpseJecnaClient {
 
     const response = await fetch(`${this.baseUrl}/user/login`, {
       method: 'POST',
-      headers: {
+      headers: this.buildHeaders({
         'Content-Type': 'application/x-www-form-urlencoded',
-        ...(this.cookies ? { 'Cookie': this.cookies } : {}),
-        'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
-      },
+      }),
       body: form.toString(),
     });
     const document = parseDocument(await response.text());
@@ -149,17 +165,13 @@ export class SpseJecnaClient {
       this.updateCookies(response);
       return true;
     }
-
     return false;
   }
 
-  public async fetchHtml(path: string): Promise<string> {
+  public async fetchHtml(path: string, extraHeaders?: Record<string, string>): Promise<string> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'GET',
-      headers: {
-        ...(this.cookies ? { 'Cookie': this.cookies } : {}),
-        'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
-      },
+      headers: this.buildHeaders(extraHeaders),
       credentials: 'include',
     });
     this.updateCookies(response);
