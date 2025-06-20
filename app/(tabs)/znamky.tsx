@@ -11,7 +11,7 @@ type Grade = GradeBase & { href?: string };
 const gradeColor = (value: number | 'N') => {
   if (value === 'N') return 'rgb(189,189,189)'; // gray
   const colors = [
-    [76, 175, 80],   // 1: #4CAF50
+    [76, 175, 80],  // 1: #4CAF50
     [139, 195, 74], // 2: #8BC34A
     [255, 193, 7],  // 3: #FFC107
     [255, 152, 0],  // 4: #FF9800
@@ -153,7 +153,7 @@ export default function ZnamkyScreen() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
+    <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -184,7 +184,7 @@ export default function ZnamkyScreen() {
           const allGrades = subject.splits.flatMap(split => split.grades);
           const avg = getWeightedAverage(allGrades);
           return (
-            <View key={subject.subject + idx} style={[styles.subjectBlock, { backgroundColor: '#181a20' }]}> 
+            <View key={subject.subject + idx} style={[styles.subjectBlock, { backgroundColor: theme.colors.surfaceVariant }]}> 
               <View style={styles.subjectHeader}>
                 <Text variant="titleMedium" style={styles.subjectName}>{subject.subject}</Text>
                 {subject.finalGrade && (

@@ -16,18 +16,25 @@ export default function LoginScreen() {
   const router = useRouter();
   const setClient = useSpseJecnaClient((state) => state.setClient);
   const setCookies = useSpseJecnaClient((state) => state.setCookies);
+  const client = new SpseJecnaClient();
 
   useEffect(() => {
+    setClient(client);
     (async () => {
+      const isLoggedIn = await client.isLoggedIn();
+      if (isLoggedIn) {
+        router.replace('/(tabs)');
+        return;
+      }
+
       const savedUsername = await SecureStore.getItemAsync('username');
       const savedPassword = await SecureStore.getItemAsync('password');
       if (savedUsername && savedPassword) {
         setUsername(savedUsername);
         setPassword(savedPassword);
-        setCheckedStored(true);
-      } else {
-        setCheckedStored(true);
+        await handleLogin(savedUsername, savedPassword, true);
       }
+      setCheckedStored(true);
     })();
   }, []);
 
@@ -35,7 +42,6 @@ export default function LoginScreen() {
     setLoading(true);
     setError(null);
     setSuccess(false);
-    const client = new SpseJecnaClient();
     try {
       const ok = await client.login(u ?? username, p ?? password);
       if (ok) {
@@ -80,49 +86,41 @@ export default function LoginScreen() {
   }
 
   return (
-    <Surface style={styles.surface} elevation={4}>
-      <Text variant="headlineMedium" style={styles.title}>Login</Text>
-      <TextInput
-        label="Username"
-        value={username}
-        onChangeText={setUsername}
-        autoCapitalize="none"
-        style={styles.input}
-        mode="outlined"
-        autoComplete="username"
-        returnKeyType="next"
-      />
-      <TextInput
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-        mode="outlined"
-        autoComplete="password"
-        returnKeyType="done"
-      />
-      {error && <HelperText type="error" visible>{error}</HelperText>}
-      <Button
-        mode="contained"
-        onPress={() => handleLogin()}
-        loading={loading}
-        disabled={loading}
-        style={styles.button}
-      >
-        Login
-      </Button>
-      <Button
-        mode="contained"
-        style={styles.button}
-  onPress={async () => {
-    var client = new SpseJecnaClient();
-    await client.logout();
-  }}
->
-  Logout
-</Button>
-    </Surface>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+      <Surface style={styles.surface} elevation={4}>
+        <Text variant="headlineMedium" style={styles.title}>Login</Text>
+        <TextInput
+          label="Username"
+          value={username}
+          onChangeText={setUsername}
+          autoCapitalize="none"
+          style={styles.input}
+          mode="outlined"
+          autoComplete="username"
+          returnKeyType="next"
+        />
+        <TextInput
+          label="Password"
+          value={password}
+          onChangeText={setPassword}
+          secureTextEntry
+          style={styles.input}
+          mode="outlined"
+          autoComplete="password"
+          returnKeyType="done"
+        />
+        {error && <HelperText type="error" visible>{error}</HelperText>}
+        <Button
+          mode="contained"
+          onPress={() => handleLogin()}
+          loading={loading}
+          disabled={loading}
+          style={styles.button}
+        >
+          Login
+        </Button>
+      </Surface>
+    </View>
   );
 }
 

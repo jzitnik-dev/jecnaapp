@@ -2,7 +2,6 @@ import { Image } from 'expo-image';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { Platform, StyleSheet } from 'react-native';
-import { Button } from 'react-native-paper';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 
 import { HelloWave } from '@/components/HelloWave';
@@ -15,11 +14,7 @@ export default function HomeScreen() {
   const router = useRouter();
   const handleLogout = async () => {
     if (client) {
-      try {
-        await client.logout();
-      } catch (e) {
-        // ignore errors
-      }
+      await client.logout();
     }
     await SecureStore.deleteItemAsync('username');
     await SecureStore.deleteItemAsync('password');
@@ -71,9 +66,6 @@ export default function HomeScreen() {
           <ThemedText type="defaultSemiBold">app-example</ThemedText>.
         </ThemedText>
       </ThemedView>
-      <Button mode="outlined" onPress={handleLogout} style={{ margin: 24 }}>
-        Logout
-      </Button>
     </ParallaxScrollView>
   );
 }

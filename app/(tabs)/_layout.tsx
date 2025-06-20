@@ -1,9 +1,12 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { createDrawerNavigator, DrawerNavigationProp } from '@react-navigation/drawer';
+import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList, DrawerNavigationProp } from '@react-navigation/drawer';
+import { useRouter } from 'expo-router';
+import * as SecureStore from 'expo-secure-store';
 import React from 'react';
-import { IconButton } from 'react-native-paper';
+import { Button, IconButton } from 'react-native-paper';
+import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 
 import HomeScreen from './index';
 import RozvrhScreen from './rozvrh';
@@ -28,6 +31,17 @@ function DrawerMenuButton({ navigation }: DrawerMenuButtonProps) {
 
 export default function DrawerLayout() {
   const colorScheme = useColorScheme();
+  const { client, logout: globalLogout } = useSpseJecnaClient();
+  const router = useRouter();
+  const handleLogout = async () => {
+    if (client) {
+      await client.logout();
+    }
+    await SecureStore.deleteItemAsync('username');
+    await SecureStore.deleteItemAsync('password');
+    globalLogout();
+    router.replace('/login');
+  };
   return (
     <Drawer.Navigator
       initialRouteName="Home"
@@ -36,9 +50,25 @@ export default function DrawerLayout() {
         return {
           headerStyle: { backgroundColor: Colors[scheme].background },
           headerTintColor: Colors[scheme].text,
-          headerLeft: () => <DrawerMenuButton navigation={navigation} />,
+        headerLeft: () => <DrawerMenuButton navigation={navigation} />,
         };
       }}
+      drawerContent={props => (
+        <>
+          <DrawerContentScrollView {...props}>
+            <DrawerItemList {...props} />
+          </DrawerContentScrollView>
+          <Button
+            mode="contained"
+            onPress={handleLogout}
+            style={{ margin: 16, marginTop: 'auto', backgroundColor: '#fff' }}
+            labelStyle={{ color: '#23272e', fontWeight: 'bold' }}
+            icon="logout"
+          >
+            Odhlásit se
+          </Button>
+        </>
+      )}
     >
       <Drawer.Screen
         name="Home"
