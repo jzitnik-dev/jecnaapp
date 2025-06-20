@@ -2,7 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import { Dimensions, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Chip, Divider, Modal as PaperModal, Portal, Text, useTheme } from 'react-native-paper';
+import { ActivityIndicator, Button, Chip, Divider, Menu, Modal as PaperModal, Portal, Text, useTheme } from 'react-native-paper';
 import type { Grade as GradeBase, PochvalaDetail, SubjectGrades } from '../../api/SpseJecnaClient';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 
@@ -82,18 +82,6 @@ function getWeightedAverage(grades: Grade[]): number | null {
 
 export default function ZnamkyScreen() {
   const { client } = useSpseJecnaClient();
-  const { data, error, isLoading, refetch } = useQuery<SubjectGrades[]>({
-    queryKey: ['znamky'],
-    queryFn: async () => {
-      if (!client) throw new Error('Not logged in');
-      return client.getZnamky();
-    },
-    enabled: !!client,
-  });
-  const [modal, setModal] = useState<{ grade: Grade; subject: string } | null>(null);
-  const [pochvalaModal, setPochvalaModal] = useState<{ href: string; label: string } | null>(null);
-  const [pochvalaDetail, setPochvalaDetail] = useState<PochvalaDetail | null>(null);
-  const [pochvalaLoading, setPochvalaLoading] = useState(false);
   const theme = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [plannerMode, setPlannerMode] = useState(false);
@@ -102,6 +90,37 @@ export default function ZnamkyScreen() {
   const [newGradeValue, setNewGradeValue] = useState<number>(1);
   const [newGradeWeight, setNewGradeWeight] = useState<number>(1);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [modal, setModal] = useState<{ grade: Grade; subject: string } | null>(null);
+  const [pochvalaModal, setPochvalaModal] = useState<{ href: string; label: string } | null>(null);
+  const [pochvalaDetail, setPochvalaDetail] = useState<PochvalaDetail | null>(null);
+  const [pochvalaLoading, setPochvalaLoading] = useState(false);
+
+  // Year/period selectors
+  const [years, setYears] = useState<{ id: string, label: string }[]>([]);
+  const [periods, setPeriods] = useState<{ id: string, label: string }[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
+  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>(undefined);
+  const [yearMenuVisible, setYearMenuVisible] = useState(false);
+  const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
+
+  React.useEffect(() => {
+    if (!client) return;
+    client.getGradesMeta().then(meta => {
+      setYears(meta.years);
+      setPeriods(meta.periods);
+      setSelectedYear(meta.selectedYearId);
+      setSelectedPeriod(meta.selectedPeriodId);
+    });
+  }, [client]);
+
+  const { data, error, isLoading, refetch, isFetching } = useQuery<SubjectGrades[]>({
+    queryKey: ['znamky', selectedYear, selectedPeriod],
+    queryFn: async () => {
+      if (!client) throw new Error('Not logged in');
+      return client.getZnamky(selectedYear, selectedPeriod);
+    },
+    enabled: !!client && !!selectedYear && !!selectedPeriod,
+  });
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -152,8 +171,36 @@ export default function ZnamkyScreen() {
     );
   }
 
+  // Year/period selectors UI
+  const renderSelectors = () => (
+    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 56 }} contentContainerStyle={{ flexDirection: 'row', gap: 12, paddingHorizontal: 12, paddingTop: 12, alignItems: 'center', zIndex: 10 }}>
+      {/* Year select */}
+      <Menu
+        visible={yearMenuVisible}
+        onDismiss={() => setYearMenuVisible(false)}
+        anchor={<Button mode="outlined" onPress={() => setYearMenuVisible(true)} disabled={!years.length}>{years.find(y => y.id === selectedYear)?.label || 'Rok'}</Button>}
+      >
+        {years.map(y => (
+          <Menu.Item key={y.id} onPress={() => { setSelectedYear(y.id); setYearMenuVisible(false); }} title={y.label} />
+        ))}
+      </Menu>
+      {/* Period select */}
+      <Menu
+        visible={periodMenuVisible}
+        onDismiss={() => setPeriodMenuVisible(false)}
+        anchor={<Button mode="outlined" onPress={() => setPeriodMenuVisible(true)} disabled={!periods.length}>{periods.find(p => p.id === selectedPeriod)?.label || 'Období'}</Button>}
+      >
+        {periods.map(p => (
+          <Menu.Item key={p.id} onPress={() => { setSelectedPeriod(p.id); setPeriodMenuVisible(false); }} title={p.label} />
+        ))}
+      </Menu>
+      {(isFetching || isLoading) && <ActivityIndicator size={18} style={{ marginLeft: 8 }} />}
+    </ScrollView>
+  );
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      {renderSelectors()}
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={

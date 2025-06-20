@@ -126,8 +126,6 @@ export class SpseJecnaClient {
       credentials: 'include',
     });
     const html = await response.text();
-    console.log(response);
-    console.log(html)
     this.updateCookies(response);
     const token = this.extractToken3(html);
     if (!token) throw new Error('Login token not found');
@@ -183,8 +181,52 @@ export class SpseJecnaClient {
     return parseDocument(html);
   }
 
-  public async getZnamky(): Promise<SubjectGrades[]> {
+  public async getGradesMeta(): Promise<{ years: { id: string, label: string }[], periods: { id: string, label: string }[], selectedYearId: string, selectedPeriodId: string }> {
     const html = await this.fetchHtml('/score/student');
+    const document = parseDocument(html);
+
+    // Years
+    const yearSelect = selectAll('select#schoolYearId', document.children)[0] as Element | undefined;
+    const years: { id: string, label: string }[] = [];
+    let selectedYearId = '';
+    if (yearSelect) {
+      const options = selectAll('option', [yearSelect]) as Element[];
+      for (const opt of options) {
+        const id = opt.attribs.value;
+        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const selected = !!opt.attribs.selected;
+        if (selected) selectedYearId = id;
+        years.push({ id, label });
+      }
+    }
+
+    // Periods
+    const periodSelect = selectAll('select#schoolYearHalfId', document.children)[0] as Element | undefined;
+    const periods: { id: string, label: string }[] = [];
+    let selectedPeriodId = '';
+    if (periodSelect) {
+      const options = selectAll('option', [periodSelect]) as Element[];
+      for (const opt of options) {
+        const id = opt.attribs.value;
+        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const selected = !!opt.attribs.selected;
+        if (selected) selectedPeriodId = id;
+        periods.push({ id, label });
+      }
+    }
+
+    return { years, periods, selectedYearId, selectedPeriodId };
+  }
+
+  public async getZnamky(yearId?: string, periodId?: string): Promise<SubjectGrades[]> {
+    let url = '/score/student';
+    if (yearId || periodId) {
+      const params = new URLSearchParams();
+      if (yearId) params.append('schoolYearId', yearId);
+      if (periodId) params.append('schoolYearHalfId', periodId);
+      url += '?' + params.toString();
+    }
+    const html = await this.fetchHtml(url);
     const document = parseDocument(html);
     const tables = selectAll('table.score', document.children) as Element[];
     const result: SubjectGrades[] = [];
