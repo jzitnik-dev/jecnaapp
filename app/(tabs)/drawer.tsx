@@ -1,4 +1,5 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -6,7 +7,9 @@ import React from 'react';
 import { Button } from 'react-native-paper';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 import HomeScreen from './home';
+import RoomsListScreen from './rooms-list';
 import RozvrhScreen from './rozvrh';
+import TeachersListScreen from './teachers-list';
 import ZnamkyScreen from './znamky';
 
 const Drawer = createDrawerNavigator();
@@ -65,6 +68,26 @@ export default function DrawerLayout() {
         options={{
           title: 'Známky',
           drawerIcon: ({ color, size }) => <IconSymbol size={size} name="paperplane.fill" color={color} />, 
+        }}
+      />
+      <Drawer.Screen
+        name="teachers-list"
+        component={TeachersListScreen}
+        options={{
+          title: 'Učitelé',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="account-multiple" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="rooms-list"
+        component={RoomsListScreen}
+        options={{
+          title: 'Učebny',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="door" color={color} size={size} />
+          ),
         }}
       />
     </Drawer.Navigator>

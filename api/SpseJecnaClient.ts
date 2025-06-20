@@ -566,7 +566,7 @@ export class SpseJecnaClient {
           const a = selectAll('a', [td])[0];
           if (a && a.attribs && a.attribs.href) roomHref = a.attribs.href;
           if (a && a.children.find(c => c.type === 'text')) {
-            room = a.children.find(c => c.type === 'text')?.data?.trim() || '';
+            room = a.children.find((c) => c.type === 'text')?.data?.trim() || '';
           } else {
             const span = selectAll('span', [td])[0];
             if (span && span.children.find(c => c.type === 'text')) {
@@ -870,7 +870,50 @@ export class SpseJecnaClient {
       }
       timetable = { periods, days };
     }
-    console.log(title, floor, mainClassroom, manager, managerHref, timetable);
     return { title, floor, mainClassroom, manager, managerHref, timetable };
+  }
+
+  /**
+   * Fetches the list of teachers from /ucitel
+   */
+  public async getTeachersList(): Promise<{ name: string; shortcut: string }[]> {
+    const html = await this.fetchHtml('/ucitel');
+    const document = parseDocument(html);
+    const teachers: { name: string; shortcut: string }[] = [];
+    // Teachers are in two columns: .contentLeftColumn ul > li > a and .contentRightColumn ul > li > a
+    const leftLinks = selectAll('.contentLeftColumn ul li a', document.children) as Element[];
+    const rightLinks = selectAll('.contentRightColumn ul li a', document.children) as Element[];
+    for (const a of [...leftLinks, ...rightLinks]) {
+      const name = a.children.find(c => c.type === 'text')?.data?.trim() || '';
+      const href = a.attribs?.href || '';
+      const match = href.match(/\/ucitel\/([A-Z]+)/i);
+      const shortcut = match ? match[1] : '';
+      if (name && shortcut) {
+        teachers.push({ name, shortcut });
+      }
+    }
+    return teachers;
+  }
+
+  /**
+   * Fetches the list of rooms from /ucebna
+   */
+  public async getRoomsList(): Promise<{ label: string; code: string }[]> {
+    const html = await this.fetchHtml('/ucebna');
+    const document = parseDocument(html);
+    const rooms: { label: string; code: string }[] = [];
+    // Rooms are in .list li a.item
+    const links = selectAll('.list li a.item', document.children) as Element[];
+    for (const a of links) {
+      const labelSpan = selectAll('span.label', [a])[0];
+      const label = labelSpan && labelSpan.children.find(c => c.type === 'text')?.data?.trim() || '';
+      const href = a.attribs?.href || '';
+      const match = href.match(/\/ucebna\/(.+)$/i);
+      const code = match ? decodeURIComponent(match[1]) : '';
+      if (label && code) {
+        rooms.push({ label, code });
+      }
+    }
+    return rooms;
   }
 } 
