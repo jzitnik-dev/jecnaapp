@@ -1,5 +1,7 @@
-import { Text } from "react-native-paper";
+import DrawerLayout from './drawer';
 
-export default function HomeScreen() {
-  return <Text>hello</Text>;
-}
+export default DrawerLayout;
+
+export const navigationOptions = {
+  headerShown: false,
+};
