@@ -720,4 +720,157 @@ export class SpseJecnaClient {
       certifications,
     };
   }
+
+  public async getUcebna(code: string): Promise<string> {
+    return this.fetchHtml(`/ucebna/${code}`);
+  }
+
+  public async getUcebnaParsed(code: string): Promise<{
+    title: string;
+    floor: string;
+    mainClassroom: string;
+    manager: string;
+    managerHref: string;
+    timetable?: { periods: { number: number; time: string }[]; days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[] };
+  }> {
+    const html = await this.fetchHtml(`/ucebna/${code}`);
+    const document = parseDocument(html);
+    // Title (from <h1> or <title>)
+    let title = '';
+    const h1 = selectAll('h1 span.label', document.children)[0] as Element | undefined;
+    if (h1 && h1.children.length > 0 && h1.children[0].type === 'text') {
+      title = h1.children[0].data?.trim() || '';
+    } else {
+      const t = selectAll('title', document.children)[0] as Element | undefined;
+      if (t && t.children.length > 0 && t.children[0].type === 'text') title = t.children[0].data?.trim() || '';
+    }
+    // Info table (userprofile)
+    let floor = '', mainClassroom = '', manager = '', managerHref = '';
+    const profileTable = selectAll('table.userprofile', document.children)[0] as Element | undefined;
+    if (profileTable) {
+      const rows = selectAll('tr', [profileTable]) as Element[];
+      for (const row of rows) {
+        const th = selectAll('th', [row])[0];
+        const td = selectAll('td', [row])[0];
+        if (!th || !td) continue;
+        const label = selectAll('.label', [th])[0]?.children.find(c => c.type === 'text')?.data?.trim() || th.children.find(c => c.type === 'text')?.data?.trim();
+        let value = '';
+        const valueSpan = selectAll('.value', [td])[0];
+        if (valueSpan) {
+          value = valueSpan.children.find(c => c.type === 'text')?.data?.trim() || '';
+        } else {
+          value = td.children.find(c => c.type === 'text')?.data?.trim() || '';
+        }
+        if (label === 'Podlaží') floor = value;
+        if (label === 'Kmenová učebna') mainClassroom = value;
+        if (label === 'Správce') {
+          const a = selectAll('a', [td])[0];
+          if (a && a.attribs && a.attribs.href) managerHref = a.attribs.href;
+          if (a && a.children.find(c => c.type === 'text')) {
+            manager = a.children.find((c) => c.type === 'text')?.data?.trim() || '';
+          } else {
+            manager = td.children.find((c) => c.type === 'text')?.data?.trim() || '';
+          }
+        }
+      }
+    }
+    // Timetable
+    let timetable: { periods: { number: number; time: string }[]; days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[] } | undefined = undefined;
+    const timetableTable = selectAll('table.timetable', document.children)[0] as Element | undefined;
+    if (timetableTable) {
+      // Header row
+      const headerRow = selectAll('tr', [timetableTable])[0];
+      const ths = selectAll('th', [headerRow]);
+      const periods: { number: number; time: string }[] = [];
+      for (let i = 1; i < ths.length; i++) { // skip first (empty) th
+        const th = ths[i] as Element;
+        let numberText: string | undefined = undefined;
+        if (Array.isArray(th.children)) {
+          const textNode = th.children.find((c: any) => c.type === 'text');
+          if (textNode && textNode.type === 'text') numberText = (textNode as import('domhandler').Text).data?.trim();
+        }
+        const timeSpan = selectAll('span.time', [th])[0] as Element | undefined;
+        let time = '';
+        if (timeSpan && Array.isArray(timeSpan.children)) {
+          const timeNode = timeSpan.children.find((c: any) => c.type === 'text');
+          if (timeNode && timeNode.type === 'text') time = (timeNode as import('domhandler').Text).data?.trim();
+        }
+        const number = numberText ? parseInt(numberText, 10) : i;
+        periods.push({ number, time });
+      }
+      // Day rows
+      const rows = selectAll('tr', [timetableTable]).slice(1); // skip header
+      const days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[] = [];
+      for (const row of rows) {
+        const th = selectAll('th.day', [row])[0] as Element | undefined;
+        let day = '';
+        if (th && Array.isArray(th.children)) {
+          const dayNode = th.children.find((c: any) => c.type === 'text');
+          if (dayNode && dayNode.type === 'text') day = (dayNode as import('domhandler').Text).data?.trim();
+        }
+        const tds = selectAll('td', [row]);
+        const cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] = [];
+        for (const td of tds) {
+          if (td.type === 'tag' && td.attribs && td.attribs.class && td.attribs.class.includes('empty')) {
+            cells.push(null);
+            continue;
+          }
+          // Each cell may have multiple lessons (splits/groups)
+          const divs = selectAll('div', [td]);
+          const lessons: import('./SpseJecnaClient').TimetableLesson[] = [];
+          for (const div of divs) {
+            // Room
+            const roomA = selectAll('a.room', [div])[0] as Element | undefined;
+            let room = '';
+            if (roomA && Array.isArray(roomA.children)) {
+              const roomNode = roomA.children.find((c: any) => c.type === 'text');
+              if (roomNode && roomNode.type === 'text') room = (roomNode as import('domhandler').Text).data?.trim();
+            }
+            // Teacher
+            const empA = selectAll('a.employee', [div])[0] as Element | undefined;
+            let teacher = '';
+            let teacherFull = '';
+            if (empA) {
+              if (Array.isArray(empA.children)) {
+                const teacherNode = empA.children.find((c: any) => c.type === 'text');
+                if (teacherNode && teacherNode.type === 'text') teacher = (teacherNode as import('domhandler').Text).data?.trim();
+              }
+              if (empA.type === 'tag' && empA.attribs && typeof empA.attribs.title === 'string') teacherFull = empA.attribs.title;
+            }
+            // Subject
+            const subjSpan = selectAll('span.subject', [div])[0] as Element | undefined;
+            let subject = '';
+            let subjectLong = '';
+            if (subjSpan) {
+              if (Array.isArray(subjSpan.children)) {
+                const subjNode = subjSpan.children.find((c: any) => c.type === 'text');
+                if (subjNode && subjNode.type === 'text') subject = (subjNode as import('domhandler').Text).data?.trim();
+              }
+              if (subjSpan.type === 'tag' && subjSpan.attribs && typeof subjSpan.attribs.title === 'string') subjectLong = subjSpan.attribs.title;
+            }
+            // Class
+            const classSpan = selectAll('span.class', [div])[0] as Element | undefined;
+            let className = '';
+            if (classSpan && Array.isArray(classSpan.children)) {
+              const classNode = classSpan.children.find((c: any) => c.type === 'text');
+              if (classNode && classNode.type === 'text') className = (classNode as import('domhandler').Text).data?.trim();
+            }
+            // Group (optional)
+            const groupSpan = selectAll('span.group', [div])[0] as Element | undefined;
+            let group = '';
+            if (groupSpan && Array.isArray(groupSpan.children)) {
+              const groupNode = groupSpan.children.find((c: any) => c.type === 'text');
+              if (groupNode && groupNode.type === 'text') group = (groupNode as import('domhandler').Text).data?.trim();
+            }
+            lessons.push({ subject, subjectLong, teacher, teacherFull, room, group, className });
+          }
+          cells.push(lessons);
+        }
+        days.push({ day, cells });
+      }
+      timetable = { periods, days };
+    }
+    console.log(title, floor, mainClassroom, manager, managerHref, timetable);
+    return { title, floor, mainClassroom, manager, managerHref, timetable };
+  }
 } 

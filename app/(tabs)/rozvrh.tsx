@@ -129,6 +129,7 @@ export default function RozvrhScreen() {
                 router.push(`/teachers/${code}`);
               }
             }}
+            onRoomPress={(room) => router.push(`/ucebna/${room}`)}
           />
         </ScrollView>
       </ScrollView>

@@ -1,7 +1,8 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
-import { Dimensions, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Dimensions, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { ActivityIndicator, Button, Chip, Divider, Menu, Modal as PaperModal, Portal, Text, useTheme } from 'react-native-paper';
 import type { Grade as GradeBase, PochvalaDetail, SubjectGrades } from '../../api/SpseJecnaClient';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';

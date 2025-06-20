@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
-import { Dimensions, Platform, Pressable, StyleSheet, View } from 'react-native';
+import { Dimensions, Platform, StyleSheet, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { Button, Divider, Modal, Portal, Surface, Text, useTheme } from 'react-native-paper';
 import type { TimetableDay, TimetableLesson, TimetablePeriod } from '../api/SpseJecnaClient';
 
-export function TimetableGrid({ periods, days, style, onTeacherPress }: {
+export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPress }: {
   periods: TimetablePeriod[];
   days: TimetableDay[];
   style?: any;
   onTeacherPress?: (teacherCode: string, teacherFull?: string) => void;
+  onRoomPress?: (roomCode: string) => void;
 }) {
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
@@ -36,6 +38,14 @@ export function TimetableGrid({ periods, days, style, onTeacherPress }: {
       const fullName = modalLesson.teacherFull || '';
       setModalVisible(false);
       setTimeout(() => onTeacherPress(code, fullName), 100);
+    }
+  };
+
+  const handleRoomPress = () => {
+    if (modalLesson && onRoomPress && modalLesson.room) {
+      const code = modalLesson.room;
+      setModalVisible(false);
+      setTimeout(() => onRoomPress(code), 100);
     }
   };
 
@@ -165,8 +175,7 @@ export function TimetableGrid({ periods, days, style, onTeacherPress }: {
               {modalLesson.group &&
                 <Text style={{ marginBottom: 8 }}>Skupina: <Text style={{ fontWeight: 'bold' }}>{modalLesson.group}</Text></Text>
               }
-              <Text style={{ marginBottom: 8 }}>Učebna: <Text style={{ fontWeight: 'bold' }}>{modalLesson.room || '-'}</Text></Text>
-              <Button mode="outlined" style={{ marginBottom: 8 }} disabled>{modalLesson.room || 'Učebna'}</Button>
+              <Button mode="contained" onPress={() => handleRoomPress()} style={{ marginBottom: 8 }}>{modalLesson.room || 'Učebna'}</Button>
               <Button mode="contained" onPress={() => handleTeacherPress()} style={{ marginBottom: 8 }}>
                 {modalLesson.teacherFull || modalLesson.teacher || 'Učitel'}
               </Button>

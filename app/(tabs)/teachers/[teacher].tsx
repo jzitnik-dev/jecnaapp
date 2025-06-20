@@ -1,6 +1,7 @@
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Modal, RefreshControl, Text as RNText, ScrollView, StyleSheet, View } from 'react-native';
+import { Pressable } from 'react-native-gesture-handler';
 import { ActivityIndicator, Divider, Text, useTheme } from 'react-native-paper';
 import type { TimetableDay, TimetablePeriod } from '../../../api/SpseJecnaClient';
 import { TimetableGrid } from '../../../components/TimetableGrid';
@@ -9,6 +10,7 @@ import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 export default function TeacherScreen() {
   const params = useLocalSearchParams();
   const navigation = useNavigation();
+  const router = useRouter();
   const teacher = params.teacher;
   const routeName = params.name;
   const theme = useTheme();
@@ -16,26 +18,34 @@ export default function TeacherScreen() {
   const [info, setInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchData = async () => {
+    if (!client || typeof teacher !== 'string') {
+      setError('Chyba: Parametr učitele není předán nebo není string.\nVšechny parametry: ' + JSON.stringify(params));
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await client.getTeacherProfile(teacher);
+      setInfo(data);
+    } catch (e: any) {
+      setError(e?.message || 'Chyba při načítání profilu.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
-    async function fetchData() {
-      if (!client || typeof teacher !== 'string') {
-        setError('Chyba: Parametr učitele není předán nebo není string.\nVšechny parametry: ' + JSON.stringify(params));
-        return;
-      }
-      setLoading(true);
-      setError(null);
-      try {
-        const data = await client.getTeacherProfile(teacher);
-        if (!cancelled) setInfo(data);
-      } catch (e: any) {
-        if (!cancelled) setError(e?.message || 'Chyba při načítání profilu.');
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
-    }
-    fetchData();
+    setLoading(true);
+    setError(null);
+    setInfo(null);
+    fetchData().then(() => {
+      if (cancelled) return;
+    });
     return () => { cancelled = true; };
   }, [client, teacher]);
 
@@ -47,6 +57,12 @@ export default function TeacherScreen() {
     }
   }, [info, loading, navigation]);
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await fetchData();
+    setRefreshing(false);
+  };
+
   if (loading) {
     return <View style={styles.centered}><ActivityIndicator /><Text>Načítám učitele…</Text></View>;
   }
@@ -56,11 +72,33 @@ export default function TeacherScreen() {
   if (!info) return null;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background }} contentContainerStyle={{ padding: 0 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      contentContainerStyle={{ padding: 0 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+    >
+      <Modal
+        visible={modalVisible}
+        transparent={true}
+        animationType="fade"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <Pressable style={styles.modalBackground} onPress={() => setModalVisible(false)}>
+          <Image
+            source={{ uri: info.photo }}
+            style={styles.fullscreenImage}
+            resizeMode="contain"
+          />
+        </Pressable>
+      </Modal>
       <View style={[styles.hero, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: 16 }]}> 
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 24, paddingHorizontal: 24 }}>
           <View style={styles.photoShadow}>
-            {info.photo && <Image source={{ uri: info.photo }} style={styles.photo} />}
+            {info.photo && (
+              <Pressable onPress={() => setModalVisible(true)}>
+                <Image source={{ uri: info.photo }} style={styles.photo} />
+              </Pressable>
+            )}
           </View>
           <View style={{ flex: 1 }}>
             <Text variant="headlineLarge" style={[styles.name, { color: theme.colors.onSurface, fontWeight: 'bold', marginTop: 0 }]}>{routeName || info.name}</Text>
@@ -69,7 +107,16 @@ export default function TeacherScreen() {
         </View>
         <Divider style={{ marginVertical: 10, backgroundColor: theme.colors.outline, opacity: 0.2 }} />
         <View style={{ marginTop: 8, paddingHorizontal: 24, marginBottom: 18 }}>
-          {info.room && (
+          {info.room && info.roomHref ? (
+            <View style={[styles.infoRow, { marginBottom: 6 }]}> 
+              <Text style={styles.infoLabel}>Kabinet:</Text>
+              <Pressable onPress={() => {
+                router.push(`/ucebna/${info.room}`);
+              }}>
+                <RNText style={[styles.infoValue, { color: '#2196f3', textDecorationLine: 'underline' }]}>{info.room}</RNText>
+              </Pressable>
+            </View>
+          ) : info.room && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}><Text style={styles.infoLabel}>Kabinet:</Text><Text style={styles.infoValue} selectable={true}>{info.room}</Text></View>
           )}
           {info.consultation && (
@@ -99,16 +146,13 @@ export default function TeacherScreen() {
               <Text style={styles.infoValue} selectable={true}>{info.privatePhone}</Text>
             </View>
           )}
-          {info.roomHref && info.room && (
-            <View style={[styles.infoRow, { marginBottom: 6 }]}><Text style={styles.infoLabel}>Odkaz na kabinet:</Text><Text style={styles.infoValue} selectable={true}>{info.roomHref}</Text></View>
-          )}
         </View>
       </View>
       <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Rozvrh hodin</Text>
       <View style={[styles.sectionSurface, { backgroundColor: theme.colors.surfaceVariant }]}> 
         {info.timetable && info.timetable.periods && info.timetable.days && info.timetable.days.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <TimetableGrid periods={info.timetable.periods as TimetablePeriod[]} days={info.timetable.days as TimetableDay[]} />
+            <TimetableGrid periods={info.timetable.periods as TimetablePeriod[]} days={info.timetable.days as TimetableDay[]} onRoomPress={(room) => router.push(`/ucebna/${room}`)} />
           </ScrollView>
         ) : (
           <Text style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>Rozvrh není k dispozici.</Text>
@@ -225,4 +269,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   link: { color: '#2196f3', textDecorationLine: 'underline' },
+  modalBackground: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
+  fullscreenImage: { width: '90%', height: '90%' },
 }); 
