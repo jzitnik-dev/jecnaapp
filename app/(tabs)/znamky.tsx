@@ -5,6 +5,7 @@ import { Dimensions, RefreshControl, ScrollView, StyleSheet, View } from 'react-
 import { Pressable } from 'react-native-gesture-handler';
 import { ActivityIndicator, Button, Chip, Divider, Menu, Modal as PaperModal, Portal, Text, useTheme } from 'react-native-paper';
 import type { Grade as GradeBase, PochvalaDetail, SubjectGrades } from '../../api/SpseJecnaClient';
+import { useGradeNotifications } from '../../hooks/useGradeNotifications';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 
 type Grade = GradeBase & { href?: string };
@@ -83,6 +84,7 @@ function getWeightedAverage(grades: Grade[]): number | null {
 
 export default function ZnamkyScreen() {
   const { client } = useSpseJecnaClient();
+  const { checkForNewGrades } = useGradeNotifications();
   const theme = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [plannerMode, setPlannerMode] = useState(false);
@@ -196,6 +198,15 @@ export default function ZnamkyScreen() {
         ))}
       </Menu>
       {(isFetching || isLoading) && <ActivityIndicator size={18} style={{ marginLeft: 8 }} />}
+      <Button
+        mode="outlined"
+        onPress={checkForNewGrades}
+        icon="bell-outline"
+        compact
+        style={{ marginLeft: 'auto' }}
+      >
+        Kontrola
+      </Button>
     </ScrollView>
   );
 

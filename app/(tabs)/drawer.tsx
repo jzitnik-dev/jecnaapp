@@ -8,6 +8,7 @@ import { Button } from 'react-native-paper';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 import HomeScreen from './home';
 import JidelnaScreen from './jidelna';
+import NotificationSettingsScreen from './notification-settings';
 import OmluvnyListScreen from './omluvny-list';
 import PrichodyScreen from './prichody';
 import RoomsListScreen from './rooms-list';
@@ -120,6 +121,16 @@ export default function DrawerLayout() {
           title: 'Jídelna',
           drawerIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="file-document-edit-outline" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="notification-settings"
+        component={NotificationSettingsScreen}
+        options={{
+          title: 'Notifikace',
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="bell-outline" color={color} size={size} />
           ),
         }}
       />
