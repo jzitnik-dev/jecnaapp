@@ -106,7 +106,7 @@ export default function DrawerLayout() {
         name="Home"
         component={HomeScreen}
         options={{
-          title: 'Home',
+          title: 'Domov',
           drawerIcon: ({ color, size }) => <IconSymbol size={size} name="house.fill" color={color} />, 
         }}
       />
