@@ -5,16 +5,29 @@ import { useAbsenceStats } from '../../hooks/useAbsenceStats';
 
 export function AbsenceCard() {
   const theme = useTheme();
-  const { totalExcused, totalUnexcused, totalAbsences, loading, error } = useAbsenceStats();
+  const { totalExcused, totalUnexcused, totalAbsences, loading, error } =
+    useAbsenceStats();
 
   if (loading) {
     return (
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+      <Card
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={2}
+      >
         <Card.Content>
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
             📋 Omluvené hodiny
           </Text>
-          <Text variant="bodyMedium" style={[styles.loadingText, { color: theme.colors.onSurfaceVariant }]}>
+          <Text
+            variant="bodyMedium"
+            style={[
+              styles.loadingText,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
             Načítání...
           </Text>
         </Card.Content>
@@ -24,12 +37,21 @@ export function AbsenceCard() {
 
   if (error) {
     return (
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+      <Card
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={2}
+      >
         <Card.Content>
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
             📋 Omluvené hodiny
           </Text>
-          <Text variant="bodyMedium" style={[styles.errorText, { color: theme.colors.error }]}>
+          <Text
+            variant="bodyMedium"
+            style={[styles.errorText, { color: theme.colors.error }]}
+          >
             {error}
           </Text>
         </Card.Content>
@@ -38,36 +60,69 @@ export function AbsenceCard() {
   }
 
   return (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={2}>
+    <Card
+      style={[styles.card, { backgroundColor: theme.colors.surface }]}
+      elevation={2}
+    >
       <Card.Content>
-        <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+        <Text
+          variant="titleLarge"
+          style={[styles.title, { color: theme.colors.onSurface }]}
+        >
           📋 Omluvené hodiny
         </Text>
-        
+
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.primary }]}>
+            <Text
+              variant="headlineMedium"
+              style={[styles.statValue, { color: theme.colors.primary }]}
+            >
               {totalExcused}
             </Text>
-            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.statLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Omluvené
             </Text>
           </View>
-          
+
           <View style={styles.statItem}>
-            <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.error }]}>
+            <Text
+              variant="headlineMedium"
+              style={[styles.statValue, { color: theme.colors.error }]}
+            >
               {totalUnexcused}
             </Text>
-            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.statLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Neomluvené
             </Text>
           </View>
-          
+
           <View style={styles.statItem}>
-            <Text variant="headlineMedium" style={[styles.statValue, { color: theme.colors.secondary }]}>
+            <Text
+              variant="headlineMedium"
+              style={[styles.statValue, { color: theme.colors.secondary }]}
+            >
               {totalAbsences}
             </Text>
-            <Text variant="bodySmall" style={[styles.statLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.statLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Celkem
             </Text>
           </View>
@@ -108,4 +163,4 @@ const styles = StyleSheet.create({
   errorText: {
     textAlign: 'center',
   },
-}); 
+});

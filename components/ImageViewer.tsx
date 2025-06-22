@@ -10,11 +10,11 @@ interface ImageViewerProps {
   style?: any;
 }
 
-export function ImageViewer({ 
-  imageUrl, 
-  size = 80, 
+export function ImageViewer({
+  imageUrl,
+  size = 80,
   fallbackSource = require('../assets/images/icon.png'),
-  style 
+  style,
 }: ImageViewerProps) {
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
 
@@ -33,7 +33,7 @@ export function ImageViewer({
           style={style}
         />
       </Pressable>
-      
+
       {imageUrl && (
         <ImageView
           images={[{ uri: imageUrl }]}
@@ -47,4 +47,4 @@ export function ImageViewer({
       )}
     </>
   );
-} 
+}

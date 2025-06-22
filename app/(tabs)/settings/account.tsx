@@ -1,14 +1,20 @@
 import { router } from 'expo-router';
 import React from 'react';
-import { Alert, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import {
-    ActivityIndicator,
-    Button,
-    Card,
-    Divider,
-    List,
-    Text,
-    useTheme
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import {
+  ActivityIndicator,
+  Button,
+  Card,
+  Divider,
+  List,
+  Text,
+  useTheme,
 } from 'react-native-paper';
 import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
@@ -22,29 +28,25 @@ export default function AccountScreen() {
   const { logout } = useSpseJecnaClient();
 
   const handleLogout = () => {
-    Alert.alert(
-      'Odhlásit se',
-      'Opravdu se chcete odhlásit?',
-      [
-        {
-          text: 'Zrušit',
-          style: 'cancel',
+    Alert.alert('Odhlásit se', 'Opravdu se chcete odhlásit?', [
+      {
+        text: 'Zrušit',
+        style: 'cancel',
+      },
+      {
+        text: 'Odhlásit',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await logout();
+            router.replace('/login');
+          } catch (err) {
+            console.error('Logout error:', err);
+            Alert.alert('Chyba', 'Nepodařilo se odhlásit');
+          }
         },
-        {
-          text: 'Odhlásit',
-          style: 'destructive',
-          onPress: async () => {
-            try {
-              await logout();
-              router.replace('/login');
-            } catch (err) {
-              console.error('Logout error:', err);
-              Alert.alert('Chyba', 'Nepodařilo se odhlásit');
-            }
-          },
-        },
-      ]
-    );
+      },
+    ]);
   };
 
   const formatPhone = (phone: string) => {
@@ -57,10 +59,14 @@ export default function AccountScreen() {
 
   if (loading && !accountInfo) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text style={[styles.loadingText, { color: theme.colors.onBackground }]}>
+          <Text
+            style={[styles.loadingText, { color: theme.colors.onBackground }]}
+          >
             Načítání informací o účtu...
           </Text>
         </View>
@@ -70,7 +76,9 @@ export default function AccountScreen() {
 
   if (error && !accountInfo) {
     return (
-      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
         <View style={styles.errorContainer}>
           <Text style={[styles.errorText, { color: theme.colors.error }]}>
             Chyba při načítání: {error}
@@ -84,7 +92,7 @@ export default function AccountScreen() {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={
         <RefreshControl
@@ -96,7 +104,12 @@ export default function AccountScreen() {
       }
     >
       {/* Profile Header */}
-      <Card style={[styles.profileCard, { backgroundColor: appTheme.colors.surface }]}>
+      <Card
+        style={[
+          styles.profileCard,
+          { backgroundColor: appTheme.colors.surface },
+        ]}
+      >
         <Card.Content style={styles.profileContent}>
           <View style={styles.profileHeader}>
             <ImageViewer
@@ -105,10 +118,16 @@ export default function AccountScreen() {
               fallbackSource={require('../../../assets/images/icon.png')}
             />
             <View style={styles.profileInfo}>
-              <Text variant="headlineSmall" style={{ color: appTheme.colors.onSurface }}>
+              <Text
+                variant="headlineSmall"
+                style={{ color: appTheme.colors.onSurface }}
+              >
                 {accountInfo?.fullName || 'Načítání...'}
               </Text>
-              <Text variant="bodyMedium" style={{ color: appTheme.colors.onSurfaceVariant }}>
+              <Text
+                variant="bodyMedium"
+                style={{ color: appTheme.colors.onSurfaceVariant }}
+              >
                 {accountInfo?.class || ''} • {accountInfo?.username || ''}
               </Text>
             </View>
@@ -123,61 +142,63 @@ export default function AccountScreen() {
           <List.Item
             title="Celé jméno"
             description={accountInfo?.fullName || '-'}
-            left={(props) => <List.Icon {...props} icon="account" />}
+            left={props => <List.Icon {...props} icon="account" />}
           />
           <Divider />
           <List.Item
             title="Uživatelské jméno"
             description={accountInfo?.username || '-'}
-            left={(props) => <List.Icon {...props} icon="account-key" />}
+            left={props => <List.Icon {...props} icon="account-key" />}
           />
           <Divider />
           <List.Item
             title="Věk"
             description={accountInfo?.age || '-'}
-            left={(props) => <List.Icon {...props} icon="cake-variant" />}
+            left={props => <List.Icon {...props} icon="cake-variant" />}
           />
           <Divider />
           <List.Item
             title="Datum narození"
             description={accountInfo?.birthDate || '-'}
-            left={(props) => <List.Icon {...props} icon="calendar" />}
+            left={props => <List.Icon {...props} icon="calendar" />}
           />
           <Divider />
           <List.Item
             title="Místo narození"
             description={accountInfo?.birthPlace || '-'}
-            left={(props) => <List.Icon {...props} icon="map-marker" />}
+            left={props => <List.Icon {...props} icon="map-marker" />}
           />
           <Divider />
           <List.Item
             title="Telefon"
-            description={accountInfo?.phone ? formatPhone(accountInfo.phone) : '-'}
-            left={(props) => <List.Icon {...props} icon="phone" />}
+            description={
+              accountInfo?.phone ? formatPhone(accountInfo.phone) : '-'
+            }
+            left={props => <List.Icon {...props} icon="phone" />}
           />
           <Divider />
           <List.Item
             title="Adresa"
             description={accountInfo?.address || '-'}
-            left={(props) => <List.Icon {...props} icon="home" />}
+            left={props => <List.Icon {...props} icon="home" />}
           />
           <Divider />
           <List.Item
             title="Třída"
             description={accountInfo?.class || '-'}
-            left={(props) => <List.Icon {...props} icon="school" />}
+            left={props => <List.Icon {...props} icon="school" />}
           />
           <Divider />
           <List.Item
             title="Skupiny"
             description={accountInfo?.groups || '-'}
-            left={(props) => <List.Icon {...props} icon="account-group" />}
+            left={props => <List.Icon {...props} icon="account-group" />}
           />
           <Divider />
           <List.Item
             title="Číslo v třídním výkazu"
             description={accountInfo?.classNumber || '-'}
-            left={(props) => <List.Icon {...props} icon="numeric" />}
+            left={props => <List.Icon {...props} icon="numeric" />}
           />
         </Card.Content>
       </Card>
@@ -189,28 +210,33 @@ export default function AccountScreen() {
           <List.Item
             title="Soukromý e-mail"
             description={accountInfo?.privateEmail || '-'}
-            left={(props) => <List.Icon {...props} icon="email" />}
+            left={props => <List.Icon {...props} icon="email" />}
           />
           <Divider />
           <List.Item
             title="Školní e-mail"
             description={accountInfo?.schoolEmail || '-'}
-            left={(props) => <List.Icon {...props} icon="email-outline" />}
+            left={props => <List.Icon {...props} icon="email-outline" />}
           />
         </Card.Content>
       </Card>
 
       {/* Parents Information */}
       {accountInfo?.parents && accountInfo.parents.length > 0 && (
-        <Card style={[styles.card, { backgroundColor: appTheme.colors.surface }]}>
-          <Card.Title title="Rodiče a zákonní zástupci" titleVariant="titleMedium" />
+        <Card
+          style={[styles.card, { backgroundColor: appTheme.colors.surface }]}
+        >
+          <Card.Title
+            title="Rodiče a zákonní zástupci"
+            titleVariant="titleMedium"
+          />
           <Card.Content>
             {accountInfo.parents.map((parent, index) => (
               <React.Fragment key={index}>
                 <List.Item
                   title={parent.name}
                   description={`${parent.phone} • ${parent.email}`}
-                  left={(props) => <List.Icon {...props} icon="account-child" />}
+                  left={props => <List.Icon {...props} icon="account-child" />}
                 />
                 {index < accountInfo.parents.length - 1 && <Divider />}
               </React.Fragment>
@@ -221,19 +247,21 @@ export default function AccountScreen() {
 
       {/* SPOSA Information */}
       {accountInfo?.sposa && (
-        <Card style={[styles.card, { backgroundColor: appTheme.colors.surface }]}>
+        <Card
+          style={[styles.card, { backgroundColor: appTheme.colors.surface }]}
+        >
           <Card.Title title="SPOSA" titleVariant="titleMedium" />
           <Card.Content>
             <List.Item
               title="Variabilní symbol"
               description={accountInfo.sposa.variableSymbol || '-'}
-              left={(props) => <List.Icon {...props} icon="credit-card" />}
+              left={props => <List.Icon {...props} icon="credit-card" />}
             />
             <Divider />
             <List.Item
               title="Bankovní účet"
               description={accountInfo.sposa.bankAccount || '-'}
-              left={(props) => <List.Icon {...props} icon="bank" />}
+              left={props => <List.Icon {...props} icon="bank" />}
             />
           </Card.Content>
         </Card>
@@ -309,4 +337,4 @@ const styles = StyleSheet.create({
   logoutButton: {
     borderWidth: 2,
   },
-}); 
+});

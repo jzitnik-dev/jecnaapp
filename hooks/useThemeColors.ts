@@ -2,7 +2,7 @@ import { useAppTheme } from './useAppTheme';
 
 export const useThemeColors = () => {
   const { navigationTheme } = useAppTheme();
-  
+
   return {
     primary: navigationTheme.colors.primary,
     background: navigationTheme.colors.background,
@@ -11,4 +11,4 @@ export const useThemeColors = () => {
     border: navigationTheme.colors.border,
     notification: navigationTheme.colors.notification,
   };
-}; 
+};

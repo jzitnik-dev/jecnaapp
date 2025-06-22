@@ -1,4 +1,8 @@
-import { ThemeProvider } from '@react-navigation/native';
+import {
+  ThemeProvider,
+  DarkTheme,
+  DefaultTheme,
+} from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
@@ -9,7 +13,6 @@ import { Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
-import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
@@ -23,10 +26,10 @@ export default function RootLayout() {
   const { client, setClient } = useSpseJecnaClient();
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
-  
+
   // Load fonts with better error handling - make it optional
   const [fontsLoaded, fontError] = useFonts({
-    'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
+    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
 
   useEffect(() => {
@@ -44,10 +47,10 @@ export default function RootLayout() {
     const initializeClient = async () => {
       const newClient = new SpseJecnaClient();
       setClient(newClient);
-      
+
       const isLoggedIn = await newClient.isLoggedIn();
       if (isLoggedIn) {
-        console.log("User is already logged in");
+        console.log('User is already logged in');
         return;
       }
 
@@ -56,16 +59,16 @@ export default function RootLayout() {
       if (savedUsername && savedPassword) {
         try {
           await newClient.login(savedUsername, savedPassword);
-          console.log("Auto-login successful");
+          console.log('Auto-login successful');
         } catch (error) {
-          console.log("Auto-login failed:", error);
+          console.log('Auto-login failed:', error);
           // Clear invalid credentials
           await SecureStore.deleteItemAsync('username');
           await SecureStore.deleteItemAsync('password');
         }
       } else {
         // Redirect to login
-        router.replace("/login");
+        router.replace('/login');
       }
     };
 

@@ -36,12 +36,12 @@ export class iCanteenClient {
     return csrfToken;
   }
 
-    public async setup(username: string, password: string) {
+  public async setup(username: string, password: string) {
     this.username = username;
     this.password = password;
-    
+
     const url = `${this.baseUrl}/j_spring_security_check`;
-    const csrf = await this.getCsrfToken() || '';
+    const csrf = (await this.getCsrfToken()) || '';
 
     // Use URLSearchParams to build correct x-www-form-urlencoded body
     const params = new URLSearchParams();
@@ -49,26 +49,33 @@ export class iCanteenClient {
     params.append('j_password', password);
     params.append('terminal', 'false');
     params.append('_spring_security_remember_me', 'false'); // fixed field name
-    params.append('targetUrl', '/faces/secured/main.jsp?status=true&printer=&keyboard=');
+    params.append(
+      'targetUrl',
+      '/faces/secured/main.jsp?status=true&printer=&keyboard='
+    );
     params.append('_csrf', csrf);
 
     const response = await fetch(url, {
-        method: 'POST',
-        headers: {
+      method: 'POST',
+      headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString(),
-        credentials: 'include',
+      },
+      body: params.toString(),
+      credentials: 'include',
     });
 
     console.log('Login response final URL:', response.url);
 
     // Check if login was successful by examining the final URL
     if (response.url.includes('error=')) {
-    const returnUrl = response.url;
-    const parts = returnUrl.split('=');
-    const errorCode = parseInt(parts[parts.length - 1]);
-      console.log('Unexpected login response:', response.status, response.url.substring(0, 200));
+      const returnUrl = response.url;
+      const parts = returnUrl.split('=');
+      const errorCode = parseInt(parts[parts.length - 1]);
+      console.log(
+        'Unexpected login response:',
+        response.status,
+        response.url.substring(0, 200)
+      );
       throw new Error(`Login failed with error code: ${errorCode}`);
     }
 
@@ -89,32 +96,50 @@ export class iCanteenClient {
     const document = parseDocument(html);
 
     // Extract credit
-    const creditElement = selectOne('[id="Kredit"]', document.children) as Element | undefined;
-    const credit = creditElement?.children.find(c => c.type === 'text')?.data?.trim() || '0,00 Kč';
+    const creditElement = selectOne('[id="Kredit"]', document.children) as
+      | Element
+      | undefined;
+    const credit =
+      creditElement?.children.find(c => c.type === 'text')?.data?.trim() ||
+      '0,00 Kč';
 
     // Extract pickup location
-    const locationElement = selectOne('[id="top:status:vydejnaName"]', document.children) as Element | undefined;
-    const pickupLocation = locationElement?.children.find(c => c.type === 'text')?.data?.trim() || '';
+    const locationElement = selectOne(
+      '[id="top:status:vydejnaName"]',
+      document.children
+    ) as Element | undefined;
+    const pickupLocation =
+      locationElement?.children.find(c => c.type === 'text')?.data?.trim() ||
+      '';
 
     // Extract menus
     const menuItems: CanteenMenuItem[] = [];
-    const dayElements = selectAll('div[id^="day-"]', document.children) as Element[];
-    
+    const dayElements = selectAll(
+      'div[id^="day-"]',
+      document.children
+    ) as Element[];
+
     for (const dayElement of dayElements) {
       const dayId = dayElement.attribs?.id;
       if (!dayId) continue;
-      
+
       const date = dayId.replace('day-', '');
-      const dayName = dayElement.children.find(c => c.type === 'text')?.data?.trim() || '';
-      
+      const dayName =
+        dayElement.children.find(c => c.type === 'text')?.data?.trim() || '';
+
       // Find the menu content for this day
-      const orderContent = selectOne(`[id="orderContent${date}"]`, document.children) as Element | undefined;
+      const orderContent = selectOne(
+        `[id="orderContent${date}"]`,
+        document.children
+      ) as Element | undefined;
       if (!orderContent) continue;
 
       // Extract food description
-      const menuElement = selectOne('.jidWrapCenter', [orderContent]) as Element | undefined;
+      const menuElement = selectOne('.jidWrapCenter', [orderContent]) as
+        | Element
+        | undefined;
       if (!menuElement) continue;
-      
+
       let food = '';
       for (const child of menuElement.children) {
         if (child.type === 'text') {
@@ -124,11 +149,16 @@ export class iCanteenClient {
       food = food.replace(/\s+/g, ' ').trim();
 
       // Extract price
-      const priceElement = selectOne('.important.warning', [orderContent]) as Element | undefined;
-      const price = priceElement?.children.find(c => c.type === 'text')?.data?.trim() || '';
+      const priceElement = selectOne('.important.warning', [orderContent]) as
+        | Element
+        | undefined;
+      const price =
+        priceElement?.children.find(c => c.type === 'text')?.data?.trim() || '';
 
       // Determine order status and extract order tokens
-      const buttonElement = selectOne('.button-link-main', [orderContent]) as Element | undefined;
+      const buttonElement = selectOne('.button-link-main', [orderContent]) as
+        | Element
+        | undefined;
       const buttonClass = buttonElement?.attribs?.class || '';
       let status: 'ordered' | 'disabled' | 'allowed' = 'allowed';
       if (buttonClass.includes('ordered')) status = 'ordered';
@@ -140,11 +170,11 @@ export class iCanteenClient {
       let orderType: string | undefined;
       const onClickAttr = buttonElement?.attribs?.onClick || '';
       console.log('Button onClick attribute:', onClickAttr);
-      
+
       const orderMatch = onClickAttr.match(/ID=(\d+)/);
       const tokenMatch = onClickAttr.match(/token=([^&]+)/);
       const typeMatch = onClickAttr.match(/type=([^&]+)/);
-      
+
       if (orderMatch) {
         orderId = orderMatch[1];
         console.log('Found order ID:', orderId);
@@ -197,8 +227,17 @@ export class iCanteenClient {
         for (const element of allDocElements) {
           const attrs = element.attribs || {};
           for (const [key, value] of Object.entries(attrs)) {
-            if (value && typeof value === 'string' && value.includes('ID=') && value.includes('token=')) {
-              console.log('Found document element with order info:', key, value);
+            if (
+              value &&
+              typeof value === 'string' &&
+              value.includes('ID=') &&
+              value.includes('token=')
+            ) {
+              console.log(
+                'Found document element with order info:',
+                key,
+                value
+              );
               const idMatch = value.match(/ID=(\d+)/);
               const tokenMatch = value.match(/token=([^&]+)/);
               const typeMatch = value.match(/type=([^&]+)/);
@@ -224,23 +263,31 @@ export class iCanteenClient {
       console.log('Final order type:', orderType);
 
       // Extract allergens
-      const allergenElements = selectAll('.textGrey span[title]', [orderContent]) as Element[];
-      const allergens = allergenElements.map(el => {
-        const title = el.attribs?.title || '';
-        const match = title.match(/<b>([^<]+)<\/b>/);
-        return match ? match[1] : '';
-      }).filter(a => a);
+      const allergenElements = selectAll('.textGrey span[title]', [
+        orderContent,
+      ]) as Element[];
+      const allergens = allergenElements
+        .map(el => {
+          const title = el.attribs?.title || '';
+          const match = title.match(/<b>([^<]+)<\/b>/);
+          return match ? match[1] : '';
+        })
+        .filter(a => a);
 
       // Extract deadlines and pickup time from clock icon title
-      const clockElement = selectOne('.fa-clock', [orderContent]) as Element | undefined;
+      const clockElement = selectOne('.fa-clock', [orderContent]) as
+        | Element
+        | undefined;
       const clockTitle = clockElement?.attribs?.title || '';
-      
+
       let orderDeadline: string | undefined;
       let cancelDeadline: string | undefined;
       let pickupTime: string | undefined;
 
       if (clockTitle) {
-        const pickupMatch = clockTitle.match(/výdej od: <b>([^<]+)<\/b> do: <b>([^<]+)<\/b>/);
+        const pickupMatch = clockTitle.match(
+          /výdej od: <b>([^<]+)<\/b> do: <b>([^<]+)<\/b>/
+        );
         if (pickupMatch) {
           pickupTime = `${pickupMatch[1]} - ${pickupMatch[2]}`;
         }
@@ -287,9 +334,14 @@ export class iCanteenClient {
     console.log('Order ID:', menuItem.orderId);
     console.log('Order token:', menuItem.orderToken);
     console.log('Order type:', menuItem.orderType);
-    
+
     if (!menuItem.orderId || !menuItem.orderToken) {
-      console.error('Missing order information - ID:', menuItem.orderId, 'Token:', menuItem.orderToken);
+      console.error(
+        'Missing order information - ID:',
+        menuItem.orderId,
+        'Token:',
+        menuItem.orderToken
+      );
       throw new Error('Missing order information');
     }
 
@@ -300,55 +352,60 @@ export class iCanteenClient {
     const day = menuItem.date;
     const type = menuItem.orderType || 'make';
     const underscore = Date.now(); // Add the _ parameter like in curl
-    
+
     // Build the URL with the correct path and all parameters
     const orderUrl = `${this.baseUrl}/faces/secured/db/dbProcessOrder.jsp?time=${time}&token=${token}&ID=${orderId}&day=${day}&type=${type}&week=&terminal=false&keyboard=false&printer=false&_=${underscore}`;
-    
+
     console.log('Order URL:', orderUrl);
 
     try {
       const response = await fetch(orderUrl, {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0',
-          'Accept': '*/*',
+          'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0',
+          Accept: '*/*',
           'Accept-Language': 'en-US,en;q=0.5',
           'Accept-Encoding': 'gzip, deflate, br, zstd',
           'X-Requested-With': 'XMLHttpRequest',
-          'DNT': '1',
+          DNT: '1',
           'Sec-GPC': '1',
-          'Connection': 'keep-alive',
-          'Referer': `${this.baseUrl}/faces/secured/month.jsp`,
+          Connection: 'keep-alive',
+          Referer: `${this.baseUrl}/faces/secured/month.jsp`,
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-origin',
-          'Priority': 'u=0',
-          'Pragma': 'no-cache',
+          Priority: 'u=0',
+          Pragma: 'no-cache',
           'Cache-Control': 'no-cache',
-          'TE': 'trailers',
+          TE: 'trailers',
         },
         credentials: 'include',
       });
 
       console.log('Order response status:', response.status);
-      
+
       // Check if the order was successful
       const responseText = await response.text();
       console.log('Order response text length:', responseText.length);
-      console.log('Order response text preview:', responseText.replaceAll('\n', ''));
-      
+      console.log(
+        'Order response text preview:',
+        responseText.replaceAll('\n', '')
+      );
+
       // Check for specific success/error indicators in the response
-      const isSuccess = response.ok && 
-        !responseText.includes('error') && 
+      const isSuccess =
+        response.ok &&
+        !responseText.includes('error') &&
         !responseText.includes('Error') &&
         !responseText.includes('chyba') &&
         !responseText.includes('Bezpečnostní kód je neplatný') &&
         !responseText.includes('Chyba 404') &&
         !responseText.includes('iCanteen chyba') &&
         !responseText.includes('více oken prohlížeče');
-      
+
       console.log('Order success determination:', isSuccess);
-      
+
       return isSuccess;
     } catch (error) {
       console.error('Order request failed:', error);
@@ -364,9 +421,14 @@ export class iCanteenClient {
     console.log('Order ID:', menuItem.orderId);
     console.log('Order token:', menuItem.orderToken);
     console.log('Order type:', menuItem.orderType);
-    
+
     if (!menuItem.orderId || !menuItem.orderToken) {
-      console.error('Missing order information - ID:', menuItem.orderId, 'Token:', menuItem.orderToken);
+      console.error(
+        'Missing order information - ID:',
+        menuItem.orderId,
+        'Token:',
+        menuItem.orderToken
+      );
       throw new Error('Missing order information');
     }
 
@@ -377,55 +439,60 @@ export class iCanteenClient {
     const day = menuItem.date;
     const type = 'delete'; // Always use 'delete' for canceling
     const underscore = Date.now(); // Add the _ parameter like in curl
-    
+
     // Build the URL with the correct path and all parameters
     const cancelUrl = `${this.baseUrl}/faces/secured/db/dbProcessOrder.jsp?time=${time}&token=${token}&ID=${orderId}&day=${day}&type=${type}&week=&terminal=false&keyboard=false&printer=false&_=${underscore}`;
-    
+
     console.log('Cancel URL:', cancelUrl);
 
     try {
       const response = await fetch(cancelUrl, {
         method: 'GET',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0',
-          'Accept': '*/*',
+          'User-Agent':
+            'Mozilla/5.0 (X11; Linux x86_64; rv:139.0) Gecko/20100101 Firefox/139.0',
+          Accept: '*/*',
           'Accept-Language': 'en-US,en;q=0.5',
           'Accept-Encoding': 'gzip, deflate, br, zstd',
           'X-Requested-With': 'XMLHttpRequest',
-          'DNT': '1',
+          DNT: '1',
           'Sec-GPC': '1',
-          'Connection': 'keep-alive',
-          'Referer': `${this.baseUrl}/faces/secured/month.jsp`,
+          Connection: 'keep-alive',
+          Referer: `${this.baseUrl}/faces/secured/month.jsp`,
           'Sec-Fetch-Dest': 'empty',
           'Sec-Fetch-Mode': 'cors',
           'Sec-Fetch-Site': 'same-origin',
-          'Priority': 'u=0',
-          'Pragma': 'no-cache',
+          Priority: 'u=0',
+          Pragma: 'no-cache',
           'Cache-Control': 'no-cache',
-          'TE': 'trailers',
+          TE: 'trailers',
         },
         credentials: 'include',
       });
 
       console.log('Cancel response status:', response.status);
-      
+
       // Check if the cancellation was successful
       const responseText = await response.text();
       console.log('Cancel response text length:', responseText.length);
-      console.log('Cancel response text preview:', responseText.replaceAll('\n', ''));
-      
+      console.log(
+        'Cancel response text preview:',
+        responseText.replaceAll('\n', '')
+      );
+
       // Check for specific success/error indicators in the response
-      const isSuccess = response.ok && 
-        !responseText.includes('error') && 
+      const isSuccess =
+        response.ok &&
+        !responseText.includes('error') &&
         !responseText.includes('Error') &&
         !responseText.includes('chyba') &&
         !responseText.includes('Bezpečnostní kód je neplatný') &&
         !responseText.includes('Chyba 404') &&
         !responseText.includes('iCanteen chyba') &&
         !responseText.includes('více oken prohlížeče');
-      
+
       console.log('Cancel success determination:', isSuccess);
-      
+
       return isSuccess;
     } catch (error) {
       console.error('Cancel request failed:', error);

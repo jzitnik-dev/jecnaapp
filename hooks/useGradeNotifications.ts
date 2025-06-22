@@ -33,19 +33,31 @@ export function useGradeNotifications() {
 
   const loadSettings = useCallback(async () => {
     try {
-      const notificationSettings = await gradeNotificationService.getNotificationSettings();
+      const notificationSettings =
+        await gradeNotificationService.getNotificationSettings();
       setSettings({
         permissions: {
           status: notificationSettings.permissions.status,
           canAskAgain: notificationSettings.permissions.canAskAgain,
         },
-        backgroundTaskStatus: BackgroundTask && notificationSettings.backgroundFetchStatus === BackgroundTask.BackgroundTaskStatus.Available ? 'available' :
-                               BackgroundTask && notificationSettings.backgroundFetchStatus === BackgroundTask.BackgroundTaskStatus.Restricted ? 'restricted' : 
-                               notificationSettings.backgroundFetchStatus === null ? null : null,
+        backgroundTaskStatus:
+          BackgroundTask &&
+          notificationSettings.backgroundFetchStatus ===
+            BackgroundTask.BackgroundTaskStatus.Available
+            ? 'available'
+            : BackgroundTask &&
+                notificationSettings.backgroundFetchStatus ===
+                  BackgroundTask.BackgroundTaskStatus.Restricted
+              ? 'restricted'
+              : notificationSettings.backgroundFetchStatus === null
+                ? null
+                : null,
       });
 
       // Load the enabled state from persistent storage
-      const savedEnabled = await SecureStore.getItemAsync('notificationsEnabled');
+      const savedEnabled = await SecureStore.getItemAsync(
+        'notificationsEnabled'
+      );
       if (savedEnabled === 'true') {
         setIsEnabled(true);
       }
@@ -59,7 +71,10 @@ export function useGradeNotifications() {
     try {
       const granted = await gradeNotificationService.requestPermissions();
       setIsEnabled(granted);
-      await SecureStore.setItemAsync('notificationsEnabled', granted.toString());
+      await SecureStore.setItemAsync(
+        'notificationsEnabled',
+        granted.toString()
+      );
       await loadSettings();
       return granted;
     } catch (error) {

@@ -7,14 +7,16 @@ export default function SettingsScreen() {
   const theme = useTheme();
 
   return (
-    <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <View
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <List.Section>
         <Link href="/(tabs)/settings/account" asChild>
           <List.Item
             title="Účet"
             description="Informace o účtu a odhlášení"
-            left={(props) => <List.Icon {...props} icon="account-outline" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            left={props => <List.Icon {...props} icon="account-outline" />}
+            right={props => <List.Icon {...props} icon="chevron-right" />}
           />
         </Link>
         <Divider />
@@ -22,8 +24,8 @@ export default function SettingsScreen() {
           <List.Item
             title="Vzhled"
             description="Nastavení témat a barev aplikace"
-            left={(props) => <List.Icon {...props} icon="palette-outline" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            left={props => <List.Icon {...props} icon="palette-outline" />}
+            right={props => <List.Icon {...props} icon="chevron-right" />}
           />
         </Link>
         <Divider />
@@ -31,8 +33,8 @@ export default function SettingsScreen() {
           <List.Item
             title="Notifikace"
             description="Nastavení notifikací pro známky a další události"
-            left={(props) => <List.Icon {...props} icon="bell-outline" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            left={props => <List.Icon {...props} icon="bell-outline" />}
+            right={props => <List.Icon {...props} icon="chevron-right" />}
           />
         </Link>
         <Divider />
@@ -40,8 +42,8 @@ export default function SettingsScreen() {
           <List.Item
             title="O aplikaci"
             description="Informace o aplikaci a kontakt"
-            left={(props) => <List.Icon {...props} icon="information-outline" />}
-            right={(props) => <List.Icon {...props} icon="chevron-right" />}
+            left={props => <List.Icon {...props} icon="information-outline" />}
+            right={props => <List.Icon {...props} icon="chevron-right" />}
           />
         </Link>
       </List.Section>

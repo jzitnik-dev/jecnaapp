@@ -145,10 +145,10 @@ export class SpseJecnaClient {
 
     // TODO: This will need more testing on iOS
     return {
-      ...(this.cookies ? { 'Cookie': this.cookies } : {}),
+      ...(this.cookies ? { Cookie: this.cookies } : {}),
       'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
       'Accept-Encoding': 'gzip',
-      'Cookie': 'WTDGUID=10',
+      Cookie: 'WTDGUID=10',
       'If-Modified-Since': 'Fri, 20 Jun 2025 07:45:34 GMT',
       ...extraHeaders,
     };
@@ -156,7 +156,10 @@ export class SpseJecnaClient {
 
   private extractToken3(html: string): string | null {
     const document = parseDocument(html);
-    const inputs = selectAll('input[name="token3"]', document.children) as Element[];
+    const inputs = selectAll(
+      'input[name="token3"]',
+      document.children
+    ) as Element[];
     if (inputs.length > 0) {
       const token = inputs[0].attribs?.value;
       return token || null;
@@ -168,7 +171,10 @@ export class SpseJecnaClient {
     // @ts-ignore
     const setCookie = response.headers.get('set-cookie');
     if (setCookie) {
-      const cookies = setCookie.split(',').map((c: string) => c.split(';')[0]).join('; ');
+      const cookies = setCookie
+        .split(',')
+        .map((c: string) => c.split(';')[0])
+        .join('; ');
       this.cookies = cookies;
     }
   }
@@ -184,7 +190,7 @@ export class SpseJecnaClient {
     });
     const html = await response.text();
     this.updateCookies(response);
-    console.log(html)
+    console.log(html);
     const token = this.extractToken3(html);
     if (!token) throw new Error('Login token not found');
     return token;
@@ -197,19 +203,22 @@ export class SpseJecnaClient {
       credentials: 'include',
     });
     const html = await response.text();
-    return !response.url.includes('/user/need-login') && !html.includes("Pro další postup je vyžadováno přihlášení uživatele.");
+    return (
+      !response.url.includes('/user/need-login') &&
+      !html.includes('Pro další postup je vyžadováno přihlášení uživatele.')
+    );
   }
 
   public async login(username: string, password: string): Promise<boolean> {
     this.username = username;
     this.password = password;
-    
+
     const token3 = await this.getLoginToken();
     const form = new URLSearchParams();
     form.append('user', username);
     form.append('pass', password);
     form.append('token3', token3);
-    form.append('submit', "Přihlásit+se")
+    form.append('submit', 'Přihlásit+se');
 
     const response = await fetch(`${this.baseUrl}/user/login`, {
       method: 'POST',
@@ -219,7 +228,10 @@ export class SpseJecnaClient {
       body: form.toString(),
     });
     const document = parseDocument(await response.text());
-    const data = selectAll('.message.message-error', document.children) as Element[];
+    const data = selectAll(
+      '.message.message-error',
+      document.children
+    ) as Element[];
     if (data.length === 0) {
       this.updateCookies(response);
       this.canteenClient = new iCanteenClient();
@@ -229,7 +241,10 @@ export class SpseJecnaClient {
     return false;
   }
 
-  public async fetchHtml(path: string, extraHeaders?: Record<string, string>): Promise<string> {
+  public async fetchHtml(
+    path: string,
+    extraHeaders?: Record<string, string>
+  ): Promise<string> {
     const response = await fetch(`${this.baseUrl}${path}`, {
       method: 'GET',
       headers: this.buildHeaders(extraHeaders),
@@ -239,24 +254,35 @@ export class SpseJecnaClient {
     return await response.text();
   }
 
-  public async fetchAndParse(path: string): Promise<ReturnType<typeof parseDocument>> {
+  public async fetchAndParse(
+    path: string
+  ): Promise<ReturnType<typeof parseDocument>> {
     const html = await this.fetchHtml(path);
     return parseDocument(html);
   }
 
-  public async getGradesMeta(): Promise<{ years: { id: string, label: string }[], periods: { id: string, label: string }[], selectedYearId: string, selectedPeriodId: string }> {
+  public async getGradesMeta(): Promise<{
+    years: { id: string; label: string }[];
+    periods: { id: string; label: string }[];
+    selectedYearId: string;
+    selectedPeriodId: string;
+  }> {
     const html = await this.fetchHtml('/score/student');
     const document = parseDocument(html);
 
     // Years
-    const yearSelect = selectAll('select#schoolYearId', document.children)[0] as Element | undefined;
-    const years: { id: string, label: string }[] = [];
+    const yearSelect = selectAll(
+      'select#schoolYearId',
+      document.children
+    )[0] as Element | undefined;
+    const years: { id: string; label: string }[] = [];
     let selectedYearId = '';
     if (yearSelect) {
       const options = selectAll('option', [yearSelect]) as Element[];
       for (const opt of options) {
         const id = opt.attribs.value;
-        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const label =
+          opt.children.find(c => c.type === 'text')?.data?.trim() || '';
         const selected = !!opt.attribs.selected;
         if (selected) selectedYearId = id;
         years.push({ id, label });
@@ -264,14 +290,18 @@ export class SpseJecnaClient {
     }
 
     // Periods
-    const periodSelect = selectAll('select#schoolYearHalfId', document.children)[0] as Element | undefined;
-    const periods: { id: string, label: string }[] = [];
+    const periodSelect = selectAll(
+      'select#schoolYearHalfId',
+      document.children
+    )[0] as Element | undefined;
+    const periods: { id: string; label: string }[] = [];
     let selectedPeriodId = '';
     if (periodSelect) {
       const options = selectAll('option', [periodSelect]) as Element[];
       for (const opt of options) {
         const id = opt.attribs.value;
-        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const label =
+          opt.children.find(c => c.type === 'text')?.data?.trim() || '';
         const selected = !!opt.attribs.selected;
         if (selected) selectedPeriodId = id;
         periods.push({ id, label });
@@ -281,7 +311,10 @@ export class SpseJecnaClient {
     return { years, periods, selectedYearId, selectedPeriodId };
   }
 
-  public async getZnamky(yearId?: string, periodId?: string): Promise<SubjectGrades[]> {
+  public async getZnamky(
+    yearId?: string,
+    periodId?: string
+  ): Promise<SubjectGrades[]> {
     let url = '/score/student';
     if (yearId || periodId) {
       const params = new URLSearchParams();
@@ -299,7 +332,9 @@ export class SpseJecnaClient {
         const ths = selectAll('th', [row]) as Element[];
         const tds = selectAll('td', [row]) as Element[];
         if (ths.length === 0 || tds.length === 0) continue;
-        const subject = ths[0].children.find(c => c.type === 'text')?.data?.trim() || 'Neznámý předmět';
+        const subject =
+          ths[0].children.find(c => c.type === 'text')?.data?.trim() ||
+          'Neznámý předmět';
         const splits: { label: string; grades: Grade[] }[] = [];
         let currentLabel = '';
         let currentGrades: Grade[] = [];
@@ -310,15 +345,40 @@ export class SpseJecnaClient {
           const pochvaly: Grade[] = [];
           for (let i = 0; i < tdChildren.length; i++) {
             const node = tdChildren[i];
-            if (node.type === 'tag' && node.name === 'span' && node.attribs && node.attribs.style && node.attribs.style.includes('float: left')) {
+            if (
+              node.type === 'tag' &&
+              node.name === 'span' &&
+              node.attribs &&
+              node.attribs.style &&
+              node.attribs.style.includes('float: left')
+            ) {
               // This span contains the <a class="link"> for Pochvala
-              const a = (node.children || []).find(c => c.type === 'tag' && c.name === 'a' && c.attribs && c.attribs.class === 'link') as Element | undefined;
+              const a = (node.children || []).find(
+                c =>
+                  c.type === 'tag' &&
+                  c.name === 'a' &&
+                  c.attribs &&
+                  c.attribs.class === 'link'
+              ) as Element | undefined;
               if (a) {
-                const labelSpan = (a.children || []).find(c => c.type === 'tag' && c.name === 'span' && c.attribs && c.attribs.class === 'label') as Element | undefined;
-                const label = labelSpan && labelSpan.children.find(c => c.type === 'text')?.data?.trim();
+                const labelSpan = (a.children || []).find(
+                  c =>
+                    c.type === 'tag' &&
+                    c.name === 'span' &&
+                    c.attribs &&
+                    c.attribs.class === 'label'
+                ) as Element | undefined;
+                const label =
+                  labelSpan &&
+                  labelSpan.children.find(c => c.type === 'text')?.data?.trim();
                 const href = a.attribs && a.attribs.href;
                 if (label && label.includes('Pochvala')) {
-                  pochvaly.push({ value: 'Pochvala', weight: 0, note: label, href });
+                  pochvaly.push({
+                    value: 'Pochvala',
+                    weight: 0,
+                    note: label,
+                    href,
+                  });
                 }
               }
             }
@@ -327,22 +387,43 @@ export class SpseJecnaClient {
         } else {
           for (let i = 0; i < tdChildren.length; i++) {
             const node = tdChildren[i];
-            if (node.type === 'tag' && node.name === 'strong' && node.attribs && node.attribs.class === 'subjectPart') {
+            if (
+              node.type === 'tag' &&
+              node.name === 'strong' &&
+              node.attribs &&
+              node.attribs.class === 'subjectPart'
+            ) {
               if (currentGrades.length > 0 || currentLabel) {
-                splits.push({ label: currentLabel || 'Bez rozdělení', grades: currentGrades });
+                splits.push({
+                  label: currentLabel || 'Bez rozdělení',
+                  grades: currentGrades,
+                });
               }
-              currentLabel = node.children.find(c => c.type === 'text')?.data?.replace(':', '').trim() || '';
+              currentLabel =
+                node.children
+                  .find(c => c.type === 'text')
+                  ?.data?.replace(':', '')
+                  .trim() || '';
               currentGrades = [];
-            } else if (node.type === 'tag' && node.name === 'a' && node.attribs && node.attribs.class && node.attribs.class.includes('score')) {
+            } else if (
+              node.type === 'tag' &&
+              node.name === 'a' &&
+              node.attribs &&
+              node.attribs.class &&
+              node.attribs.class.includes('score')
+            ) {
               const classAttr = node.attribs.class || '';
               const valueSpan = selectAll('span.value', [node]) as Element[];
-              const valueText = valueSpan[0]?.children.find(c => c.type === 'text')?.data?.trim();
+              const valueText = valueSpan[0]?.children
+                .find(c => c.type === 'text')
+                ?.data?.trim();
               let value: number | 'N' | 'Pochvala' | undefined;
               if (valueText === 'N') {
                 value = 'N';
               } else {
                 const parsed = valueText ? parseInt(valueText, 10) : undefined;
-                if (!parsed || isNaN(parsed) || parsed < 1 || parsed > 5) continue;
+                if (!parsed || isNaN(parsed) || parsed < 1 || parsed > 5)
+                  continue;
                 value = parsed;
               }
               let weight = 1;
@@ -352,7 +433,11 @@ export class SpseJecnaClient {
                 const str = node.attribs.title;
                 const index = str.lastIndexOf('(');
                 const firstPart = str.slice(0, index);
-                const secondPart = str.slice(index).replace('(', '').replace(')', '').split(',');
+                const secondPart = str
+                  .slice(index)
+                  .replace('(', '')
+                  .replace(')', '')
+                  .split(',');
                 note = firstPart.trim();
                 teacher = secondPart[1]?.trim();
                 date = secondPart[0]?.trim();
@@ -361,7 +446,10 @@ export class SpseJecnaClient {
             }
           }
           if (currentGrades.length > 0 || currentLabel) {
-            splits.push({ label: currentLabel || 'Bez rozdělení', grades: currentGrades });
+            splits.push({
+              label: currentLabel || 'Bez rozdělení',
+              grades: currentGrades,
+            });
           }
         }
         let finalGrade: number | string | undefined = undefined;
@@ -369,10 +457,14 @@ export class SpseJecnaClient {
           const finalTd = tds[1];
           const finalLink = selectAll('a.scoreFinal', [finalTd]) as Element[];
           if (finalLink.length > 0) {
-            const valueText = finalLink[0].children.find(c => c.type === 'text')?.data?.trim();
+            const valueText = finalLink[0].children
+              .find(c => c.type === 'text')
+              ?.data?.trim();
             if (valueText) finalGrade = valueText;
           } else if (finalTd && finalTd.children.length > 0) {
-            const text = finalTd.children.find(c => c.type === 'text')?.data?.trim();
+            const text = finalTd.children
+              .find(c => c.type === 'text')
+              ?.data?.trim();
             if (text) finalGrade = text;
           }
         }
@@ -395,23 +487,28 @@ export class SpseJecnaClient {
       // If we don't have credentials stored, try to get them from SecureStore
       if (!this.username || !this.password) {
         try {
-          this.username = await SecureStore.getItemAsync('username') || '';
-          this.password = await SecureStore.getItemAsync('password') || '';
+          this.username = (await SecureStore.getItemAsync('username')) || '';
+          this.password = (await SecureStore.getItemAsync('password')) || '';
         } catch (error) {
-          console.error('Error retrieving credentials from SecureStore:', error);
+          console.error(
+            'Error retrieving credentials from SecureStore:',
+            error
+          );
         }
       }
-      
+
       if (!this.username || !this.password) {
-        throw new Error('iCanteenClient not initialized. Please login first with username and password.');
+        throw new Error(
+          'iCanteenClient not initialized. Please login first with username and password.'
+        );
       }
-      
+
       // Check if we're logged in to the main system
       const isLoggedIn = await this.isLoggedIn();
       if (!isLoggedIn) {
         throw new Error('Not logged in to SPŠE Ječná. Please login first.');
       }
-      
+
       // Create and set up the iCanteenClient if it doesn't exist
       this.canteenClient = new iCanteenClient();
       await this.canteenClient.setup(this.username, this.password);
@@ -423,7 +520,7 @@ export class SpseJecnaClient {
     const response = await fetch(`${this.baseUrl}/user/logout`, {
       method: 'GET',
       headers: {
-        ...(this.cookies ? { 'Cookie': this.cookies } : {}),
+        ...(this.cookies ? { Cookie: this.cookies } : {}),
         'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
       },
       credentials: 'include',
@@ -435,15 +532,27 @@ export class SpseJecnaClient {
     // path is like '/user-student/record?userStudentRecordId=7540'
     const html = await this.fetchHtml(path);
     const document = parseDocument(html);
-    const table = selectAll('table.userprofile', document.children)[0] as Element | undefined;
-    let type = '', date = '', message = '';
+    const table = selectAll('table.userprofile', document.children)[0] as
+      | Element
+      | undefined;
+    let type = '',
+      date = '',
+      message = '';
     if (table) {
       const rows = selectAll('tr', [table]) as Element[];
       for (const row of rows) {
         const th = selectAll('th', [row])[0];
         const td = selectAll('td', [row])[0];
-        const label = th && selectAll('span.label', [th])[0]?.children.find(c => c.type === 'text')?.data?.trim();
-        const value = td && selectAll('span.value', [td])[0]?.children.find(c => c.type === 'text')?.data?.trim();
+        const label =
+          th &&
+          selectAll('span.label', [th])[0]
+            ?.children.find(c => c.type === 'text')
+            ?.data?.trim();
+        const value =
+          td &&
+          selectAll('span.value', [td])[0]
+            ?.children.find(c => c.type === 'text')
+            ?.data?.trim();
         if (label === 'Typ') type = value || '';
         if (label === 'Datum') date = value || '';
         if (label === 'Sdělení') message = value || '';
@@ -452,7 +561,10 @@ export class SpseJecnaClient {
     return { type, date, message };
   }
 
-  public async getTimetable(yearId?: string, periodId?: string): Promise<Timetable> {
+  public async getTimetable(
+    yearId?: string,
+    periodId?: string
+  ): Promise<Timetable> {
     let url = '/timetable/class';
     if (yearId || periodId) {
       const params = new URLSearchParams();
@@ -463,15 +575,22 @@ export class SpseJecnaClient {
     const html = await this.fetchHtml(url);
     const document = parseDocument(html);
     // Parse year/period selects
-    const yearSelect = selectAll('select#schoolYearId', document.children)[0] as Element | undefined;
-    const periodSelect = selectAll('select#timetableId', document.children)[0] as Element | undefined;
+    const yearSelect = selectAll(
+      'select#schoolYearId',
+      document.children
+    )[0] as Element | undefined;
+    const periodSelect = selectAll(
+      'select#timetableId',
+      document.children
+    )[0] as Element | undefined;
     const years: TimetableYearOption[] = [];
     let selectedYearId = '';
     if (yearSelect) {
       const options = selectAll('option', [yearSelect]) as Element[];
       for (const opt of options) {
         const id = opt.attribs.value;
-        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const label =
+          opt.children.find(c => c.type === 'text')?.data?.trim() || '';
         const selected = !!opt.attribs.selected;
         if (selected) selectedYearId = id;
         years.push({ id, label, selected });
@@ -483,7 +602,8 @@ export class SpseJecnaClient {
       const options = selectAll('option', [periodSelect]) as Element[];
       for (const opt of options) {
         const id = opt.attribs.value;
-        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const label =
+          opt.children.find(c => c.type === 'text')?.data?.trim() || '';
         const selected = !!opt.attribs.selected;
         if (selected) selectedPeriodId = id;
         periodOptions.push({ id, label, selected });
@@ -491,10 +611,16 @@ export class SpseJecnaClient {
     }
     // Get year/period info
     const versionInfo = selectAll('.versionInfo', document.children)[0];
-    let yearLabel = '', periodLabel = '';
+    let yearLabel = '',
+      periodLabel = '';
     if (versionInfo && Array.isArray((versionInfo as Element).children)) {
-      const textNode = (versionInfo as Element).children.find((c: any) => c.type === 'text');
-      const text = textNode && textNode.type === 'text' ? (textNode as import('domhandler').Text).data?.trim() : '';
+      const textNode = (versionInfo as Element).children.find(
+        (c: any) => c.type === 'text'
+      );
+      const text =
+        textNode && textNode.type === 'text'
+          ? (textNode as import('domhandler').Text).data?.trim()
+          : '';
       // e.g. 'Rozvrh pro školní rok: 2024/2025, období: Od 01.06.2025.'
       const match = text.match(/školní rok: ([^,]+), období: (.+)/);
       if (match) {
@@ -508,18 +634,21 @@ export class SpseJecnaClient {
     const headerRow = selectAll('tr', [table])[0];
     const ths = selectAll('th', [headerRow]);
     const periods: TimetablePeriod[] = [];
-    for (let i = 1; i < ths.length; i++) { // skip first (empty) th
+    for (let i = 1; i < ths.length; i++) {
+      // skip first (empty) th
       const th = ths[i] as Element;
       let numberText: string | undefined = undefined;
       if (Array.isArray(th.children)) {
         const textNode = th.children.find((c: any) => c.type === 'text');
-        if (textNode && textNode.type === 'text') numberText = (textNode as import('domhandler').Text).data?.trim();
+        if (textNode && textNode.type === 'text')
+          numberText = (textNode as import('domhandler').Text).data?.trim();
       }
       const timeSpan = selectAll('span.time', [th])[0] as Element | undefined;
       let time = '';
       if (timeSpan && Array.isArray(timeSpan.children)) {
         const timeNode = timeSpan.children.find((c: any) => c.type === 'text');
-        if (timeNode && timeNode.type === 'text') time = (timeNode as import('domhandler').Text).data?.trim();
+        if (timeNode && timeNode.type === 'text')
+          time = (timeNode as import('domhandler').Text).data?.trim();
       }
       const number = numberText ? parseInt(numberText, 10) : i;
       periods.push({ number, time });
@@ -532,7 +661,8 @@ export class SpseJecnaClient {
       let day = '';
       if (th && Array.isArray(th.children)) {
         const dayNode = th.children.find((c: any) => c.type === 'text');
-        if (dayNode && dayNode.type === 'text') day = (dayNode as import('domhandler').Text).data?.trim();
+        if (dayNode && dayNode.type === 'text')
+          day = (dayNode as import('domhandler').Text).data?.trim();
       }
       const tds = selectAll('td', [row]);
       const cells: (TimetableCell | null)[] = [];
@@ -541,7 +671,12 @@ export class SpseJecnaClient {
         if (td.type === 'tag' && td.attribs && td.attribs.colspan) {
           colspan = parseInt(td.attribs.colspan, 10);
         }
-        if (td.type === 'tag' && td.attribs && td.attribs.class && td.attribs.class.includes('empty')) {
+        if (
+          td.type === 'tag' &&
+          td.attribs &&
+          td.attribs.class &&
+          td.attribs.class.includes('empty')
+        ) {
           for (let i = 0; i < colspan; i++) cells.push(null);
           continue;
         }
@@ -554,7 +689,8 @@ export class SpseJecnaClient {
           let room = '';
           if (roomA && Array.isArray(roomA.children)) {
             const roomNode = roomA.children.find((c: any) => c.type === 'text');
-            if (roomNode && roomNode.type === 'text') room = (roomNode as import('domhandler').Text).data?.trim();
+            if (roomNode && roomNode.type === 'text')
+              room = (roomNode as import('domhandler').Text).data?.trim();
           }
           // Teacher
           const empA = selectAll('a.employee', [div])[0] as Element | undefined;
@@ -562,43 +698,87 @@ export class SpseJecnaClient {
           let teacherFull = '';
           if (empA) {
             if (Array.isArray(empA.children)) {
-              const teacherNode = empA.children.find((c: any) => c.type === 'text');
-              if (teacherNode && teacherNode.type === 'text') teacher = (teacherNode as import('domhandler').Text).data?.trim();
+              const teacherNode = empA.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (teacherNode && teacherNode.type === 'text')
+                teacher = (
+                  teacherNode as import('domhandler').Text
+                ).data?.trim();
             }
-            if (empA.type === 'tag' && empA.attribs && typeof empA.attribs.title === 'string') teacherFull = empA.attribs.title;
+            if (
+              empA.type === 'tag' &&
+              empA.attribs &&
+              typeof empA.attribs.title === 'string'
+            )
+              teacherFull = empA.attribs.title;
           }
           // Subject
-          const subjSpan = selectAll('span.subject', [div])[0] as Element | undefined;
+          const subjSpan = selectAll('span.subject', [div])[0] as
+            | Element
+            | undefined;
           let subject = '';
           let subjectLong = '';
           if (subjSpan) {
             if (Array.isArray(subjSpan.children)) {
-              const subjNode = subjSpan.children.find((c: any) => c.type === 'text');
-              if (subjNode && subjNode.type === 'text') subject = (subjNode as import('domhandler').Text).data?.trim();
+              const subjNode = subjSpan.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (subjNode && subjNode.type === 'text')
+                subject = (subjNode as import('domhandler').Text).data?.trim();
             }
-            if (subjSpan.type === 'tag' && subjSpan.attribs && typeof subjSpan.attribs.title === 'string') subjectLong = subjSpan.attribs.title;
+            if (
+              subjSpan.type === 'tag' &&
+              subjSpan.attribs &&
+              typeof subjSpan.attribs.title === 'string'
+            )
+              subjectLong = subjSpan.attribs.title;
           }
           // Class
-          const classSpan = selectAll('span.class', [div])[0] as Element | undefined;
+          const classSpan = selectAll('span.class', [div])[0] as
+            | Element
+            | undefined;
           let className = '';
           if (classSpan && Array.isArray(classSpan.children)) {
-            const classNode = classSpan.children.find((c: any) => c.type === 'text');
-            if (classNode && classNode.type === 'text') className = (classNode as import('domhandler').Text).data?.trim();
+            const classNode = classSpan.children.find(
+              (c: any) => c.type === 'text'
+            );
+            if (classNode && classNode.type === 'text')
+              className = (classNode as import('domhandler').Text).data?.trim();
           }
           // Group (optional)
-          const groupSpan = selectAll('span.group', [div])[0] as Element | undefined;
+          const groupSpan = selectAll('span.group', [div])[0] as
+            | Element
+            | undefined;
           let group = '';
           if (groupSpan && Array.isArray(groupSpan.children)) {
-            const groupNode = groupSpan.children.find((c: any) => c.type === 'text');
-            if (groupNode && groupNode.type === 'text') group = (groupNode as import('domhandler').Text).data?.trim();
+            const groupNode = groupSpan.children.find(
+              (c: any) => c.type === 'text'
+            );
+            if (groupNode && groupNode.type === 'text')
+              group = (groupNode as import('domhandler').Text).data?.trim();
           }
-          lessons.push({ subject, subjectLong, teacher, teacherFull, room, group, className });
+          lessons.push({
+            subject,
+            subjectLong,
+            teacher,
+            teacherFull,
+            room,
+            group,
+            className,
+          });
         }
         for (let i = 0; i < colspan; i++) cells.push(lessons);
       }
       days.push({ day, cells });
     }
-    return { periods, days, yearLabel, periodLabel, meta: { years, periods: periodOptions, selectedYearId, selectedPeriodId } };
+    return {
+      periods,
+      days,
+      yearLabel,
+      periodLabel,
+      meta: { years, periods: periodOptions, selectedYearId, selectedPeriodId },
+    };
   }
 
   /**
@@ -618,27 +798,49 @@ export class SpseJecnaClient {
     photo?: string;
     timetable: {
       periods: { number: number; time: string }[];
-      days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[];
+      days: {
+        day: string;
+        cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[];
+      }[];
     };
     certifications: { date: string; label: string; institution: string }[];
   }> {
     const html = await this.fetchHtml(`/ucitel/${code}`);
     const document = parseDocument(html);
     // Profile table
-    const profileTable = selectAll('table.userprofile', document.children)[0] as Element | undefined;
-    let name = '', codeVal = '', username = '', email = '', privateEmail = '', phone = '', privatePhone = '', room = '', roomHref = '', consultation = '', photo = '', linka = '';
+    const profileTable = selectAll(
+      'table.userprofile',
+      document.children
+    )[0] as Element | undefined;
+    let name = '',
+      codeVal = '',
+      username = '',
+      email = '',
+      privateEmail = '',
+      phone = '',
+      privatePhone = '',
+      room = '',
+      roomHref = '',
+      consultation = '',
+      photo = '',
+      linka = '';
     if (profileTable) {
       const rows = selectAll('tr', [profileTable]) as Element[];
       for (const row of rows) {
         const th = selectAll('th', [row])[0];
         const td = selectAll('td', [row])[0];
         if (!th || !td) continue;
-        const label = selectAll('.label', [th])[0]?.children.find(c => c.type === 'text')?.data?.trim() || th.children.find(c => c.type === 'text')?.data?.trim();
+        const label =
+          selectAll('.label', [th])[0]
+            ?.children.find(c => c.type === 'text')
+            ?.data?.trim() ||
+          th.children.find(c => c.type === 'text')?.data?.trim();
         // Try to get value from <span class="value"> or <span class="label"> or direct text
         let value = '';
         const valueSpan = selectAll('.value', [td])[0];
         if (valueSpan) {
-          value = valueSpan.children.find(c => c.type === 'text')?.data?.trim() || '';
+          value =
+            valueSpan.children.find(c => c.type === 'text')?.data?.trim() || '';
         } else {
           value = td.children.find(c => c.type === 'text')?.data?.trim() || '';
         }
@@ -647,11 +849,13 @@ export class SpseJecnaClient {
         if (label === 'Uživatelské jméno') username = value;
         if (label === 'E-mail') {
           const a = selectAll('a', [td])[0];
-          if (a && a.attribs && a.attribs.href) email = a.attribs.href.replace('mailto:', '');
+          if (a && a.attribs && a.attribs.href)
+            email = a.attribs.href.replace('mailto:', '');
         }
         if (label === 'Soukromý e-mail') {
           const a = selectAll('a', [td])[0];
-          if (a && a.attribs && a.attribs.href) privateEmail = a.attribs.href.replace('mailto:', '');
+          if (a && a.attribs && a.attribs.href)
+            privateEmail = a.attribs.href.replace('mailto:', '');
         }
         if (label === 'Telefon') {
           phone = value;
@@ -662,11 +866,12 @@ export class SpseJecnaClient {
           const a = selectAll('a', [td])[0];
           if (a && a.attribs && a.attribs.href) roomHref = a.attribs.href;
           if (a && a.children.find(c => c.type === 'text')) {
-            room = a.children.find((c) => c.type === 'text')?.data?.trim() || '';
+            room = a.children.find(c => c.type === 'text')?.data?.trim() || '';
           } else {
             const span = selectAll('span', [td])[0];
             if (span && span.children.find(c => c.type === 'text')) {
-              room = span.children.find(c => c.type === 'text')?.data?.trim() || '';
+              room =
+                span.children.find(c => c.type === 'text')?.data?.trim() || '';
             } else {
               room = value;
             }
@@ -676,31 +881,46 @@ export class SpseJecnaClient {
       }
     }
     // Photo
-    const photoImg = selectAll('.profilephoto img', document.children)[0] as Element | undefined;
+    const photoImg = selectAll('.profilephoto img', document.children)[0] as
+      | Element
+      | undefined;
     if (photoImg && photoImg.attribs && photoImg.attribs.src) {
-      photo = photoImg.attribs.src.startsWith('http') ? photoImg.attribs.src : `https://www.spsejecna.cz${photoImg.attribs.src}`;
+      photo = photoImg.attribs.src.startsWith('http')
+        ? photoImg.attribs.src
+        : `https://www.spsejecna.cz${photoImg.attribs.src}`;
     }
     // Timetable
-    const timetableTable = selectAll('table.timetable', document.children)[0] as Element | undefined;
+    const timetableTable = selectAll(
+      'table.timetable',
+      document.children
+    )[0] as Element | undefined;
     let periods: { number: number; time: string }[] = [];
-    let days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[] = [];
+    let days: {
+      day: string;
+      cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[];
+    }[] = [];
     if (timetableTable) {
       // Header row
       const headerRow = selectAll('tr', [timetableTable])[0];
       const ths = selectAll('th', [headerRow]);
       periods = [];
-      for (let i = 1; i < ths.length; i++) { // skip first (empty) th
+      for (let i = 1; i < ths.length; i++) {
+        // skip first (empty) th
         const th = ths[i] as Element;
         let numberText: string | undefined = undefined;
         if (Array.isArray(th.children)) {
           const textNode = th.children.find((c: any) => c.type === 'text');
-          if (textNode && textNode.type === 'text') numberText = (textNode as import('domhandler').Text).data?.trim();
+          if (textNode && textNode.type === 'text')
+            numberText = (textNode as import('domhandler').Text).data?.trim();
         }
         const timeSpan = selectAll('span.time', [th])[0] as Element | undefined;
         let time = '';
         if (timeSpan && Array.isArray(timeSpan.children)) {
-          const timeNode = timeSpan.children.find((c: any) => c.type === 'text');
-          if (timeNode && timeNode.type === 'text') time = (timeNode as import('domhandler').Text).data?.trim();
+          const timeNode = timeSpan.children.find(
+            (c: any) => c.type === 'text'
+          );
+          if (timeNode && timeNode.type === 'text')
+            time = (timeNode as import('domhandler').Text).data?.trim();
         }
         const number = numberText ? parseInt(numberText, 10) : i;
         periods.push({ number, time });
@@ -712,16 +932,23 @@ export class SpseJecnaClient {
         let day = '';
         if (th && Array.isArray(th.children)) {
           const dayNode = th.children.find((c: any) => c.type === 'text');
-          if (dayNode && dayNode.type === 'text') day = (dayNode as import('domhandler').Text).data?.trim();
+          if (dayNode && dayNode.type === 'text')
+            day = (dayNode as import('domhandler').Text).data?.trim();
         }
         const tds = selectAll('td', [row]);
-        const cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] = [];
+        const cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] =
+          [];
         for (const td of tds) {
           let colspan = 1;
           if (td.type === 'tag' && td.attribs && td.attribs.colspan) {
             colspan = parseInt(td.attribs.colspan, 10);
           }
-          if (td.type === 'tag' && td.attribs && td.attribs.class && td.attribs.class.includes('empty')) {
+          if (
+            td.type === 'tag' &&
+            td.attribs &&
+            td.attribs.class &&
+            td.attribs.class.includes('empty')
+          ) {
             for (let i = 0; i < colspan; i++) cells.push(null);
             continue;
           }
@@ -733,46 +960,93 @@ export class SpseJecnaClient {
             const roomA = selectAll('a.room', [div])[0] as Element | undefined;
             let room = '';
             if (roomA && Array.isArray(roomA.children)) {
-              const roomNode = roomA.children.find((c: any) => c.type === 'text');
-              if (roomNode && roomNode.type === 'text') room = (roomNode as import('domhandler').Text).data?.trim();
+              const roomNode = roomA.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (roomNode && roomNode.type === 'text')
+                room = (roomNode as import('domhandler').Text).data?.trim();
             }
             // Teacher
-            const empA = selectAll('a.employee', [div])[0] as Element | undefined;
+            const empA = selectAll('a.employee', [div])[0] as
+              | Element
+              | undefined;
             let teacher = '';
             let teacherFull = '';
             if (empA) {
               if (Array.isArray(empA.children)) {
-                const teacherNode = empA.children.find((c: any) => c.type === 'text');
-                if (teacherNode && teacherNode.type === 'text') teacher = (teacherNode as import('domhandler').Text).data?.trim();
+                const teacherNode = empA.children.find(
+                  (c: any) => c.type === 'text'
+                );
+                if (teacherNode && teacherNode.type === 'text')
+                  teacher = (
+                    teacherNode as import('domhandler').Text
+                  ).data?.trim();
               }
-              if (empA.type === 'tag' && empA.attribs && typeof empA.attribs.title === 'string') teacherFull = empA.attribs.title;
+              if (
+                empA.type === 'tag' &&
+                empA.attribs &&
+                typeof empA.attribs.title === 'string'
+              )
+                teacherFull = empA.attribs.title;
             }
             // Subject
-            const subjSpan = selectAll('span.subject', [div])[0] as Element | undefined;
+            const subjSpan = selectAll('span.subject', [div])[0] as
+              | Element
+              | undefined;
             let subject = '';
             let subjectLong = '';
             if (subjSpan) {
               if (Array.isArray(subjSpan.children)) {
-                const subjNode = subjSpan.children.find((c: any) => c.type === 'text');
-                if (subjNode && subjNode.type === 'text') subject = (subjNode as import('domhandler').Text).data?.trim();
+                const subjNode = subjSpan.children.find(
+                  (c: any) => c.type === 'text'
+                );
+                if (subjNode && subjNode.type === 'text')
+                  subject = (
+                    subjNode as import('domhandler').Text
+                  ).data?.trim();
               }
-              if (subjSpan.type === 'tag' && subjSpan.attribs && typeof subjSpan.attribs.title === 'string') subjectLong = subjSpan.attribs.title;
+              if (
+                subjSpan.type === 'tag' &&
+                subjSpan.attribs &&
+                typeof subjSpan.attribs.title === 'string'
+              )
+                subjectLong = subjSpan.attribs.title;
             }
             // Class
-            const classSpan = selectAll('span.class', [div])[0] as Element | undefined;
+            const classSpan = selectAll('span.class', [div])[0] as
+              | Element
+              | undefined;
             let className = '';
             if (classSpan && Array.isArray(classSpan.children)) {
-              const classNode = classSpan.children.find((c: any) => c.type === 'text');
-              if (classNode && classNode.type === 'text') className = (classNode as import('domhandler').Text).data?.trim();
+              const classNode = classSpan.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (classNode && classNode.type === 'text')
+                className = (
+                  classNode as import('domhandler').Text
+                ).data?.trim();
             }
             // Group (optional)
-            const groupSpan = selectAll('span.group', [div])[0] as Element | undefined;
+            const groupSpan = selectAll('span.group', [div])[0] as
+              | Element
+              | undefined;
             let group = '';
             if (groupSpan && Array.isArray(groupSpan.children)) {
-              const groupNode = groupSpan.children.find((c: any) => c.type === 'text');
-              if (groupNode && groupNode.type === 'text') group = (groupNode as import('domhandler').Text).data?.trim();
+              const groupNode = groupSpan.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (groupNode && groupNode.type === 'text')
+                group = (groupNode as import('domhandler').Text).data?.trim();
             }
-            lessons.push({ subject, subjectLong, teacher, teacherFull, room, group, className });
+            lessons.push({
+              subject,
+              subjectLong,
+              teacher,
+              teacherFull,
+              room,
+              group,
+              className,
+            });
           }
           for (let i = 0; i < colspan; i++) cells.push(lessons);
         }
@@ -780,26 +1054,46 @@ export class SpseJecnaClient {
       }
     }
     // Certifications
-    const certLis = selectAll('ul.certifications > li', document.children) as Element[];
-    const certifications: { date: string; label: string; institution: string }[] = [];
+    const certLis = selectAll(
+      'ul.certifications > li',
+      document.children
+    ) as Element[];
+    const certifications: {
+      date: string;
+      label: string;
+      institution: string;
+    }[] = [];
     for (const li of certLis) {
       const dateSpan = selectAll('span.date', [li])[0] as Element | undefined;
       const infoSpan = selectAll('span.info', [li])[0] as Element | undefined;
-      let date = '', label = '', institution = '';
+      let date = '',
+        label = '',
+        institution = '';
       if (dateSpan && Array.isArray(dateSpan.children)) {
         const dateNode = dateSpan.children.find((c: any) => c.type === 'text');
-        if (dateNode && dateNode.type === 'text') date = (dateNode as import('domhandler').Text).data?.trim();
+        if (dateNode && dateNode.type === 'text')
+          date = (dateNode as import('domhandler').Text).data?.trim();
       }
       if (infoSpan && Array.isArray(infoSpan.children)) {
-        const labelSpan = selectAll('span.label', [infoSpan])[0] as Element | undefined;
+        const labelSpan = selectAll('span.label', [infoSpan])[0] as
+          | Element
+          | undefined;
         if (labelSpan && Array.isArray(labelSpan.children)) {
-          const labelNode = labelSpan.children.find((c: any) => c.type === 'text');
-          if (labelNode && labelNode.type === 'text') label = (labelNode as import('domhandler').Text).data?.trim();
+          const labelNode = labelSpan.children.find(
+            (c: any) => c.type === 'text'
+          );
+          if (labelNode && labelNode.type === 'text')
+            label = (labelNode as import('domhandler').Text).data?.trim();
         }
-        const instSpan = selectAll('span.institution', [infoSpan])[0] as Element | undefined;
+        const instSpan = selectAll('span.institution', [infoSpan])[0] as
+          | Element
+          | undefined;
         if (instSpan && Array.isArray(instSpan.children)) {
-          const instNode = instSpan.children.find((c: any) => c.type === 'text');
-          if (instNode && instNode.type === 'text') institution = (instNode as import('domhandler').Text).data?.trim();
+          const instNode = instSpan.children.find(
+            (c: any) => c.type === 'text'
+          );
+          if (instNode && instNode.type === 'text')
+            institution = (instNode as import('domhandler').Text).data?.trim();
         }
       }
       if (date && label) certifications.push({ date, label, institution });
@@ -831,33 +1125,53 @@ export class SpseJecnaClient {
     mainClassroom: string;
     manager: string;
     managerHref: string;
-    timetable?: { periods: { number: number; time: string }[]; days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[] };
+    timetable?: {
+      periods: { number: number; time: string }[];
+      days: {
+        day: string;
+        cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[];
+      }[];
+    };
   }> {
     const html = await this.fetchHtml(`/ucebna/${code}`);
     const document = parseDocument(html);
     // Title (from <h1> or <title>)
     let title = '';
-    const h1 = selectAll('h1 span.label', document.children)[0] as Element | undefined;
+    const h1 = selectAll('h1 span.label', document.children)[0] as
+      | Element
+      | undefined;
     if (h1 && h1.children.length > 0 && h1.children[0].type === 'text') {
       title = h1.children[0].data?.trim() || '';
     } else {
       const t = selectAll('title', document.children)[0] as Element | undefined;
-      if (t && t.children.length > 0 && t.children[0].type === 'text') title = t.children[0].data?.trim() || '';
+      if (t && t.children.length > 0 && t.children[0].type === 'text')
+        title = t.children[0].data?.trim() || '';
     }
     // Info table (userprofile)
-    let floor = '', mainClassroom = '', manager = '', managerHref = '';
-    const profileTable = selectAll('table.userprofile', document.children)[0] as Element | undefined;
+    let floor = '',
+      mainClassroom = '',
+      manager = '',
+      managerHref = '';
+    const profileTable = selectAll(
+      'table.userprofile',
+      document.children
+    )[0] as Element | undefined;
     if (profileTable) {
       const rows = selectAll('tr', [profileTable]) as Element[];
       for (const row of rows) {
         const th = selectAll('th', [row])[0];
         const td = selectAll('td', [row])[0];
         if (!th || !td) continue;
-        const label = selectAll('.label', [th])[0]?.children.find(c => c.type === 'text')?.data?.trim() || th.children.find(c => c.type === 'text')?.data?.trim();
+        const label =
+          selectAll('.label', [th])[0]
+            ?.children.find(c => c.type === 'text')
+            ?.data?.trim() ||
+          th.children.find(c => c.type === 'text')?.data?.trim();
         let value = '';
         const valueSpan = selectAll('.value', [td])[0];
         if (valueSpan) {
-          value = valueSpan.children.find(c => c.type === 'text')?.data?.trim() || '';
+          value =
+            valueSpan.children.find(c => c.type === 'text')?.data?.trim() || '';
         } else {
           value = td.children.find(c => c.type === 'text')?.data?.trim() || '';
         }
@@ -867,55 +1181,83 @@ export class SpseJecnaClient {
           const a = selectAll('a', [td])[0];
           if (a && a.attribs && a.attribs.href) managerHref = a.attribs.href;
           if (a && a.children.find(c => c.type === 'text')) {
-            manager = a.children.find((c) => c.type === 'text')?.data?.trim() || '';
+            manager =
+              a.children.find(c => c.type === 'text')?.data?.trim() || '';
           } else {
-            manager = td.children.find((c) => c.type === 'text')?.data?.trim() || '';
+            manager =
+              td.children.find(c => c.type === 'text')?.data?.trim() || '';
           }
         }
       }
     }
     // Timetable
-    let timetable: { periods: { number: number; time: string }[]; days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[] } | undefined = undefined;
-    const timetableTable = selectAll('table.timetable', document.children)[0] as Element | undefined;
+    let timetable:
+      | {
+          periods: { number: number; time: string }[];
+          days: {
+            day: string;
+            cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[];
+          }[];
+        }
+      | undefined = undefined;
+    const timetableTable = selectAll(
+      'table.timetable',
+      document.children
+    )[0] as Element | undefined;
     if (timetableTable) {
       // Header row
       const headerRow = selectAll('tr', [timetableTable])[0];
       const ths = selectAll('th', [headerRow]);
       const periods: { number: number; time: string }[] = [];
-      for (let i = 1; i < ths.length; i++) { // skip first (empty) th
+      for (let i = 1; i < ths.length; i++) {
+        // skip first (empty) th
         const th = ths[i] as Element;
         let numberText: string | undefined = undefined;
         if (Array.isArray(th.children)) {
           const textNode = th.children.find((c: any) => c.type === 'text');
-          if (textNode && textNode.type === 'text') numberText = (textNode as import('domhandler').Text).data?.trim();
+          if (textNode && textNode.type === 'text')
+            numberText = (textNode as import('domhandler').Text).data?.trim();
         }
         const timeSpan = selectAll('span.time', [th])[0] as Element | undefined;
         let time = '';
         if (timeSpan && Array.isArray(timeSpan.children)) {
-          const timeNode = timeSpan.children.find((c: any) => c.type === 'text');
-          if (timeNode && timeNode.type === 'text') time = (timeNode as import('domhandler').Text).data?.trim();
+          const timeNode = timeSpan.children.find(
+            (c: any) => c.type === 'text'
+          );
+          if (timeNode && timeNode.type === 'text')
+            time = (timeNode as import('domhandler').Text).data?.trim();
         }
         const number = numberText ? parseInt(numberText, 10) : i;
         periods.push({ number, time });
       }
       // Day rows
       const rows = selectAll('tr', [timetableTable]).slice(1); // skip header
-      const days: { day: string; cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] }[] = [];
+      const days: {
+        day: string;
+        cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[];
+      }[] = [];
       for (const row of rows) {
         const th = selectAll('th.day', [row])[0] as Element | undefined;
         let day = '';
         if (th && Array.isArray(th.children)) {
           const dayNode = th.children.find((c: any) => c.type === 'text');
-          if (dayNode && dayNode.type === 'text') day = (dayNode as import('domhandler').Text).data?.trim();
+          if (dayNode && dayNode.type === 'text')
+            day = (dayNode as import('domhandler').Text).data?.trim();
         }
         const tds = selectAll('td', [row]);
-        const cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] = [];
+        const cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[] =
+          [];
         for (const td of tds) {
           let colspan = 1;
           if (td.type === 'tag' && td.attribs && td.attribs.colspan) {
             colspan = parseInt(td.attribs.colspan, 10);
           }
-          if (td.type === 'tag' && td.attribs && td.attribs.class && td.attribs.class.includes('empty')) {
+          if (
+            td.type === 'tag' &&
+            td.attribs &&
+            td.attribs.class &&
+            td.attribs.class.includes('empty')
+          ) {
             for (let i = 0; i < colspan; i++) cells.push(null);
             continue;
           }
@@ -927,46 +1269,93 @@ export class SpseJecnaClient {
             const roomA = selectAll('a.room', [div])[0] as Element | undefined;
             let room = '';
             if (roomA && Array.isArray(roomA.children)) {
-              const roomNode = roomA.children.find((c: any) => c.type === 'text');
-              if (roomNode && roomNode.type === 'text') room = (roomNode as import('domhandler').Text).data?.trim();
+              const roomNode = roomA.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (roomNode && roomNode.type === 'text')
+                room = (roomNode as import('domhandler').Text).data?.trim();
             }
             // Teacher
-            const empA = selectAll('a.employee', [div])[0] as Element | undefined;
+            const empA = selectAll('a.employee', [div])[0] as
+              | Element
+              | undefined;
             let teacher = '';
             let teacherFull = '';
             if (empA) {
               if (Array.isArray(empA.children)) {
-                const teacherNode = empA.children.find((c: any) => c.type === 'text');
-                if (teacherNode && teacherNode.type === 'text') teacher = (teacherNode as import('domhandler').Text).data?.trim();
+                const teacherNode = empA.children.find(
+                  (c: any) => c.type === 'text'
+                );
+                if (teacherNode && teacherNode.type === 'text')
+                  teacher = (
+                    teacherNode as import('domhandler').Text
+                  ).data?.trim();
               }
-              if (empA.type === 'tag' && empA.attribs && typeof empA.attribs.title === 'string') teacherFull = empA.attribs.title;
+              if (
+                empA.type === 'tag' &&
+                empA.attribs &&
+                typeof empA.attribs.title === 'string'
+              )
+                teacherFull = empA.attribs.title;
             }
             // Subject
-            const subjSpan = selectAll('span.subject', [div])[0] as Element | undefined;
+            const subjSpan = selectAll('span.subject', [div])[0] as
+              | Element
+              | undefined;
             let subject = '';
             let subjectLong = '';
             if (subjSpan) {
               if (Array.isArray(subjSpan.children)) {
-                const subjNode = subjSpan.children.find((c: any) => c.type === 'text');
-                if (subjNode && subjNode.type === 'text') subject = (subjNode as import('domhandler').Text).data?.trim();
+                const subjNode = subjSpan.children.find(
+                  (c: any) => c.type === 'text'
+                );
+                if (subjNode && subjNode.type === 'text')
+                  subject = (
+                    subjNode as import('domhandler').Text
+                  ).data?.trim();
               }
-              if (subjSpan.type === 'tag' && subjSpan.attribs && typeof subjSpan.attribs.title === 'string') subjectLong = subjSpan.attribs.title;
+              if (
+                subjSpan.type === 'tag' &&
+                subjSpan.attribs &&
+                typeof subjSpan.attribs.title === 'string'
+              )
+                subjectLong = subjSpan.attribs.title;
             }
             // Class
-            const classSpan = selectAll('span.class', [div])[0] as Element | undefined;
+            const classSpan = selectAll('span.class', [div])[0] as
+              | Element
+              | undefined;
             let className = '';
             if (classSpan && Array.isArray(classSpan.children)) {
-              const classNode = classSpan.children.find((c: any) => c.type === 'text');
-              if (classNode && classNode.type === 'text') className = (classNode as import('domhandler').Text).data?.trim();
+              const classNode = classSpan.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (classNode && classNode.type === 'text')
+                className = (
+                  classNode as import('domhandler').Text
+                ).data?.trim();
             }
             // Group (optional)
-            const groupSpan = selectAll('span.group', [div])[0] as Element | undefined;
+            const groupSpan = selectAll('span.group', [div])[0] as
+              | Element
+              | undefined;
             let group = '';
             if (groupSpan && Array.isArray(groupSpan.children)) {
-              const groupNode = groupSpan.children.find((c: any) => c.type === 'text');
-              if (groupNode && groupNode.type === 'text') group = (groupNode as import('domhandler').Text).data?.trim();
+              const groupNode = groupSpan.children.find(
+                (c: any) => c.type === 'text'
+              );
+              if (groupNode && groupNode.type === 'text')
+                group = (groupNode as import('domhandler').Text).data?.trim();
             }
-            lessons.push({ subject, subjectLong, teacher, teacherFull, room, group, className });
+            lessons.push({
+              subject,
+              subjectLong,
+              teacher,
+              teacherFull,
+              room,
+              group,
+              className,
+            });
           }
           for (let i = 0; i < colspan; i++) cells.push(lessons);
         }
@@ -980,13 +1369,21 @@ export class SpseJecnaClient {
   /**
    * Fetches the list of teachers from /ucitel
    */
-  public async getTeachersList(): Promise<{ name: string; shortcut: string }[]> {
+  public async getTeachersList(): Promise<
+    { name: string; shortcut: string }[]
+  > {
     const html = await this.fetchHtml('/ucitel');
     const document = parseDocument(html);
     const teachers: { name: string; shortcut: string }[] = [];
     // Teachers are in two columns: .contentLeftColumn ul > li > a and .contentRightColumn ul > li > a
-    const leftLinks = selectAll('.contentLeftColumn ul li a', document.children) as Element[];
-    const rightLinks = selectAll('.contentRightColumn ul li a', document.children) as Element[];
+    const leftLinks = selectAll(
+      '.contentLeftColumn ul li a',
+      document.children
+    ) as Element[];
+    const rightLinks = selectAll(
+      '.contentRightColumn ul li a',
+      document.children
+    ) as Element[];
     for (const a of [...leftLinks, ...rightLinks]) {
       const name = a.children.find(c => c.type === 'text')?.data?.trim() || '';
       const href = a.attribs?.href || '';
@@ -1010,7 +1407,10 @@ export class SpseJecnaClient {
     const links = selectAll('.list li a.item', document.children) as Element[];
     for (const a of links) {
       const labelSpan = selectAll('span.label', [a])[0];
-      const label = labelSpan && labelSpan.children.find(c => c.type === 'text')?.data?.trim() || '';
+      const label =
+        (labelSpan &&
+          labelSpan.children.find(c => c.type === 'text')?.data?.trim()) ||
+        '';
       const href = a.attribs?.href || '';
       const match = href.match(/\/ucebna\/(.+)$/i);
       const code = match ? decodeURIComponent(match[1]) : '';
@@ -1024,12 +1424,18 @@ export class SpseJecnaClient {
   /**
    * Fetches arrivals and departures from /absence/passing-student
    */
-  public async getPrichody(yearId?: string, monthId?: string): Promise<{
-    years: { id: string, label: string }[];
+  public async getPrichody(
+    yearId?: string,
+    monthId?: string
+  ): Promise<{
+    years: { id: string; label: string }[];
     selectedYearId: string;
-    months: { id: string, label: string }[];
+    months: { id: string; label: string }[];
     selectedMonthId: string;
-    days: { date: string, events: { type: 'Příchod' | 'Odchod', time: string }[] }[];
+    days: {
+      date: string;
+      events: { type: 'Příchod' | 'Odchod'; time: string }[];
+    }[];
   }> {
     let url = '/absence/passing-student';
     const params = new URLSearchParams();
@@ -1039,42 +1445,60 @@ export class SpseJecnaClient {
     const html = await this.fetchHtml(url);
     const document = parseDocument(html);
     // Year select
-    const yearSelect = selectAll('select#schoolYearId', document.children)[0] as Element | undefined;
-    const years: { id: string, label: string }[] = [];
+    const yearSelect = selectAll(
+      'select#schoolYearId',
+      document.children
+    )[0] as Element | undefined;
+    const years: { id: string; label: string }[] = [];
     let selectedYearId = '';
     if (yearSelect) {
       const options = selectAll('option', [yearSelect]) as Element[];
       for (const opt of options) {
         const id = opt.attribs.value;
-        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const label =
+          opt.children.find(c => c.type === 'text')?.data?.trim() || '';
         const selected = !!opt.attribs.selected;
         if (selected) selectedYearId = id;
         years.push({ id, label });
       }
     }
     // Month select
-    const monthSelect = selectAll('select#schoolYearPartMonthId', document.children)[0] as Element | undefined;
-    const months: { id: string, label: string }[] = [];
+    const monthSelect = selectAll(
+      'select#schoolYearPartMonthId',
+      document.children
+    )[0] as Element | undefined;
+    const months: { id: string; label: string }[] = [];
     let selectedMonthId = '';
     if (monthSelect) {
       const options = selectAll('option', [monthSelect]) as Element[];
       for (const opt of options) {
         const id = opt.attribs.value;
-        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const label =
+          opt.children.find(c => c.type === 'text')?.data?.trim() || '';
         const selected = !!opt.attribs.selected;
         if (selected) selectedMonthId = id;
         months.push({ id, label });
       }
     }
     // Table rows
-    const rows = selectAll('table.absence-list tr', document.children) as Element[];
-    const days: { date: string, events: { type: 'Příchod' | 'Odchod', time: string }[] }[] = [];
+    const rows = selectAll(
+      'table.absence-list tr',
+      document.children
+    ) as Element[];
+    const days: {
+      date: string;
+      events: { type: 'Příchod' | 'Odchod'; time: string }[];
+    }[] = [];
     for (const row of rows) {
       const dateTd = selectAll('td.date', [row])[0] as Element | undefined;
       const contentTd = selectAll('td', [row])[1] as Element | undefined;
       if (!dateTd) continue;
-      const date = dateTd.children.find(c => c.type === 'text')?.data?.replace(/\s+/g, ' ').trim() || '';
-      const events: { type: 'Příchod' | 'Odchod', time: string }[] = [];
+      const date =
+        dateTd.children
+          .find(c => c.type === 'text')
+          ?.data?.replace(/\s+/g, ' ')
+          .trim() || '';
+      const events: { type: 'Příchod' | 'Odchod'; time: string }[] = [];
       if (contentTd) {
         // There may be multiple arrivals/departures in <p> or as text
         const ps = selectAll('p', [contentTd]);
@@ -1084,7 +1508,11 @@ export class SpseJecnaClient {
             let text = '';
             for (const c of p.children) {
               if (c.type === 'text') text += c.data;
-              if (c.type === 'tag' && c.name === 'span' && c.children.length > 0) {
+              if (
+                c.type === 'tag' &&
+                c.name === 'span' &&
+                c.children.length > 0
+              ) {
                 for (const sc of c.children) {
                   if (sc.type === 'text') text += sc.data;
                 }
@@ -1093,16 +1521,21 @@ export class SpseJecnaClient {
             text = text.trim();
             // Split by comma, e.g. "Příchod 8:56, Odchod 14:27"
             for (const part of text.split(', ')) {
-              const m = part.split(" ");
-              if (m) events.push({ type: m[0] as 'Příchod' | 'Odchod', time: m[1] });
+              const m = part.split(' ');
+              if (m)
+                events.push({ type: m[0] as 'Příchod' | 'Odchod', time: m[1] });
             }
           }
         } else {
           // Sometimes just text
-          const text = contentTd.children.map(c => c.type === 'text' ? c.data : '').join('').trim();
+          const text = contentTd.children
+            .map(c => (c.type === 'text' ? c.data : ''))
+            .join('')
+            .trim();
           for (const part of text.split(',')) {
             const m = part.match(/(Příchod|Odchod)\s+(\d{1,2}:\d{2})/);
-            if (m) events.push({ type: m[1] as 'Příchod' | 'Odchod', time: m[2] });
+            if (m)
+              events.push({ type: m[1] as 'Příchod' | 'Odchod', time: m[2] });
           }
         }
       }
@@ -1122,21 +1555,28 @@ export class SpseJecnaClient {
     const html = await this.fetchHtml(url);
     const document = parseDocument(html);
     // Year select
-    const yearSelect = selectAll('select#schoolYearId', document.children)[0] as Element | undefined;
+    const yearSelect = selectAll(
+      'select#schoolYearId',
+      document.children
+    )[0] as Element | undefined;
     const years: { id: string; label: string }[] = [];
     let selectedYearId = '';
     if (yearSelect) {
       const options = selectAll('option', [yearSelect]) as Element[];
       for (const opt of options) {
         const id = opt.attribs.value;
-        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const label =
+          opt.children.find(c => c.type === 'text')?.data?.trim() || '';
         const selected = !!opt.attribs.selected;
         if (selected) selectedYearId = id;
         years.push({ id, label });
       }
     }
     // Table rows
-    const rows = selectAll('table.absence-list tr', document.children) as Element[];
+    const rows = selectAll(
+      'table.absence-list tr',
+      document.children
+    ) as Element[];
     const absences: OmluvnyListAbsence[] = [];
     for (const row of rows) {
       const tds = selectAll('td', [row]);
@@ -1148,10 +1588,10 @@ export class SpseJecnaClient {
       let href = undefined;
       const a = selectAll('a', [dateTd])[0] as Element | undefined;
       if (a && a.children.find(c => c.type === 'text')) {
-        date = a.children.find((c) => c.type === 'text')?.data?.trim() || '';
+        date = a.children.find(c => c.type === 'text')?.data?.trim() || '';
         if (a.attribs && a.attribs.href) href = a.attribs.href;
       } else {
-        date = dateTd.children.find((c) => c.type === 'text')?.data?.trim() || '';
+        date = dateTd.children.find(c => c.type === 'text')?.data?.trim() || '';
       }
       // Count and unexcused
       let count = 0;
@@ -1160,12 +1600,15 @@ export class SpseJecnaClient {
       const strongs = selectAll('strong', [countTd]) as Element[];
       if (strongs.length > 0) {
         // First strong: total hours
-        const countText = strongs[0].children.find(c => c.type === 'text')?.data?.trim() || '';
+        const countText =
+          strongs[0].children.find(c => c.type === 'text')?.data?.trim() || '';
         const m = countText.match(/(\d+)/);
         if (m) count = parseInt(m[1], 10);
         // Second strong: unexcused
         if (strongs.length > 1) {
-          const unexcusedText = strongs[1].children.find(c => c.type === 'text')?.data?.trim() || '';
+          const unexcusedText =
+            strongs[1].children.find(c => c.type === 'text')?.data?.trim() ||
+            '';
           const m2 = unexcusedText.match(/(\d+)/);
           if (m2) countUnexcused = parseInt(m2[1], 10);
         }
@@ -1182,69 +1625,90 @@ export class SpseJecnaClient {
     // First, we need to get the profile URL from the main page
     const mainPageHtml = await this.fetchHtml('/');
     const mainDocument = parseDocument(mainPageHtml);
-    
+
     // Find the "Můj profil" link in the user menu
-    const profileLink = selectAll('a[href*="/student/"]', mainDocument.children)[0] as Element | undefined;
+    const profileLink = selectAll(
+      'a[href*="/student/"]',
+      mainDocument.children
+    )[0] as Element | undefined;
     if (!profileLink || !profileLink.attribs?.href) {
       throw new Error('Profile link not found');
     }
-    
+
     const profileUrl = profileLink.attribs.href;
     const profileHtml = await this.fetchHtml(profileUrl);
     const profileDocument = parseDocument(profileHtml);
-    
+
     // Extract photo URL
-    const photoImg = selectAll('.profilephoto img', profileDocument.children)[0] as Element | undefined;
-    const photoUrl = photoImg?.attribs?.src ? `${this.baseUrl}${photoImg.attribs.src}` : undefined;
-    
+    const photoImg = selectAll(
+      '.profilephoto img',
+      profileDocument.children
+    )[0] as Element | undefined;
+    const photoUrl = photoImg?.attribs?.src
+      ? `${this.baseUrl}${photoImg.attribs.src}`
+      : undefined;
+
     // Extract personal information from the table
-    const profileTables = selectAll('table.userprofile', profileDocument.children) as Element[];
-    
+    const profileTables = selectAll(
+      'table.userprofile',
+      profileDocument.children
+    ) as Element[];
+
     if (profileTables.length === 0) {
       throw new Error('Profile table not found');
     }
-    
+
     const accountInfo: Partial<AccountInfo> = {
       parents: [],
-      sposa: { variableSymbol: '', bankAccount: '' }
+      sposa: { variableSymbol: '', bankAccount: '' },
     };
-    
+
     // Process the first table (personal information)
     const profileTable = profileTables[0];
     const rows = selectAll('tr', [profileTable]) as Element[];
-    
+
     for (const row of rows) {
       const th = selectAll('th', [row])[0] as Element | undefined;
       const td = selectAll('td', [row])[0] as Element | undefined;
-      
+
       if (!th || !td) continue;
-      
+
       // Get label from th > span.label
       const labelSpan = selectAll('span.label', [th])[0] as Element | undefined;
-      const label = labelSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
-      
+      const label =
+        labelSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+
       // Try different ways to get the value
       let value = '';
       let email = '';
-      
+
       // First try span.value
-      const valueElement = selectAll('span.value', [td])[0] as Element | undefined;
+      const valueElement = selectAll('span.value', [td])[0] as
+        | Element
+        | undefined;
       if (valueElement) {
-        value = valueElement.children.find(c => c.type === 'text')?.data?.trim() || '';
+        value =
+          valueElement.children.find(c => c.type === 'text')?.data?.trim() ||
+          '';
       }
-      
+
       // If no value found, try direct text content
       if (!value) {
         value = td.children.find(c => c.type === 'text')?.data?.trim() || '';
       }
-      
+
       // Handle email links - look for mailto links
-      const emailLink = selectAll('a[href^="mailto:"]', [td])[0] as Element | undefined;
+      const emailLink = selectAll('a[href^="mailto:"]', [td])[0] as
+        | Element
+        | undefined;
       if (emailLink) {
-        const emailSpan = selectAll('span.label', [emailLink])[0] as Element | undefined;
-        email = emailSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const emailSpan = selectAll('span.label', [emailLink])[0] as
+          | Element
+          | undefined;
+        email =
+          emailSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
       }
-      
+
       switch (label) {
         case 'Celé jméno':
           accountInfo.fullName = value;
@@ -1282,61 +1746,86 @@ export class SpseJecnaClient {
           break;
       }
     }
-    
+
     // Extract parents information - look for the section after the h2
     const parentsSection = selectAll('h2', profileDocument.children).find(h => {
-      const text = (h as Element).children.find(c => c.type === 'text')?.data?.trim() || '';
+      const text =
+        (h as Element).children.find(c => c.type === 'text')?.data?.trim() ||
+        '';
       return text.includes('Rodiče a zákonní zástupci');
     });
-    
+
     if (parentsSection) {
       // Find the ul.list that follows this h2
       const parentElement = parentsSection as Element;
       const nextSibling = parentElement.nextSibling;
-      if (nextSibling && nextSibling.type === 'tag' && nextSibling.name === 'ul' && nextSibling.attribs?.class?.includes('list')) {
+      if (
+        nextSibling &&
+        nextSibling.type === 'tag' &&
+        nextSibling.name === 'ul' &&
+        nextSibling.attribs?.class?.includes('list')
+      ) {
         const parentsList = selectAll('li', [nextSibling]) as Element[];
         for (const parentItem of parentsList) {
-          const itemDiv = selectAll('div.item', [parentItem])[0] as Element | undefined;
+          const itemDiv = selectAll('div.item', [parentItem])[0] as
+            | Element
+            | undefined;
           if (itemDiv) {
-            const text = itemDiv.children.find(c => c.type === 'text')?.data?.trim() || '';
+            const text =
+              itemDiv.children.find(c => c.type === 'text')?.data?.trim() || '';
             // Format: "Name, Phone, Email"
             const parts = text.split(', ');
             if (parts.length >= 3) {
               accountInfo.parents!.push({
                 name: parts[0],
                 phone: parts[1],
-                email: parts[2]
+                email: parts[2],
               });
             }
           }
         }
       }
     }
-    
+
     // Extract SPOSA information - look for the section after the h2
     const sposaSection = selectAll('h2', profileDocument.children).find(h => {
-      const text = (h as Element).children.find(c => c.type === 'text')?.data?.trim() || '';
+      const text =
+        (h as Element).children.find(c => c.type === 'text')?.data?.trim() ||
+        '';
       return text.includes('Spolek pro podporu studentských aktivit');
     });
-    
+
     if (sposaSection) {
       // Find the table that follows this h2
       const sposaElement = sposaSection as Element;
       const nextSibling = sposaElement.nextSibling;
-      if (nextSibling && nextSibling.type === 'tag' && nextSibling.name === 'table' && nextSibling.attribs?.class?.includes('userprofile')) {
+      if (
+        nextSibling &&
+        nextSibling.type === 'tag' &&
+        nextSibling.name === 'table' &&
+        nextSibling.attribs?.class?.includes('userprofile')
+      ) {
         const sposaRows = selectAll('tr', [nextSibling]) as Element[];
         for (const row of sposaRows) {
           const th = selectAll('th', [row])[0] as Element | undefined;
           const td = selectAll('td', [row])[0] as Element | undefined;
-          
+
           if (!th || !td) continue;
-          
-          const labelSpan = selectAll('span.label', [th])[0] as Element | undefined;
-          const label = labelSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
-          
-          const valueSpan = selectAll('span.value', [td])[0] as Element | undefined;
-          const value = valueSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
-          
+
+          const labelSpan = selectAll('span.label', [th])[0] as
+            | Element
+            | undefined;
+          const label =
+            labelSpan?.children.find(c => c.type === 'text')?.data?.trim() ||
+            '';
+
+          const valueSpan = selectAll('span.value', [td])[0] as
+            | Element
+            | undefined;
+          const value =
+            valueSpan?.children.find(c => c.type === 'text')?.data?.trim() ||
+            '';
+
           if (label === 'Variabilní symbol žáka') {
             accountInfo.sposa!.variableSymbol = value;
           } else if (label === 'Bankovní účet') {
@@ -1346,25 +1835,37 @@ export class SpseJecnaClient {
       }
     } else {
       // Try alternative approach - look for SPOSA table directly
-      const allTables = selectAll('table.userprofile', profileDocument.children) as Element[];
-      
+      const allTables = selectAll(
+        'table.userprofile',
+        profileDocument.children
+      ) as Element[];
+
       // Look through all tables for SPOSA information
-      for (let i = 1; i < allTables.length; i++) { // Skip first table (personal info)
+      for (let i = 1; i < allTables.length; i++) {
+        // Skip first table (personal info)
         const table = allTables[i];
         const rows = selectAll('tr', [table]) as Element[];
-        
+
         for (const row of rows) {
           const th = selectAll('th', [row])[0] as Element | undefined;
           const td = selectAll('td', [row])[0] as Element | undefined;
-          
+
           if (!th || !td) continue;
-          
-          const labelSpan = selectAll('span.label', [th])[0] as Element | undefined;
-          const label = labelSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
-          
-          const valueSpan = selectAll('span.value', [td])[0] as Element | undefined;
-          const value = valueSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
-          
+
+          const labelSpan = selectAll('span.label', [th])[0] as
+            | Element
+            | undefined;
+          const label =
+            labelSpan?.children.find(c => c.type === 'text')?.data?.trim() ||
+            '';
+
+          const valueSpan = selectAll('span.value', [td])[0] as
+            | Element
+            | undefined;
+          const value =
+            valueSpan?.children.find(c => c.type === 'text')?.data?.trim() ||
+            '';
+
           if (label === 'Variabilní symbol žáka') {
             accountInfo.sposa!.variableSymbol = value;
           } else if (label === 'Bankovní účet') {
@@ -1373,7 +1874,7 @@ export class SpseJecnaClient {
         }
       }
     }
-    
+
     // Extract birth place from birth date
     if (accountInfo.birthDate) {
       const birthParts = accountInfo.birthDate.split(', ');
@@ -1382,9 +1883,9 @@ export class SpseJecnaClient {
         accountInfo.birthDate = birthParts[0];
       }
     }
-    
+
     accountInfo.photoUrl = photoUrl;
-    
+
     return accountInfo as AccountInfo;
   }
-} 
+}

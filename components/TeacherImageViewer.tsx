@@ -10,11 +10,11 @@ interface TeacherImageViewerProps {
   style?: any;
 }
 
-export function TeacherImageViewer({ 
-  imageUrl, 
-  width = 120, 
+export function TeacherImageViewer({
+  imageUrl,
+  width = 120,
   height = 150,
-  style 
+  style,
 }: TeacherImageViewerProps) {
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
 
@@ -31,16 +31,12 @@ export function TeacherImageViewer({
   return (
     <>
       <Pressable onPress={handleImagePress}>
-        <Image 
-          source={{ uri: imageUrl }} 
-          style={[
-            styles.photo,
-            { width, height },
-            style
-          ]} 
+        <Image
+          source={{ uri: imageUrl }}
+          style={[styles.photo, { width, height }, style]}
         />
       </Pressable>
-      
+
       <ImageView
         images={[{ uri: imageUrl }]}
         imageIndex={0}
@@ -59,4 +55,4 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#222',
   },
-}); 
+});

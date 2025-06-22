@@ -1,8 +1,21 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, Platform, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Menu, Text, useTheme } from 'react-native-paper';
+import {
+  Dimensions,
+  Platform,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
+import {
+  ActivityIndicator,
+  Button,
+  Menu,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 import type { Timetable } from '../../api/SpseJecnaClient';
 import { TimetableGrid } from '../../components/TimetableGrid';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
@@ -12,8 +25,12 @@ export default function RozvrhScreen() {
   const theme = useTheme();
   const [yearMenuVisible, setYearMenuVisible] = useState(false);
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
-  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
-  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>(undefined);
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(
+    undefined
+  );
+  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>(
+    undefined
+  );
   const { data, error, isLoading, refetch, isFetching } = useQuery<Timetable>({
     queryKey: ['timetable', selectedYear, selectedPeriod],
     queryFn: async () => {
@@ -66,7 +83,17 @@ export default function RozvrhScreen() {
     return (
       <View style={styles.centered}>
         <Text style={{ color: 'red', marginTop: 24 }}>{String(error)}</Text>
-        <Button mode="contained" onPress={() => { setSelectedYear(undefined); setSelectedPeriod(undefined); refetch(); }} style={{ marginTop: 16 }}>Resetovat výběr</Button>
+        <Button
+          mode="contained"
+          onPress={() => {
+            setSelectedYear(undefined);
+            setSelectedPeriod(undefined);
+            refetch();
+          }}
+          style={{ marginTop: 16 }}
+        >
+          Resetovat výběr
+        </Button>
       </View>
     );
   }
@@ -84,28 +111,65 @@ export default function RozvrhScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 56 }} contentContainerStyle={{ flexDirection: 'row', gap: 12, paddingHorizontal: 12, paddingTop: 12, alignItems: 'center', zIndex: 10 }}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={{ maxHeight: 56 }}
+        contentContainerStyle={{
+          flexDirection: 'row',
+          gap: 12,
+          paddingHorizontal: 12,
+          paddingTop: 12,
+          alignItems: 'center',
+          zIndex: 10,
+        }}
+      >
         {/* Year select */}
         <Menu
           visible={yearMenuVisible}
           onDismiss={() => setYearMenuVisible(false)}
-          anchor={<Button mode="outlined" onPress={() => setYearMenuVisible(true)}>{meta?.years.find(y => y.id === selectedYear)?.label || 'Rok'}</Button>}
+          anchor={
+            <Button mode="outlined" onPress={() => setYearMenuVisible(true)}>
+              {meta?.years.find(y => y.id === selectedYear)?.label || 'Rok'}
+            </Button>
+          }
         >
           {meta?.years.map(y => (
-            <Menu.Item key={y.id} onPress={() => { setSelectedYear(y.id); setYearMenuVisible(false); }} title={y.label} />
+            <Menu.Item
+              key={y.id}
+              onPress={() => {
+                setSelectedYear(y.id);
+                setYearMenuVisible(false);
+              }}
+              title={y.label}
+            />
           ))}
         </Menu>
         {/* Period select */}
         <Menu
           visible={periodMenuVisible}
           onDismiss={() => setPeriodMenuVisible(false)}
-          anchor={<Button mode="outlined" onPress={() => setPeriodMenuVisible(true)}>{meta?.periods.find(p => p.id === selectedPeriod)?.label || 'Období'}</Button>}
+          anchor={
+            <Button mode="outlined" onPress={() => setPeriodMenuVisible(true)}>
+              {meta?.periods.find(p => p.id === selectedPeriod)?.label ||
+                'Období'}
+            </Button>
+          }
         >
           {meta?.periods.map(p => (
-            <Menu.Item key={p.id} onPress={() => { setSelectedPeriod(p.id); setPeriodMenuVisible(false); }} title={p.label} />
+            <Menu.Item
+              key={p.id}
+              onPress={() => {
+                setSelectedPeriod(p.id);
+                setPeriodMenuVisible(false);
+              }}
+              title={p.label}
+            />
           ))}
         </Menu>
-        {(isFetching || isLoading) && <ActivityIndicator size={18} style={{ marginLeft: 8 }} />}
+        {(isFetching || isLoading) && (
+          <ActivityIndicator size={18} style={{ marginLeft: 8 }} />
+        )}
       </ScrollView>
       <ScrollView
         horizontal
@@ -120,7 +184,10 @@ export default function RozvrhScreen() {
           />
         }
       >
-        <ScrollView style={{ flex: 1 }} contentContainerStyle={styles.scrollContent}>
+        <ScrollView
+          style={{ flex: 1 }}
+          contentContainerStyle={styles.scrollContent}
+        >
           <TimetableGrid
             periods={data.periods}
             days={data.days}
@@ -129,7 +196,7 @@ export default function RozvrhScreen() {
                 router.push(`/teachers/${code}`);
               }
             }}
-            onRoomPress={(room) => router.push(`/ucebna/${room}`)}
+            onRoomPress={room => router.push(`/ucebna/${room}`)}
           />
         </ScrollView>
       </ScrollView>

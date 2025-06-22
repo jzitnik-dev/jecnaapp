@@ -1,10 +1,30 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
-import { Dimensions, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import {
+  Dimensions,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { ActivityIndicator, Button, Chip, Divider, Menu, Modal as PaperModal, Portal, Text, useTheme } from 'react-native-paper';
-import type { Grade as GradeBase, PochvalaDetail, SubjectGrades } from '../../api/SpseJecnaClient';
+import {
+  ActivityIndicator,
+  Button,
+  Chip,
+  Divider,
+  Menu,
+  Modal as PaperModal,
+  Portal,
+  Text,
+  useTheme,
+} from 'react-native-paper';
+import type {
+  Grade as GradeBase,
+  PochvalaDetail,
+  SubjectGrades,
+} from '../../api/SpseJecnaClient';
 import { useGradeNotifications } from '../../hooks/useGradeNotifications';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 
@@ -13,38 +33,62 @@ type Grade = GradeBase & { href?: string };
 const gradeColor = (value: number | 'N') => {
   if (value === 'N') return 'rgb(189,189,189)'; // gray
   const colors = [
-    [76, 175, 80],  // 1: #4CAF50
+    [76, 175, 80], // 1: #4CAF50
     [139, 195, 74], // 2: #8BC34A
-    [255, 193, 7],  // 3: #FFC107
-    [255, 152, 0],  // 4: #FF9800
-    [244, 67, 54],  // 5: #F44336
+    [255, 193, 7], // 3: #FFC107
+    [255, 152, 0], // 4: #FF9800
+    [244, 67, 54], // 5: #F44336
   ];
   const idx = Math.round(value as number) - 1;
   const c = colors[idx] || [189, 189, 189];
   return `rgb(${c[0]},${c[1]},${c[2]})`;
 };
 
-const GradeSquare = ({ grade, subject, onPress }: { grade: Grade; subject: string; onPress: () => void }) => {
+const GradeSquare = ({
+  grade,
+  subject,
+  onPress,
+}: {
+  grade: Grade;
+  subject: string;
+  onPress: () => void;
+}) => {
   if (grade.value === 'Pochvala') return null;
   return (
-    <Pressable onPress={onPress} style={({ pressed }) => [
-      styles.gradeSquare,
-      {
-        backgroundColor: gradeColor(grade.value as number | 'N'),
-        opacity: 1,
-        width: 44,
-        height: grade.weight === 0.5 ? 22 : 44,
-      },
-    ]}>
-      <Text style={[
-        styles.gradeText,
-        grade.value === 'N' ? { color: '#333', fontSize: 16 } : (grade.weight === 0.5 ? { fontSize: 14 } : {}),
-      ]}>{String(grade.value)}</Text>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [
+        styles.gradeSquare,
+        {
+          backgroundColor: gradeColor(grade.value as number | 'N'),
+          opacity: 1,
+          width: 44,
+          height: grade.weight === 0.5 ? 22 : 44,
+        },
+      ]}
+    >
+      <Text
+        style={[
+          styles.gradeText,
+          grade.value === 'N'
+            ? { color: '#333', fontSize: 16 }
+            : grade.weight === 0.5
+              ? { fontSize: 14 }
+              : {},
+        ]}
+      >
+        {String(grade.value)}
+      </Text>
     </Pressable>
   );
 };
 
-function GradeDetailModal({ visible, onClose, grade, subject }: {
+function GradeDetailModal({
+  visible,
+  onClose,
+  grade,
+  subject,
+}: {
   visible: boolean;
   onClose: () => void;
   grade: Grade | null;
@@ -54,23 +98,54 @@ function GradeDetailModal({ visible, onClose, grade, subject }: {
   if (!grade) return null;
   return (
     <Portal>
-      <PaperModal visible={visible} onDismiss={onClose} contentContainerStyle={[styles.paperModalContent, { backgroundColor: theme.colors.surfaceVariant }]}
+      <PaperModal
+        visible={visible}
+        onDismiss={onClose}
+        contentContainerStyle={[
+          styles.paperModalContent,
+          { backgroundColor: theme.colors.surfaceVariant },
+        ]}
         theme={theme}
       >
-        <Text variant="titleLarge" style={{ marginBottom: 8 }}>{subject}</Text>
-        <Text>Známka: <Text style={{ fontWeight: 'bold' }}>{grade.value}</Text></Text>
-        <Text>Typ: <Text style={{ fontWeight: 'bold' }}>{grade.weight === 0.5 ? 'Malá' : 'Normální'}</Text></Text>
-        {grade.date && <Text>Datum: <Text style={{ fontWeight: 'bold' }}>{grade.date}</Text></Text>}
-        {grade.teacher && <Text>Učitel: <Text style={{ fontWeight: 'bold' }}>{grade.teacher}</Text></Text>}
-        {grade.note && <Text>Poznámka: <Text style={{ fontWeight: 'bold' }}>{grade.note}</Text></Text>}
-        <Button mode="contained" onPress={onClose} style={{ marginTop: 16 }}>Zavřít</Button>
+        <Text variant="titleLarge" style={{ marginBottom: 8 }}>
+          {subject}
+        </Text>
+        <Text>
+          Známka: <Text style={{ fontWeight: 'bold' }}>{grade.value}</Text>
+        </Text>
+        <Text>
+          Typ:{' '}
+          <Text style={{ fontWeight: 'bold' }}>
+            {grade.weight === 0.5 ? 'Malá' : 'Normální'}
+          </Text>
+        </Text>
+        {grade.date && (
+          <Text>
+            Datum: <Text style={{ fontWeight: 'bold' }}>{grade.date}</Text>
+          </Text>
+        )}
+        {grade.teacher && (
+          <Text>
+            Učitel: <Text style={{ fontWeight: 'bold' }}>{grade.teacher}</Text>
+          </Text>
+        )}
+        {grade.note && (
+          <Text>
+            Poznámka: <Text style={{ fontWeight: 'bold' }}>{grade.note}</Text>
+          </Text>
+        )}
+        <Button mode="contained" onPress={onClose} style={{ marginTop: 16 }}>
+          Zavřít
+        </Button>
       </PaperModal>
     </Portal>
   );
 }
 
 function getWeightedAverage(grades: Grade[]): number | null {
-  const filtered = grades.filter(g => typeof g.value === 'number' && g.value >= 1 && g.value <= 5);
+  const filtered = grades.filter(
+    g => typeof g.value === 'number' && g.value >= 1 && g.value <= 5
+  );
   if (filtered.length === 0) return null;
   let sum = 0;
   let weightSum = 0;
@@ -88,21 +163,34 @@ export default function ZnamkyScreen() {
   const theme = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [plannerMode, setPlannerMode] = useState(false);
-  const [hypotheticals, setHypotheticals] = useState<{ [subject: string]: { value: number; weight: number }[] }>({});
+  const [hypotheticals, setHypotheticals] = useState<{
+    [subject: string]: { value: number; weight: number }[];
+  }>({});
   const [addingFor, setAddingFor] = useState<string | null>(null);
   const [newGradeValue, setNewGradeValue] = useState<number>(1);
   const [newGradeWeight, setNewGradeWeight] = useState<number>(1);
   const [showAddModal, setShowAddModal] = useState(false);
-  const [modal, setModal] = useState<{ grade: Grade; subject: string } | null>(null);
-  const [pochvalaModal, setPochvalaModal] = useState<{ href: string; label: string } | null>(null);
-  const [pochvalaDetail, setPochvalaDetail] = useState<PochvalaDetail | null>(null);
+  const [modal, setModal] = useState<{ grade: Grade; subject: string } | null>(
+    null
+  );
+  const [pochvalaModal, setPochvalaModal] = useState<{
+    href: string;
+    label: string;
+  } | null>(null);
+  const [pochvalaDetail, setPochvalaDetail] = useState<PochvalaDetail | null>(
+    null
+  );
   const [pochvalaLoading, setPochvalaLoading] = useState(false);
 
   // Year/period selectors
-  const [years, setYears] = useState<{ id: string, label: string }[]>([]);
-  const [periods, setPeriods] = useState<{ id: string, label: string }[]>([]);
-  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
-  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>(undefined);
+  const [years, setYears] = useState<{ id: string; label: string }[]>([]);
+  const [periods, setPeriods] = useState<{ id: string; label: string }[]>([]);
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(
+    undefined
+  );
+  const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>(
+    undefined
+  );
   const [yearMenuVisible, setYearMenuVisible] = useState(false);
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
 
@@ -116,7 +204,9 @@ export default function ZnamkyScreen() {
     });
   }, [client]);
 
-  const { data, error, isLoading, refetch, isFetching } = useQuery<SubjectGrades[]>({
+  const { data, error, isLoading, refetch, isFetching } = useQuery<
+    SubjectGrades[]
+  >({
     queryKey: ['znamky', selectedYear, selectedPeriod],
     queryFn: async () => {
       if (!client) throw new Error('Not logged in');
@@ -144,14 +234,19 @@ export default function ZnamkyScreen() {
   const getPlannedAverage = (subject: string) => {
     const realGrades = getSubjectGrades(subject);
     const hypotheticalsForSubject = hypotheticals[subject] || [];
-    const hypotheticalsGrades: Grade[] = hypotheticalsForSubject.map(g => ({ value: g.value, weight: g.weight } as Grade));
+    const hypotheticalsGrades: Grade[] = hypotheticalsForSubject.map(
+      g => ({ value: g.value, weight: g.weight }) as Grade
+    );
     return getWeightedAverage([...realGrades, ...hypotheticalsGrades]);
   };
 
   const handleAddHypothetical = (subject: string) => {
     setHypotheticals(prev => ({
       ...prev,
-      [subject]: [...(prev[subject] || []), { value: newGradeValue, weight: newGradeWeight }],
+      [subject]: [
+        ...(prev[subject] || []),
+        { value: newGradeValue, weight: newGradeWeight },
+      ],
     }));
     setShowAddModal(false);
     setAddingFor(null);
@@ -177,28 +272,72 @@ export default function ZnamkyScreen() {
 
   // Year/period selectors UI
   const renderSelectors = () => (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ maxHeight: 56 }} contentContainerStyle={{ flexDirection: 'row', gap: 12, paddingHorizontal: 12, paddingTop: 12, alignItems: 'center', zIndex: 10 }}>
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      style={{ maxHeight: 56 }}
+      contentContainerStyle={{
+        flexDirection: 'row',
+        gap: 12,
+        paddingHorizontal: 12,
+        paddingTop: 12,
+        alignItems: 'center',
+        zIndex: 10,
+      }}
+    >
       {/* Year select */}
       <Menu
         visible={yearMenuVisible}
         onDismiss={() => setYearMenuVisible(false)}
-        anchor={<Button mode="outlined" onPress={() => setYearMenuVisible(true)} disabled={!years.length}>{years.find(y => y.id === selectedYear)?.label || 'Rok'}</Button>}
+        anchor={
+          <Button
+            mode="outlined"
+            onPress={() => setYearMenuVisible(true)}
+            disabled={!years.length}
+          >
+            {years.find(y => y.id === selectedYear)?.label || 'Rok'}
+          </Button>
+        }
       >
         {years.map(y => (
-          <Menu.Item key={y.id} onPress={() => { setSelectedYear(y.id); setYearMenuVisible(false); }} title={y.label} />
+          <Menu.Item
+            key={y.id}
+            onPress={() => {
+              setSelectedYear(y.id);
+              setYearMenuVisible(false);
+            }}
+            title={y.label}
+          />
         ))}
       </Menu>
       {/* Period select */}
       <Menu
         visible={periodMenuVisible}
         onDismiss={() => setPeriodMenuVisible(false)}
-        anchor={<Button mode="outlined" onPress={() => setPeriodMenuVisible(true)} disabled={!periods.length}>{periods.find(p => p.id === selectedPeriod)?.label || 'Období'}</Button>}
+        anchor={
+          <Button
+            mode="outlined"
+            onPress={() => setPeriodMenuVisible(true)}
+            disabled={!periods.length}
+          >
+            {periods.find(p => p.id === selectedPeriod)?.label || 'Období'}
+          </Button>
+        }
       >
         {periods.map(p => (
-          <Menu.Item key={p.id} onPress={() => { setSelectedPeriod(p.id); setPeriodMenuVisible(false); }} title={p.label} />
+          <Menu.Item
+            key={p.id}
+            onPress={() => {
+              setSelectedPeriod(p.id);
+              setPeriodMenuVisible(false);
+            }}
+            title={p.label}
+          />
         ))}
       </Menu>
-      {(isFetching || isLoading) && <ActivityIndicator size={18} style={{ marginLeft: 8 }} />}
+      {(isFetching || isLoading) && (
+        <ActivityIndicator size={18} style={{ marginLeft: 8 }} />
+      )}
     </ScrollView>
   );
 
@@ -216,155 +355,287 @@ export default function ZnamkyScreen() {
           />
         }
       >
-        <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 16 }}>
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            marginBottom: 16,
+          }}
+        >
           <Button
             mode={plannerMode ? 'contained' : 'outlined'}
             onPress={() => setPlannerMode(!plannerMode)}
             style={{ marginRight: 12 }}
           >
-            {plannerMode ? 'Plánovač známek: Zapnuto' : 'Plánovač známek: Vypnuto'}
+            {plannerMode
+              ? 'Plánovač známek: Zapnuto'
+              : 'Plánovač známek: Vypnuto'}
           </Button>
         </View>
         {isLoading && <ActivityIndicator style={{ marginTop: 24 }} />}
-        {error && <Text style={{ color: 'red', marginTop: 24 }}>{String(error)}</Text>}
-        {data && Array.isArray(data) && data.every(subject => Array.isArray(subject.splits) && subject.splits.every(split => split.grades.length === 0)) && (
-          <Text style={{ marginTop: 24 }}>Žádné známky nenalezeny.</Text>
+        {error && (
+          <Text style={{ color: 'red', marginTop: 24 }}>{String(error)}</Text>
         )}
-        {data && Array.isArray(data) && data.some(subject => Array.isArray(subject.splits) && subject.splits.some(split => split.grades.length > 0)) && data.map((subject, idx) => {
-          const plannedAvg = getPlannedAverage(subject.subject);
-          const allGrades = subject.splits.flatMap(split => split.grades);
-          const avg = getWeightedAverage(allGrades);
-          return (
-            <View key={subject.subject + idx} style={[styles.subjectBlock, { backgroundColor: theme.colors.surfaceVariant }]}> 
-              <View style={styles.subjectHeader}>
-                <Text variant="titleMedium" style={styles.subjectName}>{subject.subject}</Text>
-                {subject.finalGrade && (
-                  <Chip style={styles.finalGradeChip} textStyle={styles.finalGradeChipText}>
-                    {subject.finalGrade}
-                  </Chip>
-                )}
-                {plannerMode && (
-                  <Button
-                    mode="text"
-                    onPress={() => { setAddingFor(subject.subject); setShowAddModal(true); }}
-                    style={{ marginLeft: 8 }}
-                    compact
-                  >
-                    <MaterialIcons name="add" size={22} color="#fff" />
-                  </Button>
-                )}
-              </View>
-              {avg !== null && (
-                <View style={styles.avgPill}>
-                  <Text style={styles.avgPillText}>Průměr: {avg.toFixed(2)}</Text>
-                  {plannerMode && plannedAvg !== null && plannedAvg !== avg && (
-                    <Text style={[styles.avgPillText, { marginLeft: 12, color: '#90ee90' }]}>Nový: {plannedAvg.toFixed(2)}</Text>
-                  )}
-                </View>
-              )}
-              {plannerMode && (hypotheticals[subject.subject]?.length > 0) && (
-                <View style={{ flexDirection: 'row', flexWrap: 'wrap', marginBottom: 8 }}>
-                  {hypotheticals[subject.subject].map((g, i) => (
+        {data &&
+          Array.isArray(data) &&
+          data.every(
+            subject =>
+              Array.isArray(subject.splits) &&
+              subject.splits.every(split => split.grades.length === 0)
+          ) && <Text style={{ marginTop: 24 }}>Žádné známky nenalezeny.</Text>}
+        {data &&
+          Array.isArray(data) &&
+          data.some(
+            subject =>
+              Array.isArray(subject.splits) &&
+              subject.splits.some(split => split.grades.length > 0)
+          ) &&
+          data.map((subject, idx) => {
+            const plannedAvg = getPlannedAverage(subject.subject);
+            const allGrades = subject.splits.flatMap(split => split.grades);
+            const avg = getWeightedAverage(allGrades);
+            return (
+              <View
+                key={subject.subject + idx}
+                style={[
+                  styles.subjectBlock,
+                  { backgroundColor: theme.colors.surfaceVariant },
+                ]}
+              >
+                <View style={styles.subjectHeader}>
+                  <Text variant="titleMedium" style={styles.subjectName}>
+                    {subject.subject}
+                  </Text>
+                  {subject.finalGrade && (
                     <Chip
-                      key={i}
-                      style={{ marginRight: 6, marginBottom: 6, backgroundColor: '#23272e' }}
-                      onClose={() => handleRemoveHypothetical(subject.subject, i)}
+                      style={styles.finalGradeChip}
+                      textStyle={styles.finalGradeChipText}
                     >
-                      {g.value} ({g.weight === 1 ? 'Normální' : 'Malá'})
+                      {subject.finalGrade}
                     </Chip>
-                  ))}
-                </View>
-              )}
-              {subject.splits.map((split, splitIdx) => (
-                <View key={split.label + splitIdx} style={{ marginBottom: 8 }}>
-                  {!(subject.splits.length === 1 && (!split.label || split.label === 'Bez rozdělení')) && (
-                    <Text style={{ color: '#aaa', marginBottom: 2, fontSize: 15 }}>{split.label}:</Text>
                   )}
-                  <View style={styles.gradesRowContainer}>
-                    <View style={styles.gradesRow}>
-                      {split.grades.map((grade, i) => (
-                        subject.subject === 'Chování' && grade.value === 'Pochvala' ? (
-                          <Chip
-                            key={i}
-                            style={{ marginRight: 6, marginBottom: 6, backgroundColor: '#4CAF50' }}
-                            textStyle={{ color: '#fff', fontWeight: 'bold' }}
-                            icon="star"
-                            onPress={async () => {
-                              const href = (grade as any).href;
-                              if (!href || !client) return;
-                              setPochvalaModal({ href, label: grade.note || 'Pochvala' });
-                              setPochvalaDetail(null);
-                              setPochvalaLoading(true);
-                              try {
-                                const detail = await client.getPochvalaDetail(href);
-                                setPochvalaDetail(detail);
-                              } catch (e) {
-                                setPochvalaDetail({ type: '', date: '', message: 'Chyba při načítání detailu.' });
+                  {plannerMode && (
+                    <Button
+                      mode="text"
+                      onPress={() => {
+                        setAddingFor(subject.subject);
+                        setShowAddModal(true);
+                      }}
+                      style={{ marginLeft: 8 }}
+                      compact
+                    >
+                      <MaterialIcons name="add" size={22} color="#fff" />
+                    </Button>
+                  )}
+                </View>
+                {avg !== null && (
+                  <View style={styles.avgPill}>
+                    <Text style={styles.avgPillText}>
+                      Průměr: {avg.toFixed(2)}
+                    </Text>
+                    {plannerMode &&
+                      plannedAvg !== null &&
+                      plannedAvg !== avg && (
+                        <Text
+                          style={[
+                            styles.avgPillText,
+                            { marginLeft: 12, color: '#90ee90' },
+                          ]}
+                        >
+                          Nový: {plannedAvg.toFixed(2)}
+                        </Text>
+                      )}
+                  </View>
+                )}
+                {plannerMode && hypotheticals[subject.subject]?.length > 0 && (
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      marginBottom: 8,
+                    }}
+                  >
+                    {hypotheticals[subject.subject].map((g, i) => (
+                      <Chip
+                        key={i}
+                        style={{
+                          marginRight: 6,
+                          marginBottom: 6,
+                          backgroundColor: '#23272e',
+                        }}
+                        onClose={() =>
+                          handleRemoveHypothetical(subject.subject, i)
+                        }
+                      >
+                        {g.value} ({g.weight === 1 ? 'Normální' : 'Malá'})
+                      </Chip>
+                    ))}
+                  </View>
+                )}
+                {subject.splits.map((split, splitIdx) => (
+                  <View
+                    key={split.label + splitIdx}
+                    style={{ marginBottom: 8 }}
+                  >
+                    {!(
+                      subject.splits.length === 1 &&
+                      (!split.label || split.label === 'Bez rozdělení')
+                    ) && (
+                      <Text
+                        style={{ color: '#aaa', marginBottom: 2, fontSize: 15 }}
+                      >
+                        {split.label}:
+                      </Text>
+                    )}
+                    <View style={styles.gradesRowContainer}>
+                      <View style={styles.gradesRow}>
+                        {split.grades.map((grade, i) =>
+                          subject.subject === 'Chování' &&
+                          grade.value === 'Pochvala' ? (
+                            <Chip
+                              key={i}
+                              style={{
+                                marginRight: 6,
+                                marginBottom: 6,
+                                backgroundColor: '#4CAF50',
+                              }}
+                              textStyle={{ color: '#fff', fontWeight: 'bold' }}
+                              icon="star"
+                              onPress={async () => {
+                                const href = (grade as any).href;
+                                if (!href || !client) return;
+                                setPochvalaModal({
+                                  href,
+                                  label: grade.note || 'Pochvala',
+                                });
+                                setPochvalaDetail(null);
+                                setPochvalaLoading(true);
+                                try {
+                                  const detail =
+                                    await client.getPochvalaDetail(href);
+                                  setPochvalaDetail(detail);
+                                } catch (e) {
+                                  setPochvalaDetail({
+                                    type: '',
+                                    date: '',
+                                    message: 'Chyba při načítání detailu.',
+                                  });
+                                }
+                                setPochvalaLoading(false);
+                              }}
+                            >
+                              {grade.note || 'Pochvala'}
+                            </Chip>
+                          ) : (
+                            <GradeSquare
+                              grade={grade}
+                              subject={subject.subject}
+                              key={i}
+                              onPress={() =>
+                                setModal({ grade, subject: subject.subject })
                               }
-                              setPochvalaLoading(false);
-                            }}
-                          >
-                            {grade.note || 'Pochvala'}
-                          </Chip>
-                        ) : (
-                          <GradeSquare grade={grade} subject={subject.subject} key={i} onPress={() => setModal({ grade, subject: subject.subject })} />
-                        )
-                      ))}
+                            />
+                          )
+                        )}
+                      </View>
                     </View>
                   </View>
-                </View>
-              ))}
-              <Portal>
-                <PaperModal
-                  visible={showAddModal && addingFor === subject.subject}
-                  onDismiss={() => { setShowAddModal(false); setAddingFor(null); }}
-                  contentContainerStyle={[styles.paperModalContent, { backgroundColor: theme.colors.surfaceVariant }]}
-                >
-                  <Text variant="titleLarge" style={{ marginBottom: 8 }}>Přidat hypotetickou známku</Text>
-                  <Text style={{ marginBottom: 8 }}>Známka:</Text>
-                  <View style={styles.modalButtonRow}>
-                    {[1, 2, 3, 4, 5].map(v => (
+                ))}
+                <Portal>
+                  <PaperModal
+                    visible={showAddModal && addingFor === subject.subject}
+                    onDismiss={() => {
+                      setShowAddModal(false);
+                      setAddingFor(null);
+                    }}
+                    contentContainerStyle={[
+                      styles.paperModalContent,
+                      { backgroundColor: theme.colors.surfaceVariant },
+                    ]}
+                  >
+                    <Text variant="titleLarge" style={{ marginBottom: 8 }}>
+                      Přidat hypotetickou známku
+                    </Text>
+                    <Text style={{ marginBottom: 8 }}>Známka:</Text>
+                    <View style={styles.modalButtonRow}>
+                      {[1, 2, 3, 4, 5].map(v => (
+                        <Button
+                          key={v}
+                          mode={newGradeValue === v ? 'contained' : 'outlined'}
+                          onPress={() => setNewGradeValue(v)}
+                          style={[
+                            {
+                              minWidth: 36,
+                              height: 32,
+                              marginRight: 2,
+                              marginBottom: 4,
+                              paddingHorizontal: 0,
+                            },
+                            newGradeValue === v
+                              ? styles.modalButtonSelected
+                              : styles.modalButtonUnselected,
+                          ]}
+                          labelStyle={styles.modalButtonLabel}
+                        >
+                          {v}
+                        </Button>
+                      ))}
+                    </View>
+                    <Text style={{ marginBottom: 8 }}>Váha:</Text>
+                    <View style={styles.modalButtonRow}>
+                      {[1, 0.5].map(w => (
+                        <Button
+                          key={w}
+                          mode={newGradeWeight === w ? 'contained' : 'outlined'}
+                          onPress={() => setNewGradeWeight(w)}
+                          style={[
+                            {
+                              minWidth: 60,
+                              height: 32,
+                              marginRight: 2,
+                              marginBottom: 4,
+                              paddingHorizontal: 0,
+                            },
+                            newGradeWeight === w
+                              ? styles.modalButtonSelected
+                              : styles.modalButtonUnselected,
+                          ]}
+                          labelStyle={styles.modalButtonLabel}
+                        >
+                          {w === 1 ? 'Normální' : 'Malá'}
+                        </Button>
+                      ))}
+                    </View>
+                    <View
+                      style={{
+                        flexDirection: 'row',
+                        justifyContent: 'flex-end',
+                        width: '100%',
+                      }}
+                    >
                       <Button
-                        key={v}
-                        mode={newGradeValue === v ? 'contained' : 'outlined'}
-                        onPress={() => setNewGradeValue(v)}
-                        style={[
-                          { minWidth: 36, height: 32, marginRight: 2, marginBottom: 4, paddingHorizontal: 0 },
-                          newGradeValue === v ? styles.modalButtonSelected : styles.modalButtonUnselected,
-                        ]}
-                        labelStyle={styles.modalButtonLabel}
+                        mode="contained"
+                        onPress={() => handleAddHypothetical(subject.subject)}
+                        style={{ marginRight: 8 }}
                       >
-                        {v}
+                        Přidat
                       </Button>
-                    ))}
-                  </View>
-                  <Text style={{ marginBottom: 8 }}>Váha:</Text>
-                  <View style={styles.modalButtonRow}>
-                    {[1, 0.5].map(w => (
                       <Button
-                        key={w}
-                        mode={newGradeWeight === w ? 'contained' : 'outlined'}
-                        onPress={() => setNewGradeWeight(w)}
-                        style={[
-                          { minWidth: 60, height: 32, marginRight: 2, marginBottom: 4, paddingHorizontal: 0 },
-                          newGradeWeight === w ? styles.modalButtonSelected : styles.modalButtonUnselected,
-                        ]}
-                        labelStyle={styles.modalButtonLabel}
+                        mode="text"
+                        onPress={() => {
+                          setShowAddModal(false);
+                          setAddingFor(null);
+                        }}
                       >
-                        {w === 1 ? 'Normální' : 'Malá'}
+                        Zrušit
                       </Button>
-                    ))}
-                  </View>
-                  <View style={{ flexDirection: 'row', justifyContent: 'flex-end', width: '100%' }}>
-                    <Button mode="contained" onPress={() => handleAddHypothetical(subject.subject)} style={{ marginRight: 8 }}>Přidat</Button>
-                    <Button mode="text" onPress={() => { setShowAddModal(false); setAddingFor(null); }}>Zrušit</Button>
-                  </View>
-                </PaperModal>
-              </Portal>
-              <Divider style={styles.divider} />
-            </View>
-          );
-        })}
+                    </View>
+                  </PaperModal>
+                </Portal>
+                <Divider style={styles.divider} />
+              </View>
+            );
+          })}
       </ScrollView>
       <GradeDetailModal
         visible={!!modal}
@@ -376,19 +647,50 @@ export default function ZnamkyScreen() {
       <Portal>
         <PaperModal
           visible={!!pochvalaModal}
-          onDismiss={() => { setPochvalaModal(null); setPochvalaDetail(null); }}
-          contentContainerStyle={[styles.paperModalContent, { backgroundColor: theme.colors.surfaceVariant }]}
+          onDismiss={() => {
+            setPochvalaModal(null);
+            setPochvalaDetail(null);
+          }}
+          contentContainerStyle={[
+            styles.paperModalContent,
+            { backgroundColor: theme.colors.surfaceVariant },
+          ]}
         >
-          <Text variant="titleLarge" style={{ marginBottom: 8 }}>{pochvalaModal?.label || 'Pochvala'}</Text>
-          {pochvalaLoading && <ActivityIndicator style={{ marginVertical: 16 }} />}
+          <Text variant="titleLarge" style={{ marginBottom: 8 }}>
+            {pochvalaModal?.label || 'Pochvala'}
+          </Text>
+          {pochvalaLoading && (
+            <ActivityIndicator style={{ marginVertical: 16 }} />
+          )}
           {pochvalaDetail && (
             <>
-              <Text>Typ: <Text style={{ fontWeight: 'bold' }}>{pochvalaDetail.type}</Text></Text>
-              <Text>Datum: <Text style={{ fontWeight: 'bold' }}>{pochvalaDetail.date}</Text></Text>
-              <Text>Sdělení: <Text style={{ fontWeight: 'bold' }}>{pochvalaDetail.message}</Text></Text>
+              <Text>
+                Typ:{' '}
+                <Text style={{ fontWeight: 'bold' }}>
+                  {pochvalaDetail.type}
+                </Text>
+              </Text>
+              <Text>
+                Datum:{' '}
+                <Text style={{ fontWeight: 'bold' }}>
+                  {pochvalaDetail.date}
+                </Text>
+              </Text>
+              <Text>
+                Sdělení:{' '}
+                <Text style={{ fontWeight: 'bold' }}>
+                  {pochvalaDetail.message}
+                </Text>
+              </Text>
             </>
           )}
-          <Button mode="contained" onPress={() => setPochvalaModal(null)} style={{ marginTop: 16 }}>Zavřít</Button>
+          <Button
+            mode="contained"
+            onPress={() => setPochvalaModal(null)}
+            style={{ marginTop: 16 }}
+          >
+            Zavřít
+          </Button>
         </PaperModal>
       </Portal>
     </View>
@@ -412,7 +714,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 18,
     shadowColor: '#000',
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 12,
     elevation: 4,
     borderWidth: 1,

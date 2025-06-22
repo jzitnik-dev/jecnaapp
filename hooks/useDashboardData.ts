@@ -1,6 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useEffect, useState } from 'react';
-import type { AccountInfo, SubjectGrades, Timetable } from '../api/SpseJecnaClient';
+import type {
+  AccountInfo,
+  SubjectGrades,
+  Timetable,
+} from '../api/SpseJecnaClient';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
 
 // Cache keys
@@ -31,11 +35,14 @@ export function useDashboardData(): DashboardData {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const loadFromCache = async <T>(cacheKey: string, timestampKey: string): Promise<T | null> => {
+  const loadFromCache = async <T>(
+    cacheKey: string,
+    timestampKey: string
+  ): Promise<T | null> => {
     try {
       const cachedData = await AsyncStorage.getItem(cacheKey);
       const timestamp = await AsyncStorage.getItem(timestampKey);
-      
+
       if (cachedData && timestamp) {
         const age = Date.now() - parseInt(timestamp, 10);
         if (age < CACHE_DURATION) {
@@ -48,7 +55,11 @@ export function useDashboardData(): DashboardData {
     return null;
   };
 
-  const saveToCache = async <T>(data: T, cacheKey: string, timestampKey: string) => {
+  const saveToCache = async <T>(
+    data: T,
+    cacheKey: string,
+    timestampKey: string
+  ) => {
     try {
       await AsyncStorage.setItem(cacheKey, JSON.stringify(data));
       await AsyncStorage.setItem(timestampKey, Date.now().toString());
@@ -74,31 +85,31 @@ export function useDashboardData(): DashboardData {
 
   const fetchGrades = async (): Promise<SubjectGrades[]> => {
     if (!client) throw new Error('Client not available');
-    
+
     // Check if logged in
     const isLoggedIn = await client.isLoggedIn();
     if (!isLoggedIn) throw new Error('Not logged in');
-    
+
     return await client.getZnamky();
   };
 
   const fetchTimetable = async (): Promise<Timetable> => {
     if (!client) throw new Error('Client not available');
-    
+
     // Check if logged in
     const isLoggedIn = await client.isLoggedIn();
     if (!isLoggedIn) throw new Error('Not logged in');
-    
+
     return await client.getTimetable();
   };
 
   const fetchAccountInfo = async (): Promise<AccountInfo> => {
     if (!client) throw new Error('Client not available');
-    
+
     // Check if logged in
     const isLoggedIn = await client.isLoggedIn();
     if (!isLoggedIn) throw new Error('Not logged in');
-    
+
     return await client.getAccountInfo();
   };
 
@@ -121,7 +132,12 @@ export function useDashboardData(): DashboardData {
       }
 
       // Load grades
-      let gradesData = forceRefresh ? null : await loadFromCache<SubjectGrades[]>(GRADES_CACHE_KEY, GRADES_TIMESTAMP_KEY);
+      let gradesData = forceRefresh
+        ? null
+        : await loadFromCache<SubjectGrades[]>(
+            GRADES_CACHE_KEY,
+            GRADES_TIMESTAMP_KEY
+          );
       if (!gradesData) {
         try {
           gradesData = await fetchGrades();
@@ -134,11 +150,20 @@ export function useDashboardData(): DashboardData {
       setGrades(gradesData);
 
       // Load timetable
-      let timetableData = forceRefresh ? null : await loadFromCache<Timetable>(TIMETABLE_CACHE_KEY, TIMETABLE_TIMESTAMP_KEY);
+      let timetableData = forceRefresh
+        ? null
+        : await loadFromCache<Timetable>(
+            TIMETABLE_CACHE_KEY,
+            TIMETABLE_TIMESTAMP_KEY
+          );
       if (!timetableData) {
         try {
           timetableData = await fetchTimetable();
-          await saveToCache(timetableData, TIMETABLE_CACHE_KEY, TIMETABLE_TIMESTAMP_KEY);
+          await saveToCache(
+            timetableData,
+            TIMETABLE_CACHE_KEY,
+            TIMETABLE_TIMESTAMP_KEY
+          );
         } catch (err) {
           console.warn('Failed to fetch timetable:', err);
           timetableData = null;
@@ -147,20 +172,29 @@ export function useDashboardData(): DashboardData {
       setTimetable(timetableData);
 
       // Load account info
-      let accountData = forceRefresh ? null : await loadFromCache<AccountInfo>(ACCOUNT_CACHE_KEY, ACCOUNT_TIMESTAMP_KEY);
+      let accountData = forceRefresh
+        ? null
+        : await loadFromCache<AccountInfo>(
+            ACCOUNT_CACHE_KEY,
+            ACCOUNT_TIMESTAMP_KEY
+          );
       if (!accountData) {
         try {
           accountData = await fetchAccountInfo();
-          await saveToCache(accountData, ACCOUNT_CACHE_KEY, ACCOUNT_TIMESTAMP_KEY);
+          await saveToCache(
+            accountData,
+            ACCOUNT_CACHE_KEY,
+            ACCOUNT_TIMESTAMP_KEY
+          );
         } catch (err) {
           console.warn('Failed to fetch account info:', err);
           accountData = null;
         }
       }
       setAccountInfo(accountData);
-
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to load dashboard data';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to load dashboard data';
       setError(errorMessage);
       console.error('Error loading dashboard data:', err);
     } finally {
@@ -192,4 +226,4 @@ export function useDashboardData(): DashboardData {
     error,
     refresh,
   };
-} 
+}

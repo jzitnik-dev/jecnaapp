@@ -4,7 +4,10 @@ import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Card, Text, useTheme } from 'react-native-paper';
 import type { SubjectGrades } from '../../api/SpseJecnaClient';
 import type { GradeStats } from '../../utils/dashboardUtils';
-import { getGradeChartData, getGradeTrendChartData } from '../../utils/dashboardUtils';
+import {
+  getGradeChartData,
+  getGradeTrendChartData,
+} from '../../utils/dashboardUtils';
 
 interface GradeCardProps {
   gradeStats: GradeStats;
@@ -15,7 +18,7 @@ const screenWidth = Dimensions.get('window').width - 32; // Full width minus mar
 
 export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const theme = useTheme();
-  
+
   const chartData = getGradeChartData(gradeStats);
   const trendData = getGradeTrendChartData(grades);
 
@@ -61,17 +64,32 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
     } catch (error) {
       console.warn('Bar chart rendering error:', error);
       return (
-        <View style={[styles.chartFallback, { backgroundColor: theme.colors.surfaceVariant }]}>
-          <Text style={[styles.chartFallbackText, { color: theme.colors.onSurfaceVariant }]}>
+        <View
+          style={[
+            styles.chartFallback,
+            { backgroundColor: theme.colors.surfaceVariant },
+          ]}
+        >
+          <Text
+            style={[
+              styles.chartFallbackText,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
             Rozložení známek:
           </Text>
           <View style={styles.gradeDistributionText}>
-            <Text style={[styles.gradeText, { color: theme.colors.onSurfaceVariant }]}>
-              1: {gradeStats.gradeDistribution[1] || 0} | 
-              2: {gradeStats.gradeDistribution[2] || 0} | 
-              3: {gradeStats.gradeDistribution[3] || 0} | 
-              4: {gradeStats.gradeDistribution[4] || 0} | 
-              5: {gradeStats.gradeDistribution[5] || 0}
+            <Text
+              style={[
+                styles.gradeText,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
+              1: {gradeStats.gradeDistribution[1] || 0} | 2:{' '}
+              {gradeStats.gradeDistribution[2] || 0} | 3:{' '}
+              {gradeStats.gradeDistribution[3] || 0} | 4:{' '}
+              {gradeStats.gradeDistribution[4] || 0} | 5:{' '}
+              {gradeStats.gradeDistribution[5] || 0}
             </Text>
           </View>
         </View>
@@ -82,15 +100,36 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const renderLineChart = () => {
     try {
       // Check if we have valid data
-      if (!trendData || !trendData.labels || trendData.labels.length === 0 || 
-          !trendData.datasets || trendData.datasets.length === 0 || 
-          !trendData.datasets[0].data || trendData.datasets[0].data.length === 0) {
+      if (
+        !trendData ||
+        !trendData.labels ||
+        trendData.labels.length === 0 ||
+        !trendData.datasets ||
+        trendData.datasets.length === 0 ||
+        !trendData.datasets[0].data ||
+        trendData.datasets[0].data.length === 0
+      ) {
         return (
-          <View style={[styles.chartFallback, { backgroundColor: theme.colors.surfaceVariant }]}>
-            <Text style={[styles.chartFallbackText, { color: theme.colors.onSurfaceVariant }]}>
+          <View
+            style={[
+              styles.chartFallback,
+              { backgroundColor: theme.colors.surfaceVariant },
+            ]}
+          >
+            <Text
+              style={[
+                styles.chartFallbackText,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Trend známek:
             </Text>
-            <Text style={[styles.gradeText, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              style={[
+                styles.gradeText,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Žádná data s daty
             </Text>
           </View>
@@ -113,11 +152,23 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
     } catch (error) {
       console.warn('Line chart rendering error:', error);
       return (
-        <View style={[styles.chartFallback, { backgroundColor: theme.colors.surfaceVariant }]}>
-          <Text style={[styles.chartFallbackText, { color: theme.colors.onSurfaceVariant }]}>
+        <View
+          style={[
+            styles.chartFallback,
+            { backgroundColor: theme.colors.surfaceVariant },
+          ]}
+        >
+          <Text
+            style={[
+              styles.chartFallbackText,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
             Trend známek:
           </Text>
-          <Text style={[styles.gradeText, { color: theme.colors.onSurfaceVariant }]}>
+          <Text
+            style={[styles.gradeText, { color: theme.colors.onSurfaceVariant }]}
+          >
             Chyba při vykreslování
           </Text>
         </View>
@@ -126,37 +177,70 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   };
 
   return (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={3}>
+    <Card
+      style={[styles.card, { backgroundColor: theme.colors.surface }]}
+      elevation={3}
+    >
       <Card.Content>
-        <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+        <Text
+          variant="titleLarge"
+          style={[styles.title, { color: theme.colors.onSurface }]}
+        >
           📊 Známky
         </Text>
-        
+
         {/* Key Metrics */}
         <View style={styles.metricsContainer}>
           <View style={styles.metric}>
-            <Text variant="headlineMedium" style={[styles.metricValue, { color: theme.colors.primary }]}>
+            <Text
+              variant="headlineMedium"
+              style={[styles.metricValue, { color: theme.colors.primary }]}
+            >
               {gradeStats.average}
             </Text>
-            <Text variant="bodySmall" style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.metricLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Průměr
             </Text>
           </View>
-          
+
           <View style={styles.metric}>
-            <Text variant="headlineMedium" style={[styles.metricValue, { color: theme.colors.secondary }]}>
+            <Text
+              variant="headlineMedium"
+              style={[styles.metricValue, { color: theme.colors.secondary }]}
+            >
               {gradeStats.totalGrades}
             </Text>
-            <Text variant="bodySmall" style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.metricLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Celkem známek
             </Text>
           </View>
-          
+
           <View style={styles.metric}>
-            <Text variant="headlineMedium" style={[styles.metricValue, { color: theme.colors.tertiary }]}>
+            <Text
+              variant="headlineMedium"
+              style={[styles.metricValue, { color: theme.colors.tertiary }]}
+            >
               {gradeStats.subjectsWithGrades}
             </Text>
-            <Text variant="bodySmall" style={[styles.metricLabel, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.metricLabel,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Předmětů
             </Text>
           </View>
@@ -164,7 +248,10 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
 
         {/* Grade Distribution Chart */}
         <View style={styles.chartContainer}>
-          <Text variant="titleMedium" style={[styles.chartTitle, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleMedium"
+            style={[styles.chartTitle, { color: theme.colors.onSurface }]}
+          >
             Rozložení známek
           </Text>
           {renderBarChart()}
@@ -172,7 +259,10 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
 
         {/* Trend Chart */}
         <View style={styles.chartContainer}>
-          <Text variant="titleMedium" style={[styles.chartTitle, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleMedium"
+            style={[styles.chartTitle, { color: theme.colors.onSurface }]}
+          >
             Trend známek (měsíc)
           </Text>
           {renderLineChart()}
@@ -181,25 +271,49 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
         {/* Best and Worst Subjects */}
         <View style={styles.subjectsContainer}>
           <View style={styles.subjectCard}>
-            <Text variant="titleSmall" style={[styles.subjectTitle, { color: theme.colors.primary }]}>
+            <Text
+              variant="titleSmall"
+              style={[styles.subjectTitle, { color: theme.colors.primary }]}
+            >
               🏆 Nejlepší předmět
             </Text>
-            <Text variant="bodyMedium" style={[styles.subjectName, { color: theme.colors.onSurface }]}>
+            <Text
+              variant="bodyMedium"
+              style={[styles.subjectName, { color: theme.colors.onSurface }]}
+            >
               {gradeStats.bestSubject.subject}
             </Text>
-            <Text variant="bodySmall" style={[styles.subjectGrade, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.subjectGrade,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Průměr: {gradeStats.bestSubject.average.toFixed(2)}
             </Text>
           </View>
-          
+
           <View style={styles.subjectCard}>
-            <Text variant="titleSmall" style={[styles.subjectTitle, { color: theme.colors.error }]}>
+            <Text
+              variant="titleSmall"
+              style={[styles.subjectTitle, { color: theme.colors.error }]}
+            >
               ⚠️ Nejtěžší předmět
             </Text>
-            <Text variant="bodyMedium" style={[styles.subjectName, { color: theme.colors.onSurface }]}>
+            <Text
+              variant="bodyMedium"
+              style={[styles.subjectName, { color: theme.colors.onSurface }]}
+            >
               {gradeStats.worstSubject.subject}
             </Text>
-            <Text variant="bodySmall" style={[styles.subjectGrade, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodySmall"
+              style={[
+                styles.subjectGrade,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Průměr: {gradeStats.worstSubject.average.toFixed(2)}
             </Text>
           </View>
@@ -286,4 +400,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: 'center',
   },
-}); 
+});

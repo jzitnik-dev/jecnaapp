@@ -10,11 +10,11 @@ interface SpseJecnaClientState {
   logout: () => void;
 }
 
-export const useSpseJecnaClient = create<SpseJecnaClientState>((set) => ({
+export const useSpseJecnaClient = create<SpseJecnaClientState>(set => ({
   client: null,
   cookies: '',
-  setClient: (client) => set({ client }),
-  setCookies: (cookies) => set({ cookies }),
+  setClient: client => set({ client }),
+  setCookies: cookies => set({ cookies }),
   logout: async () => {
     // Clear account info cache
     try {
@@ -25,4 +25,4 @@ export const useSpseJecnaClient = create<SpseJecnaClientState>((set) => ({
     }
     set({ client: null, cookies: '' });
   },
-})); 
+}));

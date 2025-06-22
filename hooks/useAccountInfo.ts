@@ -16,8 +16,10 @@ export function useAccountInfo() {
   const loadFromCache = async (): Promise<AccountInfo | null> => {
     try {
       const cachedData = await SecureStore.getItemAsync(ACCOUNT_INFO_KEY);
-      const timestamp = await SecureStore.getItemAsync(ACCOUNT_INFO_TIMESTAMP_KEY);
-      
+      const timestamp = await SecureStore.getItemAsync(
+        ACCOUNT_INFO_TIMESTAMP_KEY
+      );
+
       if (cachedData && timestamp) {
         const age = Date.now() - parseInt(timestamp, 10);
         if (age < CACHE_DURATION) {
@@ -33,7 +35,10 @@ export function useAccountInfo() {
   const saveToCache = async (data: AccountInfo) => {
     try {
       await SecureStore.setItemAsync(ACCOUNT_INFO_KEY, JSON.stringify(data));
-      await SecureStore.setItemAsync(ACCOUNT_INFO_TIMESTAMP_KEY, Date.now().toString());
+      await SecureStore.setItemAsync(
+        ACCOUNT_INFO_TIMESTAMP_KEY,
+        Date.now().toString()
+      );
     } catch (err) {
       console.warn('Failed to save account info to cache:', err);
     }
@@ -87,7 +92,8 @@ export function useAccountInfo() {
       setAccountInfo(freshData);
       await saveToCache(freshData);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch account info';
+      const errorMessage =
+        err instanceof Error ? err.message : 'Failed to fetch account info';
       setError(errorMessage);
       console.error('Error fetching account info:', err);
     } finally {
@@ -114,4 +120,4 @@ export function useAccountInfo() {
     refresh,
     clearCache,
   };
-} 
+}

@@ -56,7 +56,7 @@ export class GradeNotificationService {
       // Check if background task is available
       await BackgroundTask.getStatusAsync();
       this.backgroundTaskAvailable = true;
-      
+
       TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
         try {
           console.log('Background task: Checking for new grades...');
@@ -74,14 +74,15 @@ export class GradeNotificationService {
   }
 
   async requestPermissions(): Promise<boolean> {
-    const { status: existingStatus } = await Notifications.getPermissionsAsync();
+    const { status: existingStatus } =
+      await Notifications.getPermissionsAsync();
     let finalStatus = existingStatus;
-    
+
     if (existingStatus !== 'granted') {
       const { status } = await Notifications.requestPermissionsAsync();
       finalStatus = status;
     }
-    
+
     if (finalStatus !== 'granted') {
       console.log('Failed to get push token for push notification!');
       return false;
@@ -91,7 +92,10 @@ export class GradeNotificationService {
     if (this.backgroundTaskAvailable && BackgroundTask) {
       try {
         const backgroundTaskStatus = await BackgroundTask.getStatusAsync();
-        if (backgroundTaskStatus === BackgroundTask.BackgroundTaskStatus.Restricted) {
+        if (
+          backgroundTaskStatus ===
+          BackgroundTask.BackgroundTaskStatus.Restricted
+        ) {
           console.log('Background task permission restricted');
           return false;
         }
@@ -150,7 +154,9 @@ export class GradeNotificationService {
     return new Map();
   }
 
-  private async savePreviousGrades(grades: Map<string, Grade[]>): Promise<void> {
+  private async savePreviousGrades(
+    grades: Map<string, Grade[]>
+  ): Promise<void> {
     try {
       const obj: Record<string, Grade[]> = {};
       grades.forEach((gradeList, subject) => {
@@ -166,12 +172,17 @@ export class GradeNotificationService {
     return `${grade.value}-${grade.weight}-${grade.date || ''}-${grade.teacher || ''}`;
   }
 
-  private findNewGrades(currentGrades: SubjectGrades[], previousGrades: Map<string, Grade[]>): GradeNotification[] {
+  private findNewGrades(
+    currentGrades: SubjectGrades[],
+    previousGrades: Map<string, Grade[]>
+  ): GradeNotification[] {
     const newGrades: GradeNotification[] = [];
 
     for (const subject of currentGrades) {
       const previousSubjectGrades = previousGrades.get(subject.subject) || [];
-      const previousGradeKeys = new Set(previousSubjectGrades.map(g => this.createGradeKey(g)));
+      const previousGradeKeys = new Set(
+        previousSubjectGrades.map(g => this.createGradeKey(g))
+      );
 
       for (const split of subject.splits) {
         for (const grade of split.grades) {
@@ -192,10 +203,12 @@ export class GradeNotificationService {
     return newGrades;
   }
 
-  private async sendGradeNotification(gradeNotification: GradeNotification): Promise<void> {
+  private async sendGradeNotification(
+    gradeNotification: GradeNotification
+  ): Promise<void> {
     const title = `Nová známka z ${gradeNotification.subject}`;
     let body = `Známka: ${gradeNotification.grade} (váha: ${gradeNotification.weight})`;
-    
+
     if (gradeNotification.teacher) {
       body += ` - ${gradeNotification.teacher}`;
     }
@@ -226,13 +239,13 @@ export class GradeNotificationService {
 
       // Get current grades
       const currentGrades = await this.client.getZnamky();
-      
+
       // Get previous grades
       const previousGrades = await this.getPreviousGrades();
-      
+
       // Find new grades
       const newGrades = this.findNewGrades(currentGrades, previousGrades);
-      
+
       // Send notifications for new grades
       for (const newGrade of newGrades) {
         await this.sendGradeNotification(newGrade);
@@ -269,7 +282,7 @@ export class GradeNotificationService {
     backgroundFetchStatus: any | null;
   }> {
     const permissions = await Notifications.getPermissionsAsync();
-    
+
     let backgroundFetchStatus: any | null = null;
     if (this.backgroundTaskAvailable && BackgroundTask) {
       try {
@@ -278,7 +291,7 @@ export class GradeNotificationService {
         console.warn('Failed to get background task status:', error);
       }
     }
-    
+
     return {
       permissions,
       backgroundFetchStatus,

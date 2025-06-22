@@ -20,7 +20,8 @@ export default function UcebnaScreen() {
     setLoading(true);
     setError(null);
     setData(null);
-    client.getUcebnaParsed(String(code))
+    client
+      .getUcebnaParsed(String(code))
       .then((parsed: any) => {
         setData(parsed);
         setLoading(false);
@@ -42,52 +43,141 @@ export default function UcebnaScreen() {
   }, [loading, data, navigation]);
 
   if (loading) {
-    return <View style={styles.centered}><ActivityIndicator size="large" /><Text>Načítám učebnu…</Text></View>;
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" />
+        <Text>Načítám učebnu…</Text>
+      </View>
+    );
   }
   if (error) {
-    return <View style={styles.centered}><Text style={{ color: 'red' }}>{error}</Text></View>;
+    return (
+      <View style={styles.centered}>
+        <Text style={{ color: 'red' }}>{error}</Text>
+      </View>
+    );
   }
   if (!data) return null;
 
   return (
-    <ScrollView style={{ flex: 1, backgroundColor: theme.colors.background }} contentContainerStyle={{ padding: 0 }}>
-      <Surface style={[styles.hero, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: 16 }]}> 
-        <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 24, paddingHorizontal: 24 }}>
+    <ScrollView
+      style={{ flex: 1, backgroundColor: theme.colors.background }}
+      contentContainerStyle={{ padding: 0 }}
+    >
+      <Surface
+        style={[
+          styles.hero,
+          {
+            backgroundColor: theme.colors.surfaceVariant,
+            marginHorizontal: 16,
+          },
+        ]}
+      >
+        <View
+          style={{
+            flexDirection: 'row',
+            alignItems: 'center',
+            paddingTop: 24,
+            paddingHorizontal: 24,
+          }}
+        >
           <View style={{ flex: 1 }}>
-            <Text variant="headlineLarge" style={[styles.name, { color: theme.colors.onSurface, fontWeight: 'bold', marginTop: 0 }]}>{data.title}</Text>
+            <Text
+              variant="headlineLarge"
+              style={[
+                styles.name,
+                {
+                  color: theme.colors.onSurface,
+                  fontWeight: 'bold',
+                  marginTop: 0,
+                },
+              ]}
+            >
+              {data.title}
+            </Text>
             {data.mainClassroom ? (
-              <Text style={[styles.code, { color: theme.colors.primary, marginBottom: 12 }]}>{data.mainClassroom}</Text>
+              <Text
+                style={[
+                  styles.code,
+                  { color: theme.colors.primary, marginBottom: 12 },
+                ]}
+              >
+                {data.mainClassroom}
+              </Text>
             ) : null}
           </View>
         </View>
-        <Divider style={{ marginVertical: 10, backgroundColor: theme.colors.outline, opacity: 0.2 }} />
+        <Divider
+          style={{
+            marginVertical: 10,
+            backgroundColor: theme.colors.outline,
+            opacity: 0.2,
+          }}
+        />
         <View style={{ marginTop: 8, paddingHorizontal: 24, marginBottom: 18 }}>
           {data.floor && (
-            <View style={[styles.infoRow, { marginBottom: 6 }]}><Text style={styles.infoLabel}>Podlaží:</Text><Text style={styles.infoValue} selectable={true}>{data.floor}</Text></View>
+            <View style={[styles.infoRow, { marginBottom: 6 }]}>
+              <Text style={styles.infoLabel}>Podlaží:</Text>
+              <Text style={styles.infoValue} selectable={true}>
+                {data.floor}
+              </Text>
+            </View>
           )}
           {data.manager && (
-            <View style={[styles.infoRow, { marginBottom: 6 }]}> 
+            <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Správce:</Text>
               {data.managerHref ? (
-                <Text style={[styles.infoValue, styles.link]} onPress={() => router.push(data.managerHref.replace('/ucitel/', '/teachers/'))}>{data.manager}</Text>
-              ) : <Text style={styles.infoValue} selectable={true}>{data.manager}</Text>}
+                <Text
+                  style={[styles.infoValue, styles.link]}
+                  onPress={() =>
+                    router.push(
+                      data.managerHref.replace('/ucitel/', '/teachers/')
+                    )
+                  }
+                >
+                  {data.manager}
+                </Text>
+              ) : (
+                <Text style={styles.infoValue} selectable={true}>
+                  {data.manager}
+                </Text>
+              )}
             </View>
           )}
         </View>
       </Surface>
-      <Text variant="titleLarge" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>Rozvrh učebny</Text>
-      <View style={[styles.sectionSurface, { backgroundColor: theme.colors.surfaceVariant }]}> 
-        {data.timetable && data.timetable.periods && data.timetable.days && data.timetable.days.length > 0 ? (
+      <Text
+        variant="titleLarge"
+        style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
+      >
+        Rozvrh učebny
+      </Text>
+      <View
+        style={[
+          styles.sectionSurface,
+          { backgroundColor: theme.colors.surfaceVariant },
+        ]}
+      >
+        {data.timetable &&
+        data.timetable.periods &&
+        data.timetable.days &&
+        data.timetable.days.length > 0 ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TimetableGrid
               periods={data.timetable.periods}
               days={data.timetable.days}
-              onTeacherPress={(teacherCode) => router.push(`/teachers/${teacherCode}`)}
-              onRoomPress={(roomCode) => router.push(`/ucebna/${roomCode}`)}
+              onTeacherPress={teacherCode =>
+                router.push(`/teachers/${teacherCode}`)
+              }
+              onRoomPress={roomCode => router.push(`/ucebna/${roomCode}`)}
             />
           </ScrollView>
         ) : (
-          <Text style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}>Rozvrh není k dispozici.</Text>
+          <Text
+            style={{ color: theme.colors.onSurfaceVariant, marginBottom: 8 }}
+          >
+            Rozvrh není k dispozici.
+          </Text>
         )}
       </View>
     </ScrollView>
@@ -108,7 +198,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
     shadowColor: '#000',
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 24,
     elevation: 8,
     marginBottom: 12,
@@ -156,4 +246,4 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 3,
   },
-}); 
+});

@@ -1,7 +1,13 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, Card, Text, useTheme } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Button,
+  Card,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 import { ImageViewer } from '../../components/ImageViewer';
 import { AbsenceCard } from '../../components/dashboard/AbsenceCard';
 import { GradeCard } from '../../components/dashboard/GradeCard';
@@ -11,7 +17,8 @@ import { calculateGradeStats } from '../../utils/dashboardUtils';
 
 export default function HomeScreen() {
   const theme = useTheme();
-  const { grades, timetable, accountInfo, loading, error, refresh } = useDashboardData();
+  const { grades, timetable, accountInfo, loading, error, refresh } =
+    useDashboardData();
 
   const gradeStats = calculateGradeStats(grades);
 
@@ -21,9 +28,16 @@ export default function HomeScreen() {
 
   if (loading && grades.length === 0) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: theme.colors.background }]}>
+      <View
+        style={[
+          styles.loadingContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
         <ActivityIndicator size="large" color={theme.colors.primary} />
-        <Text style={[styles.loadingText, { color: theme.colors.onBackground }]}>
+        <Text
+          style={[styles.loadingText, { color: theme.colors.onBackground }]}
+        >
           Načítání dashboardu...
         </Text>
       </View>
@@ -32,21 +46,28 @@ export default function HomeScreen() {
 
   if (error && grades.length === 0) {
     return (
-      <View style={[styles.errorContainer, { backgroundColor: theme.colors.background }]}>
-        <MaterialCommunityIcons 
-          name="alert-circle-outline" 
-          size={64} 
-          color={theme.colors.error} 
+      <View
+        style={[
+          styles.errorContainer,
+          { backgroundColor: theme.colors.background },
+        ]}
+      >
+        <MaterialCommunityIcons
+          name="alert-circle-outline"
+          size={64}
+          color={theme.colors.error}
         />
         <Text style={[styles.errorTitle, { color: theme.colors.error }]}>
           Chyba při načítání
         </Text>
-        <Text style={[styles.errorText, { color: theme.colors.onSurfaceVariant }]}>
+        <Text
+          style={[styles.errorText, { color: theme.colors.onSurfaceVariant }]}
+        >
           {error}
         </Text>
-        <Button 
-          mode="contained" 
-          onPress={handleRefresh} 
+        <Button
+          mode="contained"
+          onPress={handleRefresh}
           style={styles.retryButton}
           icon="refresh"
         >
@@ -57,7 +78,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={[styles.container, { backgroundColor: theme.colors.background }]}
       refreshControl={
         <RefreshControl
@@ -69,7 +90,10 @@ export default function HomeScreen() {
       }
     >
       {/* Welcome Header */}
-      <Card style={[styles.welcomeCard, { backgroundColor: theme.colors.primary }]} elevation={4}>
+      <Card
+        style={[styles.welcomeCard, { backgroundColor: theme.colors.primary }]}
+        elevation={4}
+      >
         <Card.Content style={styles.welcomeContent}>
           <View style={styles.welcomeHeader}>
             <ImageViewer
@@ -78,34 +102,70 @@ export default function HomeScreen() {
               fallbackSource={require('../../assets/images/icon.png')}
             />
             <View style={styles.welcomeText}>
-              <Text variant="headlineSmall" style={[styles.welcomeTitle, { color: theme.colors.onPrimary }]}>
+              <Text
+                variant="headlineSmall"
+                style={[styles.welcomeTitle, { color: theme.colors.onPrimary }]}
+              >
                 Vítej zpět!
               </Text>
-              <Text variant="bodyLarge" style={[styles.welcomeSubtitle, { color: theme.colors.onPrimary }]}>
+              <Text
+                variant="bodyLarge"
+                style={[
+                  styles.welcomeSubtitle,
+                  { color: theme.colors.onPrimary },
+                ]}
+              >
                 {accountInfo?.fullName || 'Student'}
               </Text>
-              <Text variant="bodyMedium" style={[styles.welcomeClass, { color: theme.colors.onPrimary }]}>
+              <Text
+                variant="bodyMedium"
+                style={[styles.welcomeClass, { color: theme.colors.onPrimary }]}
+              >
                 {accountInfo?.class || ''} • {accountInfo?.username || ''}
               </Text>
             </View>
           </View>
-          
+
           {/* Quick Stats */}
           <View style={styles.quickStats}>
             <View style={styles.quickStat}>
-              <Text variant="titleLarge" style={[styles.quickStatValue, { color: theme.colors.onPrimary }]}>
+              <Text
+                variant="titleLarge"
+                style={[
+                  styles.quickStatValue,
+                  { color: theme.colors.onPrimary },
+                ]}
+              >
                 {gradeStats.average}
               </Text>
-              <Text variant="bodySmall" style={[styles.quickStatLabel, { color: theme.colors.onPrimary }]}>
+              <Text
+                variant="bodySmall"
+                style={[
+                  styles.quickStatLabel,
+                  { color: theme.colors.onPrimary },
+                ]}
+              >
                 Průměr
               </Text>
             </View>
-            
+
             <View style={styles.quickStat}>
-              <Text variant="titleLarge" style={[styles.quickStatValue, { color: theme.colors.onPrimary }]}>
+              <Text
+                variant="titleLarge"
+                style={[
+                  styles.quickStatValue,
+                  { color: theme.colors.onPrimary },
+                ]}
+              >
                 {gradeStats.totalGrades}
               </Text>
-              <Text variant="bodySmall" style={[styles.quickStatLabel, { color: theme.colors.onPrimary }]}>
+              <Text
+                variant="bodySmall"
+                style={[
+                  styles.quickStatLabel,
+                  { color: theme.colors.onPrimary },
+                ]}
+              >
                 Známek
               </Text>
             </View>
@@ -209,4 +269,4 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontStyle: 'italic',
   },
-}); 
+});

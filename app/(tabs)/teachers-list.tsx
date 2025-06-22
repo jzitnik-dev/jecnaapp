@@ -2,7 +2,13 @@ import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Searchbar, Surface, Text, useTheme } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Searchbar,
+  Surface,
+  Text,
+  useTheme,
+} from 'react-native-paper';
 
 export default function TeachersListScreen() {
   const { client } = useSpseJecnaClient();
@@ -10,15 +16,18 @@ export default function TeachersListScreen() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [teachers, setTeachers] = useState<{ name: string; shortcut: string }[]>([]);
+  const [teachers, setTeachers] = useState<
+    { name: string; shortcut: string }[]
+  >([]);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!client) return;
     setLoading(true);
     setError(null);
-    client.getTeachersList()
-      .then((list) => {
+    client
+      .getTeachersList()
+      .then(list => {
         setTeachers(list);
         setLoading(false);
       })
@@ -28,9 +37,10 @@ export default function TeachersListScreen() {
       });
   }, [client]);
 
-  const filtered = teachers.filter(t =>
-    t.name.toLowerCase().includes(search.toLowerCase()) ||
-    t.shortcut.toLowerCase().includes(search.toLowerCase())
+  const filtered = teachers.filter(
+    t =>
+      t.name.toLowerCase().includes(search.toLowerCase()) ||
+      t.shortcut.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -43,23 +53,55 @@ export default function TeachersListScreen() {
         inputStyle={{ fontSize: 18 }}
       />
       {loading ? (
-        <View style={styles.centered}><ActivityIndicator size="large" /><Text>Načítám učitele…</Text></View>
+        <View style={styles.centered}>
+          <ActivityIndicator size="large" />
+          <Text>Načítám učitele…</Text>
+        </View>
       ) : error ? (
-        <View style={styles.centered}><Text style={{ color: 'red' }}>{error}</Text></View>
+        <View style={styles.centered}>
+          <Text style={{ color: 'red' }}>{error}</Text>
+        </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8 }}>
           {filtered.length === 0 ? (
-            <Text style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginTop: 32 }}>Žádný učitel nenalezen.</Text>
-          ) : filtered.map((t, i) => (
-            <Surface
-              key={t.shortcut}
-              style={[styles.teacherCard, { backgroundColor: theme.colors.surfaceVariant }]}
-              onTouchEnd={() => router.push(`/teachers/${t.shortcut}`)}
+            <Text
+              style={{
+                color: theme.colors.onSurfaceVariant,
+                textAlign: 'center',
+                marginTop: 32,
+              }}
             >
-              <Text style={[styles.teacherName, { color: theme.colors.onSurface }]}>{t.name}</Text>
-              <Text style={[styles.teacherShortcut, { color: theme.colors.primary }]}>{t.shortcut}</Text>
-            </Surface>
-          ))}
+              Žádný učitel nenalezen.
+            </Text>
+          ) : (
+            filtered.map((t, i) => (
+              <Surface
+                key={t.shortcut}
+                style={[
+                  styles.teacherCard,
+                  { backgroundColor: theme.colors.surfaceVariant },
+                ]}
+                onTouchEnd={() => router.push(`/teachers/${t.shortcut}`)}
+              >
+                <Text
+                  style={[
+                    styles.teacherName,
+                    { color: theme.colors.onSurface },
+                  ]}
+                >
+                  {t.name}
+                </Text>
+                <Text
+                  style={[
+                    styles.teacherShortcut,
+                    { color: theme.colors.primary },
+                  ]}
+                >
+                  {t.shortcut}
+                </Text>
+              </Surface>
+            ))
+          )}
         </ScrollView>
       )}
     </View>
@@ -95,4 +137,4 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     marginLeft: 16,
   },
-}); 
+});

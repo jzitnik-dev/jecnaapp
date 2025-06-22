@@ -29,7 +29,7 @@ export default function NotificationSettingsScreen() {
 
   const getPermissionStatusText = () => {
     if (!settings) return 'Načítání...';
-    
+
     switch (settings.permissions.status) {
       case 'granted':
         return 'Povoleno';
@@ -44,7 +44,7 @@ export default function NotificationSettingsScreen() {
 
   const getBackgroundFetchStatusText = () => {
     if (!settings) return 'Načítání...';
-    
+
     switch (settings.backgroundTaskStatus) {
       case 'available':
         return 'Dostupné';
@@ -60,14 +60,26 @@ export default function NotificationSettingsScreen() {
   };
 
   return (
-    <ScrollView style={[styles.container, { backgroundColor: theme.colors.background }]}>
+    <ScrollView
+      style={[styles.container, { backgroundColor: theme.colors.background }]}
+    >
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
             Notifikace známek
           </Text>
-          <Text variant="bodyMedium" style={[styles.description, { color: theme.colors.onSurfaceVariant }]}>
-            Získejte notifikace o nových známkách. Aplikace bude kontrolovat nové známky každou hodinu na pozadí.
+          <Text
+            variant="bodyMedium"
+            style={[
+              styles.description,
+              { color: theme.colors.onSurfaceVariant },
+            ]}
+          >
+            Získejte notifikace o nových známkách. Aplikace bude kontrolovat
+            nové známky každou hodinu na pozadí.
           </Text>
         </Card.Content>
       </Card>
@@ -76,10 +88,16 @@ export default function NotificationSettingsScreen() {
         <Card.Content>
           <View style={styles.settingRow}>
             <View style={styles.settingText}>
-              <Text variant="titleMedium" style={{ color: theme.colors.onSurface }}>
+              <Text
+                variant="titleMedium"
+                style={{ color: theme.colors.onSurface }}
+              >
                 Notifikace známek
               </Text>
-              <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant }}>
+              <Text
+                variant="bodySmall"
+                style={{ color: theme.colors.onSurfaceVariant }}
+              >
                 Zapnout/vypnout notifikace
               </Text>
             </View>
@@ -94,24 +112,39 @@ export default function NotificationSettingsScreen() {
 
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
-          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
+          >
             Stav oprávnění
           </Text>
-          
+
           <View style={styles.statusRow}>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
               Notifikace:
             </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurface }}
+            >
               {getPermissionStatusText()}
             </Text>
           </View>
-          
+
           <View style={styles.statusRow}>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
               Pozadí:
             </Text>
-            <Text variant="bodyMedium" style={{ color: theme.colors.onSurface }}>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurface }}
+            >
               {getBackgroundFetchStatusText()}
             </Text>
           </View>
@@ -120,10 +153,13 @@ export default function NotificationSettingsScreen() {
 
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
-          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
+          >
             Testování
           </Text>
-          
+
           <Button
             mode="outlined"
             onPress={testNotification}
@@ -132,7 +168,7 @@ export default function NotificationSettingsScreen() {
           >
             Odeslat testovací notifikaci
           </Button>
-          
+
           <Button
             mode="outlined"
             onPress={checkForNewGrades}
@@ -146,16 +182,21 @@ export default function NotificationSettingsScreen() {
 
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
-          <Text variant="titleMedium" style={[styles.sectionTitle, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleMedium"
+            style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
+          >
             Informace
           </Text>
-          
-          <Text variant="bodySmall" style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}>
-            • Notifikace se kontrolují každou hodinu na pozadí{'\n'}
-            • Aplikace musí být alespoň jednou spuštěna{'\n'}
-            • Pro správnou funkčnost musíte být přihlášeni{'\n'}
-            • Notifikace se zobrazí pouze pro nové známky{'\n'}
-            • Data o předchozích známkách se ukládají lokálně
+
+          <Text
+            variant="bodySmall"
+            style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}
+          >
+            • Notifikace se kontrolují každou hodinu na pozadí{'\n'}• Aplikace
+            musí být alespoň jednou spuštěna{'\n'}• Pro správnou funkčnost
+            musíte být přihlášeni{'\n'}• Notifikace se zobrazí pouze pro nové
+            známky{'\n'}• Data o předchozích známkách se ukládají lokálně
           </Text>
         </Card.Content>
       </Card>

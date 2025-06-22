@@ -2,7 +2,14 @@ import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
-import { ActivityIndicator, Button, HelperText, Surface, Text, TextInput } from 'react-native-paper';
+import {
+  ActivityIndicator,
+  Button,
+  HelperText,
+  Surface,
+  Text,
+  TextInput,
+} from 'react-native-paper';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 
@@ -14,8 +21,8 @@ export default function LoginScreen() {
   const [success, setSuccess] = useState(false);
   const [checkedStored, setCheckedStored] = useState(false);
   const router = useRouter();
-  const setClient = useSpseJecnaClient((state) => state.setClient);
-  const setCookies = useSpseJecnaClient((state) => state.setCookies);
+  const setClient = useSpseJecnaClient(state => state.setClient);
+  const setCookies = useSpseJecnaClient(state => state.setCookies);
   const client = new SpseJecnaClient();
 
   // Check for stored credentials on component mount
@@ -24,7 +31,7 @@ export default function LoginScreen() {
       try {
         const storedUsername = await SecureStore.getItemAsync('username');
         const storedPassword = await SecureStore.getItemAsync('password');
-        
+
         if (storedUsername && storedPassword) {
           // Try to login with stored credentials silently
           await handleLogin(storedUsername, storedPassword, true);
@@ -60,7 +67,7 @@ export default function LoginScreen() {
         }
       }
     } catch (e: any) {
-      if (e.message == "Login token not found") {
+      if (e.message == 'Login token not found') {
         await client.logout();
         await SecureStore.deleteItemAsync('username');
         await SecureStore.deleteItemAsync('password');
@@ -94,7 +101,9 @@ export default function LoginScreen() {
   return (
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Surface style={styles.surface} elevation={4}>
-        <Text variant="headlineMedium" style={styles.title}>Login</Text>
+        <Text variant="headlineMedium" style={styles.title}>
+          Login
+        </Text>
         <TextInput
           label="Username"
           value={username}
@@ -115,7 +124,11 @@ export default function LoginScreen() {
           autoComplete="password"
           returnKeyType="done"
         />
-        {error && <HelperText type="error" visible>{error}</HelperText>}
+        {error && (
+          <HelperText type="error" visible>
+            {error}
+          </HelperText>
+        )}
         <Button
           mode="contained"
           onPress={() => handleLogin()}
@@ -156,4 +169,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
     width: 200,
   },
-}); 
+});

@@ -1,10 +1,28 @@
 import React, { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
-import { Button, Divider, Modal, Portal, Surface, Text, useTheme } from 'react-native-paper';
-import type { TimetableDay, TimetableLesson, TimetablePeriod } from '../api/SpseJecnaClient';
+import {
+  Button,
+  Divider,
+  Modal,
+  Portal,
+  Surface,
+  Text,
+  useTheme,
+} from 'react-native-paper';
+import type {
+  TimetableDay,
+  TimetableLesson,
+  TimetablePeriod,
+} from '../api/SpseJecnaClient';
 
-export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPress }: {
+export function TimetableGrid({
+  periods,
+  days,
+  style,
+  onTeacherPress,
+  onRoomPress,
+}: {
   periods: TimetablePeriod[];
   days: TimetableDay[];
   style?: any;
@@ -14,9 +32,12 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
   const periodCount = periods.length;
-  const cellWidth = Math.max(120, Math.floor((screenWidth - 24) / (periodCount + 1)));
+  const cellWidth = Math.max(
+    120,
+    Math.floor((screenWidth - 24) / (periodCount + 1))
+  );
   const cellHeight = 90;
-  
+
   // Use theme colors instead of hardcoded dark/light colors
   const tableBg = theme.colors.surface;
   const cellBg = theme.colors.surfaceVariant;
@@ -54,25 +75,58 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
 
   return (
     <>
-      <Surface style={[styles.table, { backgroundColor: tableBg, borderRadius: 18, borderColor }, style]} elevation={3}>
+      <Surface
+        style={[
+          styles.table,
+          { backgroundColor: tableBg, borderRadius: 18, borderColor },
+          style,
+        ]}
+        elevation={3}
+      >
         {/* Header row */}
-        <View style={[styles.row, styles.stickyHeader, Platform.OS === 'web' ? { position: 'sticky', top: 0, zIndex: 10 } : {}]}>
-          <View style={[styles.headerCell, { width: cellWidth, backgroundColor: headerBg, borderTopLeftRadius: 18, borderColor, borderRightWidth: 1 }]}> 
-            <Text style={[styles.headerText, { color: textColor }]}> </Text>
-          </View>
-          {periods.map((period, idx) => (
-            <View key={idx} style={[
+        <View
+          style={[
+            styles.row,
+            styles.stickyHeader,
+            Platform.OS === 'web'
+              ? { position: 'sticky', top: 0, zIndex: 10 }
+              : {},
+          ]}
+        >
+          <View
+            style={[
               styles.headerCell,
               {
                 width: cellWidth,
                 backgroundColor: headerBg,
-                borderTopRightRadius: idx === periods.length - 1 ? 18 : 0,
+                borderTopLeftRadius: 18,
                 borderColor,
-                borderRightWidth: idx === periods.length - 1 ? 0 : 1,
-              }
-            ]}>
-              <Text style={[styles.headerText, { color: textColor }]}>{period.number}</Text>
-              <Text style={[styles.timeText, { color: secondaryTextColor }]}>{period.time}</Text>
+                borderRightWidth: 1,
+              },
+            ]}
+          >
+            <Text style={[styles.headerText, { color: textColor }]}> </Text>
+          </View>
+          {periods.map((period, idx) => (
+            <View
+              key={idx}
+              style={[
+                styles.headerCell,
+                {
+                  width: cellWidth,
+                  backgroundColor: headerBg,
+                  borderTopRightRadius: idx === periods.length - 1 ? 18 : 0,
+                  borderColor,
+                  borderRightWidth: idx === periods.length - 1 ? 0 : 1,
+                },
+              ]}
+            >
+              <Text style={[styles.headerText, { color: textColor }]}>
+                {period.number}
+              </Text>
+              <Text style={[styles.timeText, { color: secondaryTextColor }]}>
+                {period.time}
+              </Text>
             </View>
           ))}
         </View>
@@ -80,8 +134,20 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
         {/* Day rows */}
         {days.map((day, dayIdx) => (
           <View key={day.day + dayIdx} style={styles.row}>
-            <View style={[styles.dayCell, { width: cellWidth, backgroundColor: headerBg, borderBottomLeftRadius: dayIdx === days.length - 1 ? 18 : 0, borderColor }]}> 
-              <Text style={[styles.dayText, { color: textColor }]}>{day.day}</Text>
+            <View
+              style={[
+                styles.dayCell,
+                {
+                  width: cellWidth,
+                  backgroundColor: headerBg,
+                  borderBottomLeftRadius: dayIdx === days.length - 1 ? 18 : 0,
+                  borderColor,
+                },
+              ]}
+            >
+              <Text style={[styles.dayText, { color: textColor }]}>
+                {day.day}
+              </Text>
             </View>
             {day.cells.map((cell, periodIdx) => {
               const isSplit = cell && cell.length > 1;
@@ -95,74 +161,133 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
                       height: cellHeight,
                       backgroundColor: cellBg,
                       borderBottomRightRadius:
-                        dayIdx === days.length - 1 && periodIdx === day.cells.length - 1 ? 18 : 0,
+                        dayIdx === days.length - 1 &&
+                        periodIdx === day.cells.length - 1
+                          ? 18
+                          : 0,
                       borderColor,
-                      borderRightWidth: periodIdx === day.cells.length - 1 ? 0 : 1,
+                      borderRightWidth:
+                        periodIdx === day.cells.length - 1 ? 0 : 1,
                     },
                   ]}
                 >
-                  {cell && cell.length > 0 ? cell.map((lesson, i) => (
-                    <Pressable
-                      key={i}
-                      onPress={() => handleLessonPress(lesson)}
-                      style={[
-                        styles.lessonSquare,
-                        {
-                          backgroundColor: cellBg,
-                          borderColor: borderColor,
-                          borderBottomWidth: isSplit && i === 0 ? 1 : 0,
-                          borderRightWidth: 0,
-                          borderLeftWidth: 0,
-                          borderTopWidth: 0,
-                          height: isSplit ? cellHeight / 2 : cellHeight,
-                          width: '100%',
-                          flex: 1,
-                          margin: 0,
-                          padding: 6,
-                          borderRadius: 0,
-                          justifyContent: 'flex-start',
-                          alignItems: 'stretch',
-                        },
-                      ]}
-                    >
-                      <View style={{ position: 'absolute', top: 6, left: 6, right: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <Text style={[styles.teacherSquare, {
-                          color: accentColor,
-                          fontSize: 12,
-                          flex: 1,
-                          marginRight: 4
-                        }]} numberOfLines={1} ellipsizeMode="tail">{lesson.teacher}</Text>
-                        {lesson.room ? (
-                          <View style={{
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                          }}>
-                            <Text style={[styles.roomSquare, {
-                              color: secondaryTextColor,
-                              fontSize: 11,
-                              fontWeight: '500'
-                            }]} numberOfLines={1}>{lesson.room}</Text>
+                  {cell && cell.length > 0
+                    ? cell.map((lesson, i) => (
+                        <Pressable
+                          key={i}
+                          onPress={() => handleLessonPress(lesson)}
+                          style={[
+                            styles.lessonSquare,
+                            {
+                              backgroundColor: cellBg,
+                              borderColor: borderColor,
+                              borderBottomWidth: isSplit && i === 0 ? 1 : 0,
+                              borderRightWidth: 0,
+                              borderLeftWidth: 0,
+                              borderTopWidth: 0,
+                              height: isSplit ? cellHeight / 2 : cellHeight,
+                              width: '100%',
+                              flex: 1,
+                              margin: 0,
+                              padding: 6,
+                              borderRadius: 0,
+                              justifyContent: 'flex-start',
+                              alignItems: 'stretch',
+                            },
+                          ]}
+                        >
+                          <View
+                            style={{
+                              position: 'absolute',
+                              top: 6,
+                              left: 6,
+                              right: 6,
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'flex-start',
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.teacherSquare,
+                                {
+                                  color: accentColor,
+                                  fontSize: 12,
+                                  flex: 1,
+                                  marginRight: 4,
+                                },
+                              ]}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
+                              {lesson.teacher}
+                            </Text>
+                            {lesson.room ? (
+                              <View
+                                style={{
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <Text
+                                  style={[
+                                    styles.roomSquare,
+                                    {
+                                      color: secondaryTextColor,
+                                      fontSize: 11,
+                                      fontWeight: '500',
+                                    },
+                                  ]}
+                                  numberOfLines={1}
+                                >
+                                  {lesson.room}
+                                </Text>
+                              </View>
+                            ) : null}
                           </View>
-                        ) : null}
-                      </View>
-                      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-                        <Text style={[styles.subjectSquare, {
-                          color: textColor,
-                          fontSize: 15,
-                          fontWeight: '600',
-                          textAlign: 'center'
-                        }]} numberOfLines={1} ellipsizeMode="tail">{lesson.subject}</Text>
-                        {lesson.group ? (
-                          <Text style={[styles.groupSquare, {
-                            color: secondaryTextColor,
-                            fontSize: 11,
-                            marginTop: 2,
-                            textAlign: 'center'
-                          }]} numberOfLines={1} ellipsizeMode="tail">{lesson.group}</Text>
-                        ) : null}
-                      </View>
-                    </Pressable>
-                  )) : null}
+                          <View
+                            style={{
+                              flex: 1,
+                              justifyContent: 'center',
+                              alignItems: 'center',
+                            }}
+                          >
+                            <Text
+                              style={[
+                                styles.subjectSquare,
+                                {
+                                  color: textColor,
+                                  fontSize: 15,
+                                  fontWeight: '600',
+                                  textAlign: 'center',
+                                },
+                              ]}
+                              numberOfLines={1}
+                              ellipsizeMode="tail"
+                            >
+                              {lesson.subject}
+                            </Text>
+                            {lesson.group ? (
+                              <Text
+                                style={[
+                                  styles.groupSquare,
+                                  {
+                                    color: secondaryTextColor,
+                                    fontSize: 11,
+                                    marginTop: 2,
+                                    textAlign: 'center',
+                                  },
+                                ]}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                              >
+                                {lesson.group}
+                              </Text>
+                            ) : null}
+                          </View>
+                        </Pressable>
+                      ))
+                    : null}
                 </View>
               );
             })}
@@ -170,19 +295,53 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
         ))}
       </Surface>
       <Portal>
-        <Modal visible={modalVisible} onDismiss={() => setModalVisible(false)} contentContainerStyle={[styles.modal, { backgroundColor: theme.colors.surfaceVariant }]}> 
+        <Modal
+          visible={modalVisible}
+          onDismiss={() => setModalVisible(false)}
+          contentContainerStyle={[
+            styles.modal,
+            { backgroundColor: theme.colors.surfaceVariant },
+          ]}
+        >
           {modalLesson && (
             <View>
-              <Text variant="titleLarge" style={{ marginBottom: 8 }}>{modalLesson.subject}</Text>
-              <Text style={{ marginBottom: 8 }}>Třída: <Text style={{ fontWeight: 'bold' }}>{modalLesson.className || '-'}</Text></Text>
-              {modalLesson.group &&
-                <Text style={{ marginBottom: 8 }}>Skupina: <Text style={{ fontWeight: 'bold' }}>{modalLesson.group}</Text></Text>
-              }
-              <Button mode="contained" onPress={() => handleRoomPress()} style={{ marginBottom: 8 }}>{modalLesson.room || 'Učebna'}</Button>
-              <Button mode="contained" onPress={() => handleTeacherPress()} style={{ marginBottom: 8 }}>
+              <Text variant="titleLarge" style={{ marginBottom: 8 }}>
+                {modalLesson.subject}
+              </Text>
+              <Text style={{ marginBottom: 8 }}>
+                Třída:{' '}
+                <Text style={{ fontWeight: 'bold' }}>
+                  {modalLesson.className || '-'}
+                </Text>
+              </Text>
+              {modalLesson.group && (
+                <Text style={{ marginBottom: 8 }}>
+                  Skupina:{' '}
+                  <Text style={{ fontWeight: 'bold' }}>
+                    {modalLesson.group}
+                  </Text>
+                </Text>
+              )}
+              <Button
+                mode="contained"
+                onPress={() => handleRoomPress()}
+                style={{ marginBottom: 8 }}
+              >
+                {modalLesson.room || 'Učebna'}
+              </Button>
+              <Button
+                mode="contained"
+                onPress={() => handleTeacherPress()}
+                style={{ marginBottom: 8 }}
+              >
                 {modalLesson.teacherFull || modalLesson.teacher || 'Učitel'}
               </Button>
-              <Button onPress={() => setModalVisible(false)} style={{ marginTop: 8 }}>Zavřít</Button>
+              <Button
+                onPress={() => setModalVisible(false)}
+                style={{ marginTop: 8 }}
+              >
+                Zavřít
+              </Button>
             </View>
           )}
         </Modal>
@@ -299,4 +458,4 @@ const styles = StyleSheet.create({
     minWidth: 280,
     maxWidth: 400,
   },
-}); 
+});

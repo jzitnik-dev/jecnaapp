@@ -1,18 +1,21 @@
-import { type CanteenMenuItem, type CanteenMenuResult } from "@/api/iCanteenClient";
-import { useSpseJecnaClient } from "@/hooks/useSpseJecnaClient";
-import { useThemeColor } from "@/hooks/useThemeColor";
+import {
+  type CanteenMenuItem,
+  type CanteenMenuResult,
+} from '@/api/iCanteenClient';
+import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
+import { useThemeColor } from '@/hooks/useThemeColor';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
-    ActivityIndicator,
-    Alert,
-    RefreshControl,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View
-} from "react-native";
+  ActivityIndicator,
+  Alert,
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 
 const allergenColors: { [key: string]: string } = {
   '1': '#FF6B6B', // Obiloviny - červená
@@ -57,7 +60,7 @@ export default function Jidelna() {
   const backgroundColor = useThemeColor({}, 'background');
   const textColor = useThemeColor({}, 'text');
   const cardBackground = useThemeColor({}, 'background');
-  
+
   const { client: spseClient } = useSpseJecnaClient();
 
   const fetchMenu = async () => {
@@ -65,13 +68,16 @@ export default function Jidelna() {
       if (!spseClient) {
         throw new Error('SpseJecnaClient not available. Please login first.');
       }
-      
+
       const canteenClient = await spseClient.getCanteenClient();
       const menu = await canteenClient.getMonthlyMenu();
       setMenuData(menu);
     } catch (error) {
       console.error('Error fetching menu:', error);
-      const errorMessage = error instanceof Error ? error.message : 'Nepodařilo se načíst jídelníček';
+      const errorMessage =
+        error instanceof Error
+          ? error.message
+          : 'Nepodařilo se načíst jídelníček';
       Alert.alert('Chyba', errorMessage);
     } finally {
       setLoading(false);
@@ -81,30 +87,33 @@ export default function Jidelna() {
 
   const handleOrder = async (menuItem: CanteenMenuItem) => {
     if (menuItem.status === 'disabled') {
-      Alert.alert('Nelze objednat', 'Toto jídlo již nelze objednat nebo zrušit');
+      Alert.alert(
+        'Nelze objednat',
+        'Toto jídlo již nelze objednat nebo zrušit'
+      );
       return;
     }
 
     setOrdering(menuItem.date);
-    
+
     try {
       if (!spseClient) {
         throw new Error('SpseJecnaClient not available');
       }
-      
+
       const canteenClient = await spseClient.getCanteenClient();
-      
+
       // Use the actual ordering functionality
       const success = await canteenClient.toggleMealOrder(menuItem);
-      
+
       if (success) {
         // Refresh the menu data to get updated information
         await fetchMenu();
-        
+
         Alert.alert(
-          'Úspěch', 
-          menuItem.status === 'ordered' 
-            ? 'Objednávka byla zrušena' 
+          'Úspěch',
+          menuItem.status === 'ordered'
+            ? 'Objednávka byla zrušena'
             : 'Jídlo bylo objednáno'
         );
       } else {
@@ -123,31 +132,40 @@ export default function Jidelna() {
     fetchMenu();
   };
 
-    useEffect(() => {
+  useEffect(() => {
     fetchMenu();
-    }, []);
+  }, []);
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'ordered': return '#4CAF50';
-      case 'disabled': return '#F44336';
-      default: return '#2196F3';
+      case 'ordered':
+        return '#4CAF50';
+      case 'disabled':
+        return '#F44336';
+      default:
+        return '#2196F3';
     }
   };
 
   const getStatusText = (status: string) => {
     switch (status) {
-      case 'ordered': return 'Objednáno';
-      case 'disabled': return 'Nelze zrušit';
-      default: return 'Objednat';
+      case 'ordered':
+        return 'Objednáno';
+      case 'disabled':
+        return 'Nelze zrušit';
+      default:
+        return 'Objednat';
     }
   };
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'ordered': return 'checkmark-circle';
-      case 'disabled': return 'close-circle';
-      default: return 'add-circle-outline';
+      case 'ordered':
+        return 'checkmark-circle';
+      case 'disabled':
+        return 'close-circle';
+      default:
+        return 'add-circle-outline';
     }
   };
 
@@ -155,13 +173,15 @@ export default function Jidelna() {
     return (
       <View style={[styles.container, { backgroundColor }]}>
         <ActivityIndicator size="large" color={textColor} />
-        <Text style={[styles.loadingText, { color: textColor }]}>Načítání jídelníčku...</Text>
+        <Text style={[styles.loadingText, { color: textColor }]}>
+          Načítání jídelníčku...
+        </Text>
       </View>
     );
   }
 
   return (
-    <ScrollView 
+    <ScrollView
       style={[styles.container, { backgroundColor }]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
@@ -172,14 +192,18 @@ export default function Jidelna() {
         <View style={styles.headerRow}>
           <View style={styles.headerItem}>
             <Ionicons name="wallet-outline" size={20} color={textColor} />
-            <Text style={[styles.headerLabel, { color: textColor }]}>Kredit</Text>
+            <Text style={[styles.headerLabel, { color: textColor }]}>
+              Kredit
+            </Text>
             <Text style={[styles.headerValue, { color: textColor }]}>
               {menuData?.credit || '0,00 Kč'}
             </Text>
           </View>
           <View style={styles.headerItem}>
             <Ionicons name="location-outline" size={20} color={textColor} />
-            <Text style={[styles.headerLabel, { color: textColor }]}>Výdejna</Text>
+            <Text style={[styles.headerLabel, { color: textColor }]}>
+              Výdejna
+            </Text>
             <Text style={[styles.headerValue, { color: textColor }]}>
               {menuData?.pickupLocation || 'N/A'}
             </Text>
@@ -188,18 +212,26 @@ export default function Jidelna() {
       </View>
 
       {/* Menu items */}
-      {menuData?.menus.map((menuItem) => (
-        <View key={menuItem.date} style={[styles.menuCard, { backgroundColor: cardBackground }]}>
+      {menuData?.menus.map(menuItem => (
+        <View
+          key={menuItem.date}
+          style={[styles.menuCard, { backgroundColor: cardBackground }]}
+        >
           {/* Date header */}
           <View style={styles.dateHeader}>
             <Text style={[styles.dateText, { color: textColor }]}>
               {menuItem.dayName}
             </Text>
-            <View style={[styles.statusBadge, { backgroundColor: getStatusColor(menuItem.status) }]}>
-              <Ionicons 
-                name={getStatusIcon(menuItem.status) as any} 
-                size={16} 
-                color="white" 
+            <View
+              style={[
+                styles.statusBadge,
+                { backgroundColor: getStatusColor(menuItem.status) },
+              ]}
+            >
+              <Ionicons
+                name={getStatusIcon(menuItem.status) as any}
+                size={16}
+                color="white"
               />
               <Text style={styles.statusText}>
                 {getStatusText(menuItem.status)}
@@ -210,7 +242,9 @@ export default function Jidelna() {
           {/* Food description */}
           {menuItem.food && (
             <View style={styles.foodSection}>
-              <Text style={[styles.foodTitle, { color: textColor }]}>Jídlo</Text>
+              <Text style={[styles.foodTitle, { color: textColor }]}>
+                Jídlo
+              </Text>
               <Text style={[styles.foodDescription, { color: textColor }]}>
                 {menuItem.food}
               </Text>
@@ -229,14 +263,16 @@ export default function Jidelna() {
           {/* Allergens */}
           {menuItem.allergens.length > 0 && (
             <View style={styles.allergenSection}>
-              <Text style={[styles.allergenTitle, { color: textColor }]}>Alergeny</Text>
+              <Text style={[styles.allergenTitle, { color: textColor }]}>
+                Alergeny
+              </Text>
               <View style={styles.allergenList}>
                 {menuItem.allergens.map((allergen, index) => (
-                  <View 
-                    key={index} 
+                  <View
+                    key={index}
                     style={[
-                      styles.allergenBadge, 
-                      { backgroundColor: allergenColors[allergen] || '#999' }
+                      styles.allergenBadge,
+                      { backgroundColor: allergenColors[allergen] || '#999' },
                     ]}
                   >
                     <Text style={styles.allergenText}>{allergen}</Text>
@@ -247,7 +283,9 @@ export default function Jidelna() {
           )}
 
           {/* Timing information */}
-          {(menuItem.pickupTime || menuItem.orderDeadline || menuItem.cancelDeadline) && (
+          {(menuItem.pickupTime ||
+            menuItem.orderDeadline ||
+            menuItem.cancelDeadline) && (
             <View style={styles.timingSection}>
               <Ionicons name="time-outline" size={16} color={textColor} />
               <View style={styles.timingInfo}>
@@ -274,22 +312,24 @@ export default function Jidelna() {
           <TouchableOpacity
             style={[
               styles.orderButton,
-              { 
+              {
                 backgroundColor: getStatusColor(menuItem.status),
-                opacity: ordering === menuItem.date ? 0.7 : 1
-              }
+                opacity: ordering === menuItem.date ? 0.7 : 1,
+              },
             ]}
             onPress={() => handleOrder(menuItem)}
-            disabled={menuItem.status === 'disabled' || ordering === menuItem.date}
+            disabled={
+              menuItem.status === 'disabled' || ordering === menuItem.date
+            }
           >
             {ordering === menuItem.date ? (
               <ActivityIndicator size="small" color="white" />
             ) : (
               <>
-                <Ionicons 
-                  name={getStatusIcon(menuItem.status) as any} 
-                  size={20} 
-                  color="white" 
+                <Ionicons
+                  name={getStatusIcon(menuItem.status) as any}
+                  size={20}
+                  color="white"
                 />
                 <Text style={styles.orderButtonText}>
                   {getStatusText(menuItem.status)}

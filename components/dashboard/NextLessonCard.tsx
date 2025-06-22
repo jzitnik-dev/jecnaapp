@@ -45,18 +45,30 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
 
   if (!timetable) {
     return (
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={3}>
+      <Card
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={3}
+      >
         <Card.Content>
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
             ⏰ Rozvrh hodin
           </Text>
           <View style={styles.noLessonContainer}>
-            <MaterialCommunityIcons 
-              name="calendar-blank" 
-              size={48} 
-              color={theme.colors.onSurfaceVariant} 
+            <MaterialCommunityIcons
+              name="calendar-blank"
+              size={48}
+              color={theme.colors.onSurfaceVariant}
             />
-            <Text variant="bodyLarge" style={[styles.noLessonText, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodyLarge"
+              style={[
+                styles.noLessonText,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Rozvrh není k dispozici
             </Text>
           </View>
@@ -67,18 +79,30 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
 
   if (!currentLesson && !nextLesson) {
     return (
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={3}>
+      <Card
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={3}
+      >
         <Card.Content>
-          <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
             ⏰ Rozvrh hodin
           </Text>
           <View style={styles.noLessonContainer}>
-            <MaterialCommunityIcons 
-              name="calendar-check" 
-              size={48} 
-              color={theme.colors.onSurfaceVariant} 
+            <MaterialCommunityIcons
+              name="calendar-check"
+              size={48}
+              color={theme.colors.onSurfaceVariant}
             />
-            <Text variant="bodyLarge" style={[styles.noLessonText, { color: theme.colors.onSurfaceVariant }]}>
+            <Text
+              variant="bodyLarge"
+              style={[
+                styles.noLessonText,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
               Žádné další hodiny dnes
             </Text>
           </View>
@@ -89,87 +113,117 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
 
   const renderLessonDetails = (lesson: LessonInfo) => (
     <View style={styles.lessonDetails}>
-      <TouchableOpacity 
+      <TouchableOpacity
         style={styles.detailRow}
         onPress={() => handleTeacherPress(lesson.teacherCode)}
       >
-        <MaterialCommunityIcons 
-          name="account" 
-          size={20} 
-          color={theme.colors.onSurfaceVariant} 
+        <MaterialCommunityIcons
+          name="account"
+          size={20}
+          color={theme.colors.onSurfaceVariant}
         />
-        <Text variant="bodyMedium" style={[styles.detailText, { color: theme.colors.primary }]}>
+        <Text
+          variant="bodyMedium"
+          style={[styles.detailText, { color: theme.colors.primary }]}
+        >
           {lesson.teacherFull}
         </Text>
-        <MaterialCommunityIcons 
-          name="chevron-right" 
-          size={16} 
-          color={theme.colors.onSurfaceVariant} 
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={16}
+          color={theme.colors.onSurfaceVariant}
         />
       </TouchableOpacity>
-      
-      <TouchableOpacity 
+
+      <TouchableOpacity
         style={styles.detailRow}
         onPress={() => handleRoomPress(lesson.room)}
       >
-        <MaterialCommunityIcons 
-          name="door" 
-          size={20} 
-          color={theme.colors.onSurfaceVariant} 
+        <MaterialCommunityIcons
+          name="door"
+          size={20}
+          color={theme.colors.onSurfaceVariant}
         />
-        <Text variant="bodyMedium" style={[styles.detailText, { color: theme.colors.secondary }]}>
+        <Text
+          variant="bodyMedium"
+          style={[styles.detailText, { color: theme.colors.secondary }]}
+        >
           {lesson.room}
         </Text>
-        <MaterialCommunityIcons 
-          name="chevron-right" 
-          size={16} 
-          color={theme.colors.onSurfaceVariant} 
+        <MaterialCommunityIcons
+          name="chevron-right"
+          size={16}
+          color={theme.colors.onSurfaceVariant}
         />
       </TouchableOpacity>
     </View>
   );
 
   return (
-    <Card style={[styles.card, { backgroundColor: theme.colors.surface }]} elevation={3}>
+    <Card
+      style={[styles.card, { backgroundColor: theme.colors.surface }]}
+      elevation={3}
+    >
       <Card.Content>
-        <Text variant="titleLarge" style={[styles.title, { color: theme.colors.onSurface }]}>
+        <Text
+          variant="titleLarge"
+          style={[styles.title, { color: theme.colors.onSurface }]}
+        >
           ⏰ Rozvrh hodin
         </Text>
-        
+
         {/* Current Lesson */}
         {currentLesson && (
           <View style={[styles.lessonContainer, styles.currentLesson]}>
             <View style={styles.lessonHeader}>
               <View style={styles.statusContainer}>
-                <MaterialCommunityIcons 
-                  name="play-circle" 
-                  size={24} 
-                  color={theme.colors.primary} 
+                <MaterialCommunityIcons
+                  name="play-circle"
+                  size={24}
+                  color={theme.colors.primary}
                 />
-                <Text variant="titleMedium" style={[styles.statusText, { color: theme.colors.primary }]}>
+                <Text
+                  variant="titleMedium"
+                  style={[styles.statusText, { color: theme.colors.primary }]}
+                >
                   Právě probíhá
                 </Text>
               </View>
-              
+
               <View style={styles.countdownContainer}>
-                <Text variant="titleMedium" style={[styles.countdown, { color: theme.colors.error }]}>
+                <Text
+                  variant="titleMedium"
+                  style={[styles.countdown, { color: theme.colors.error }]}
+                >
                   {currentLesson.timeUntilEnd}
                 </Text>
-                <Text variant="bodySmall" style={[styles.countdownLabel, { color: theme.colors.onSurfaceVariant }]}>
+                <Text
+                  variant="bodySmall"
+                  style={[
+                    styles.countdownLabel,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
                   do konce
                 </Text>
               </View>
             </View>
-            
+
             <View style={styles.subjectContainer}>
-              <Text variant="headlineSmall" style={[styles.subject, { color: theme.colors.primary }]}>
+              <Text
+                variant="headlineSmall"
+                style={[styles.subject, { color: theme.colors.primary }]}
+              >
                 {currentLesson.subject}
               </Text>
-              <Text variant="bodyMedium" style={[styles.time, { color: theme.colors.onSurfaceVariant }]}>
+              <Text
+                variant="bodyMedium"
+                style={[styles.time, { color: theme.colors.onSurfaceVariant }]}
+              >
                 {currentLesson.time} • {currentLesson.period}. hodina
               </Text>
             </View>
-            
+
             {renderLessonDetails(currentLesson)}
           </View>
         )}
@@ -179,35 +233,53 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
           <View style={[styles.lessonContainer, styles.nextLesson]}>
             <View style={styles.lessonHeader}>
               <View style={styles.statusContainer}>
-                <MaterialCommunityIcons 
-                  name="clock-outline" 
-                  size={24} 
-                  color={theme.colors.secondary} 
+                <MaterialCommunityIcons
+                  name="clock-outline"
+                  size={24}
+                  color={theme.colors.secondary}
                 />
-                <Text variant="titleMedium" style={[styles.statusText, { color: theme.colors.secondary }]}>
+                <Text
+                  variant="titleMedium"
+                  style={[styles.statusText, { color: theme.colors.secondary }]}
+                >
                   Další hodina
                 </Text>
               </View>
-              
+
               <View style={styles.countdownContainer}>
-                <Text variant="titleMedium" style={[styles.countdown, { color: theme.colors.secondary }]}>
+                <Text
+                  variant="titleMedium"
+                  style={[styles.countdown, { color: theme.colors.secondary }]}
+                >
                   {nextLesson.timeUntilStart}
                 </Text>
-                <Text variant="bodySmall" style={[styles.countdownLabel, { color: theme.colors.onSurfaceVariant }]}>
+                <Text
+                  variant="bodySmall"
+                  style={[
+                    styles.countdownLabel,
+                    { color: theme.colors.onSurfaceVariant },
+                  ]}
+                >
                   do začátku
                 </Text>
               </View>
             </View>
-            
+
             <View style={styles.subjectContainer}>
-              <Text variant="headlineSmall" style={[styles.subject, { color: theme.colors.secondary }]}>
+              <Text
+                variant="headlineSmall"
+                style={[styles.subject, { color: theme.colors.secondary }]}
+              >
                 {nextLesson.subject}
               </Text>
-              <Text variant="bodyMedium" style={[styles.time, { color: theme.colors.onSurfaceVariant }]}>
+              <Text
+                variant="bodyMedium"
+                style={[styles.time, { color: theme.colors.onSurfaceVariant }]}
+              >
                 {nextLesson.time} • {nextLesson.period}. hodina
               </Text>
             </View>
-            
+
             {renderLessonDetails(nextLesson)}
           </View>
         )}
@@ -294,4 +366,4 @@ const styles = StyleSheet.create({
     fontWeight: '500',
     flex: 1,
   },
-}); 
+});

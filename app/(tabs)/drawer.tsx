@@ -1,6 +1,10 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '@react-navigation/drawer';
+import {
+  createDrawerNavigator,
+  DrawerContentScrollView,
+  DrawerItemList,
+} from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React from 'react';
@@ -27,7 +31,7 @@ export default function DrawerLayout() {
   const { navigationTheme } = useAppTheme();
   const { accountInfo } = useAccountInfo();
   const router = useRouter();
-  
+
   const handleLogout = async () => {
     if (client) {
       await client.logout();
@@ -61,40 +65,52 @@ export default function DrawerLayout() {
           <DrawerContentScrollView {...props}>
             <DrawerItemList {...props} />
           </DrawerContentScrollView>
-          
+
           {/* Account Section */}
-          <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: navigationTheme.colors.border }}>
+          <View
+            style={{
+              padding: 16,
+              borderTopWidth: 1,
+              borderTopColor: navigationTheme.colors.border,
+            }}
+          >
             <TouchableRipple onPress={handleAccountPress}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <View
+                style={{
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                }}
+              >
                 <ImageViewer
                   imageUrl={accountInfo?.photoUrl}
                   size={48}
                   fallbackSource={require('../../assets/images/icon.png')}
                 />
                 <View style={{ marginLeft: 12, flex: 1 }}>
-                  <Text 
-                    variant="titleMedium" 
-                    style={{ 
+                  <Text
+                    variant="titleMedium"
+                    style={{
                       color: navigationTheme.colors.text,
-                      fontWeight: '600'
+                      fontWeight: '600',
                     }}
                   >
                     {accountInfo?.fullName || 'Načítání...'}
                   </Text>
-                  <Text 
-                    variant="bodySmall" 
-                    style={{ 
+                  <Text
+                    variant="bodySmall"
+                    style={{
                       color: navigationTheme.colors.text,
-                      opacity: 0.7
+                      opacity: 0.7,
                     }}
                   >
                     {accountInfo?.class || ''} • {accountInfo?.username || ''}
                   </Text>
                 </View>
-                <MaterialCommunityIcons 
-                  name="chevron-right" 
-                  size={20} 
-                  color={navigationTheme.colors.text} 
+                <MaterialCommunityIcons
+                  name="chevron-right"
+                  size={20}
+                  color={navigationTheme.colors.text}
                 />
               </View>
             </TouchableRipple>
@@ -107,7 +123,9 @@ export default function DrawerLayout() {
         component={HomeScreen}
         options={{
           title: 'Domov',
-          drawerIcon: ({ color, size }) => <IconSymbol size={size} name="house.fill" color={color} />, 
+          drawerIcon: ({ color, size }) => (
+            <IconSymbol size={size} name="house.fill" color={color} />
+          ),
         }}
       />
       <Drawer.Screen
@@ -115,7 +133,13 @@ export default function DrawerLayout() {
         component={RozvrhScreen}
         options={{
           title: 'Rozvrh',
-          drawerIcon: ({ color, size }) => <IconSymbol size={size} name="chevron.left.forwardslash.chevron.right" color={color} />, 
+          drawerIcon: ({ color, size }) => (
+            <IconSymbol
+              size={size}
+              name="chevron.left.forwardslash.chevron.right"
+              color={color}
+            />
+          ),
         }}
       />
       <Drawer.Screen
@@ -123,7 +147,9 @@ export default function DrawerLayout() {
         component={ZnamkyScreen}
         options={{
           title: 'Známky',
-          drawerIcon: ({ color, size }) => <IconSymbol size={size} name="paperplane.fill" color={color} />, 
+          drawerIcon: ({ color, size }) => (
+            <IconSymbol size={size} name="paperplane.fill" color={color} />
+          ),
         }}
       />
       <Drawer.Screen
@@ -132,7 +158,11 @@ export default function DrawerLayout() {
         options={{
           title: 'Učitelé',
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="account-multiple" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="account-multiple"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -152,7 +182,11 @@ export default function DrawerLayout() {
         options={{
           title: 'Příchody a odchody',
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="login-variant" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="login-variant"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -162,7 +196,11 @@ export default function DrawerLayout() {
         options={{
           title: 'Omluvný list',
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="file-document-edit-outline" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="file-document-edit-outline"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -172,7 +210,11 @@ export default function DrawerLayout() {
         options={{
           title: 'Jídelna',
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="file-document-edit-outline" color={color} size={size} />
+            <MaterialCommunityIcons
+              name="file-document-edit-outline"
+              color={color}
+              size={size}
+            />
           ),
         }}
       />
@@ -189,4 +231,4 @@ export default function DrawerLayout() {
       />
     </Drawer.Navigator>
   );
-} 
+}

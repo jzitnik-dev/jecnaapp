@@ -19,10 +19,10 @@ export function useAbsenceStats(): AbsenceStats {
 
   const fetchData = useCallback(async () => {
     if (!client) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const result = await client.getOmluvnyList();
       setData(result);
@@ -68,4 +68,4 @@ export function useAbsenceStats(): AbsenceStats {
     error,
     refresh,
   };
-} 
+}

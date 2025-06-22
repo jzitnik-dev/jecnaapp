@@ -1,50 +1,57 @@
-# Welcome to your Expo app 👋
+# Ječná App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Neoficiální mobilní aplikace pro studenty a učitele SPŠE Ječná. Umožňuje rychlý přístup k rozvrhu, známkám, učitelům, jídelníčku a dalším školním informacím v moderním a přehledném rozhraní.
 
-## Get started
+## 📱 Funkce
 
-1. Install dependencies
+- Zobrazení rozvrhu hodin
+- Přehled známek a průměrů
+- Seznam učitelů a učeben
+- Příchody a odchody
+- Omluvný list
+- Jídelníček
+- Notifikace na nové známky
+- Moderní design a podpora světlého/tmavého režimu
 
+## 🚀 Instalace a spuštění
+
+1. **Klonuj repozitář:**
+   ```bash
+   git clone https://github.com/jzitnik-dev/JecnaApp.git
+   cd JecnaApp
+   ```
+2. **Nainstaluj závislosti:**
    ```bash
    npm install
+   # nebo
+   yarn install
    ```
-
-2. Start the app
-
+3. **Spusť aplikaci v Expo:**
    ```bash
-   npx expo start
+   npm start
+   # nebo
+   yarn start
+   ```
+4. **Skenuj QR kód v Development buildu** nebo spusť na emulátoru:
+   ```bash
+   npm run android
+   npm run ios
    ```
 
-In the output, you'll find options to open the app in a
+## 🛠️ Vývoj
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+- Projekt je postaven na [React Native](https://reactnative.dev/) a [Expo](https://expo.dev/).
+- Navigace je řešena pomocí [expo-router](https://expo.github.io/router/docs/).
+- Stylování a komponenty: [react-native-paper](https://callstack.github.io/react-native-paper/)
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+## 📄 Licence
 
-## Get a fresh project
+Tento projekt je licencován pod GNU General Public License v3.0. Podrobnosti najdeš v souboru [COPYING](COPYING).
 
-When you're ready, run:
+---
 
-```bash
-npm run reset-project
-```
+Tato aplikace není oficiálně spojena se SPŠE Ječná.
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## 🧑‍💻 Přispívání (Contributing)
 
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+Rád uvítám jakékoliv příspěvky, nápady nebo hlášení chyb! Podrobné informace o tom, jak přispět, najdeš v [CONTRIBUTING.md](CONTRIBUTING.md).

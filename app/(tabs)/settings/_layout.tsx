@@ -3,7 +3,7 @@ import { useAppTheme } from '../../../hooks/useAppTheme';
 
 export default function SettingsLayout() {
   const { navigationTheme } = useAppTheme();
-  
+
   return (
     <Stack
       screenOptions={{
@@ -13,40 +13,40 @@ export default function SettingsLayout() {
         headerTintColor: navigationTheme.colors.text,
       }}
     >
-      <Stack.Screen 
-        name="index" 
-        options={{ 
+      <Stack.Screen
+        name="index"
+        options={{
           title: 'Nastavení',
-          headerShown: false
-        }} 
+          headerShown: false,
+        }}
       />
-      <Stack.Screen 
-        name="account" 
-        options={{ 
+      <Stack.Screen
+        name="account"
+        options={{
           title: 'Účet',
-          headerShown: true
-        }} 
+          headerShown: true,
+        }}
       />
-      <Stack.Screen 
-        name="notifications" 
-        options={{ 
+      <Stack.Screen
+        name="notifications"
+        options={{
           title: 'Notifikace',
-          headerShown: true
-        }} 
+          headerShown: true,
+        }}
       />
-      <Stack.Screen 
-        name="appearance" 
-        options={{ 
+      <Stack.Screen
+        name="appearance"
+        options={{
           title: 'Vzhled',
-          headerShown: true
-        }} 
+          headerShown: true,
+        }}
       />
-      <Stack.Screen 
-        name="about" 
-        options={{ 
+      <Stack.Screen
+        name="about"
+        options={{
           title: 'O aplikaci',
-          headerShown: true
-        }} 
+          headerShown: true,
+        }}
       />
     </Stack>
   );

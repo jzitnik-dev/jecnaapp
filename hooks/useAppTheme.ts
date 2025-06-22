@@ -269,7 +269,8 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
     try {
       const savedTheme = await SecureStore.getItemAsync('selectedTheme');
       const savedCustomColors = await SecureStore.getItemAsync('customColors');
-      const savedUseCustomColors = await SecureStore.getItemAsync('useCustomColors');
+      const savedUseCustomColors =
+        await SecureStore.getItemAsync('useCustomColors');
 
       set({
         selectedTheme: savedTheme || 'Default',
@@ -295,13 +296,15 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
   updateCurrentTheme: () => {
     try {
       const { selectedTheme, customColors, useCustomColors } = get();
-      
+
       let themeColors: ThemeColors;
-      
+
       if (useCustomColors && customColors) {
         themeColors = customColors;
       } else {
-        const predefinedTheme = predefinedThemes.find(t => t.name === selectedTheme);
+        const predefinedTheme = predefinedThemes.find(
+          t => t.name === selectedTheme
+        );
         themeColors = predefinedTheme?.colors || predefinedThemes[0].colors;
       }
 
@@ -346,14 +349,14 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
         },
       };
 
-      set({ 
+      set({
         currentTheme: customPaperTheme,
         navigationTheme: customNavigationTheme,
       });
     } catch (error) {
       console.error('Error updating theme:', error);
       // Fallback to default theme
-      set({ 
+      set({
         currentTheme: MD3DarkTheme,
         navigationTheme: {
           dark: true,
@@ -373,4 +376,4 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
       });
     }
   },
-})); 
+}));
