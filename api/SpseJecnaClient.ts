@@ -100,6 +100,31 @@ export type UcebnaData = {
   timetable: TimetableEntry[];
 };
 
+export type AccountInfo = {
+  fullName: string;
+  username: string;
+  age: string;
+  birthDate: string;
+  birthPlace: string;
+  phone: string;
+  address: string;
+  class: string;
+  groups: string;
+  classNumber: string;
+  privateEmail: string;
+  schoolEmail: string;
+  parents: Array<{
+    name: string;
+    phone: string;
+    email: string;
+  }>;
+  sposa: {
+    variableSymbol: string;
+    bankAccount: string;
+  };
+  photoUrl?: string;
+};
+
 export class SpseJecnaClient {
   private readonly baseUrl = 'https://www.spsejecna.cz';
   private cookies: string = '';
@@ -1148,5 +1173,218 @@ export class SpseJecnaClient {
       absences.push({ date, count, countUnexcused, href });
     }
     return { years, selectedYearId, absences };
+  }
+
+  /**
+   * Fetches account information from the profile page
+   */
+  public async getAccountInfo(): Promise<AccountInfo> {
+    // First, we need to get the profile URL from the main page
+    const mainPageHtml = await this.fetchHtml('/');
+    const mainDocument = parseDocument(mainPageHtml);
+    
+    // Find the "Můj profil" link in the user menu
+    const profileLink = selectAll('a[href*="/student/"]', mainDocument.children)[0] as Element | undefined;
+    if (!profileLink || !profileLink.attribs?.href) {
+      throw new Error('Profile link not found');
+    }
+    
+    const profileUrl = profileLink.attribs.href;
+    const profileHtml = await this.fetchHtml(profileUrl);
+    const profileDocument = parseDocument(profileHtml);
+    
+    // Extract photo URL
+    const photoImg = selectAll('.profilephoto img', profileDocument.children)[0] as Element | undefined;
+    const photoUrl = photoImg?.attribs?.src ? `${this.baseUrl}${photoImg.attribs.src}` : undefined;
+    
+    // Extract personal information from the table
+    const profileTables = selectAll('table.userprofile', profileDocument.children) as Element[];
+    
+    if (profileTables.length === 0) {
+      throw new Error('Profile table not found');
+    }
+    
+    const accountInfo: Partial<AccountInfo> = {
+      parents: [],
+      sposa: { variableSymbol: '', bankAccount: '' }
+    };
+    
+    // Process the first table (personal information)
+    const profileTable = profileTables[0];
+    const rows = selectAll('tr', [profileTable]) as Element[];
+    
+    for (const row of rows) {
+      const th = selectAll('th', [row])[0] as Element | undefined;
+      const td = selectAll('td', [row])[0] as Element | undefined;
+      
+      if (!th || !td) continue;
+      
+      // Get label from th > span.label
+      const labelSpan = selectAll('span.label', [th])[0] as Element | undefined;
+      const label = labelSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+      
+      // Try different ways to get the value
+      let value = '';
+      let email = '';
+      
+      // First try span.value
+      const valueElement = selectAll('span.value', [td])[0] as Element | undefined;
+      if (valueElement) {
+        value = valueElement.children.find(c => c.type === 'text')?.data?.trim() || '';
+      }
+      
+      // If no value found, try direct text content
+      if (!value) {
+        value = td.children.find(c => c.type === 'text')?.data?.trim() || '';
+      }
+      
+      // Handle email links - look for mailto links
+      const emailLink = selectAll('a[href^="mailto:"]', [td])[0] as Element | undefined;
+      if (emailLink) {
+        const emailSpan = selectAll('span.label', [emailLink])[0] as Element | undefined;
+        email = emailSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+      }
+      
+      switch (label) {
+        case 'Celé jméno':
+          accountInfo.fullName = value;
+          break;
+        case 'Uživatelské jméno':
+          accountInfo.username = value;
+          break;
+        case 'Věk':
+          accountInfo.age = value;
+          break;
+        case 'Narození':
+          accountInfo.birthDate = value;
+          break;
+        case 'Telefon':
+          accountInfo.phone = value;
+          break;
+        case 'Trvalá adresa':
+          accountInfo.address = value;
+          break;
+        case 'Třída, skupiny':
+          const classMatch = value.match(/^([^,]+), skupiny: (.+)$/);
+          if (classMatch) {
+            accountInfo.class = classMatch[1];
+            accountInfo.groups = classMatch[2];
+          }
+          break;
+        case 'Číslo v tříd. výkazu':
+          accountInfo.classNumber = value;
+          break;
+        case 'Soukromý e-mail':
+          accountInfo.privateEmail = email;
+          break;
+        case 'Školní e-mail':
+          accountInfo.schoolEmail = email;
+          break;
+      }
+    }
+    
+    // Extract parents information - look for the section after the h2
+    const parentsSection = selectAll('h2', profileDocument.children).find(h => {
+      const text = (h as Element).children.find(c => c.type === 'text')?.data?.trim() || '';
+      return text.includes('Rodiče a zákonní zástupci');
+    });
+    
+    if (parentsSection) {
+      // Find the ul.list that follows this h2
+      const parentElement = parentsSection as Element;
+      const nextSibling = parentElement.nextSibling;
+      if (nextSibling && nextSibling.type === 'tag' && nextSibling.name === 'ul' && nextSibling.attribs?.class?.includes('list')) {
+        const parentsList = selectAll('li', [nextSibling]) as Element[];
+        for (const parentItem of parentsList) {
+          const itemDiv = selectAll('div.item', [parentItem])[0] as Element | undefined;
+          if (itemDiv) {
+            const text = itemDiv.children.find(c => c.type === 'text')?.data?.trim() || '';
+            // Format: "Name, Phone, Email"
+            const parts = text.split(', ');
+            if (parts.length >= 3) {
+              accountInfo.parents!.push({
+                name: parts[0],
+                phone: parts[1],
+                email: parts[2]
+              });
+            }
+          }
+        }
+      }
+    }
+    
+    // Extract SPOSA information - look for the section after the h2
+    const sposaSection = selectAll('h2', profileDocument.children).find(h => {
+      const text = (h as Element).children.find(c => c.type === 'text')?.data?.trim() || '';
+      return text.includes('Spolek pro podporu studentských aktivit');
+    });
+    
+    if (sposaSection) {
+      // Find the table that follows this h2
+      const sposaElement = sposaSection as Element;
+      const nextSibling = sposaElement.nextSibling;
+      if (nextSibling && nextSibling.type === 'tag' && nextSibling.name === 'table' && nextSibling.attribs?.class?.includes('userprofile')) {
+        const sposaRows = selectAll('tr', [nextSibling]) as Element[];
+        for (const row of sposaRows) {
+          const th = selectAll('th', [row])[0] as Element | undefined;
+          const td = selectAll('td', [row])[0] as Element | undefined;
+          
+          if (!th || !td) continue;
+          
+          const labelSpan = selectAll('span.label', [th])[0] as Element | undefined;
+          const label = labelSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+          
+          const valueSpan = selectAll('span.value', [td])[0] as Element | undefined;
+          const value = valueSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+          
+          if (label === 'Variabilní symbol žáka') {
+            accountInfo.sposa!.variableSymbol = value;
+          } else if (label === 'Bankovní účet') {
+            accountInfo.sposa!.bankAccount = value;
+          }
+        }
+      }
+    } else {
+      // Try alternative approach - look for SPOSA table directly
+      const allTables = selectAll('table.userprofile', profileDocument.children) as Element[];
+      
+      // Look through all tables for SPOSA information
+      for (let i = 1; i < allTables.length; i++) { // Skip first table (personal info)
+        const table = allTables[i];
+        const rows = selectAll('tr', [table]) as Element[];
+        
+        for (const row of rows) {
+          const th = selectAll('th', [row])[0] as Element | undefined;
+          const td = selectAll('td', [row])[0] as Element | undefined;
+          
+          if (!th || !td) continue;
+          
+          const labelSpan = selectAll('span.label', [th])[0] as Element | undefined;
+          const label = labelSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+          
+          const valueSpan = selectAll('span.value', [td])[0] as Element | undefined;
+          const value = valueSpan?.children.find(c => c.type === 'text')?.data?.trim() || '';
+          
+          if (label === 'Variabilní symbol žáka') {
+            accountInfo.sposa!.variableSymbol = value;
+          } else if (label === 'Bankovní účet') {
+            accountInfo.sposa!.bankAccount = value;
+          }
+        }
+      }
+    }
+    
+    // Extract birth place from birth date
+    if (accountInfo.birthDate) {
+      const birthParts = accountInfo.birthDate.split(', ');
+      if (birthParts.length >= 2) {
+        accountInfo.birthPlace = birthParts[1];
+        accountInfo.birthDate = birthParts[0];
+      }
+    }
+    
+    accountInfo.photoUrl = photoUrl;
+    
+    return accountInfo as AccountInfo;
   }
 } 

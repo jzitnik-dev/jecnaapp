@@ -4,15 +4,19 @@ import { createDrawerNavigator, DrawerContentScrollView, DrawerItemList } from '
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React from 'react';
-import { Button } from 'react-native-paper';
+import { View } from 'react-native';
+import { Text, TouchableRipple } from 'react-native-paper';
+import { ImageViewer } from '../../components/ImageViewer';
+import { useAccountInfo } from '../../hooks/useAccountInfo';
+import { useAppTheme } from '../../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 import HomeScreen from './home';
 import JidelnaScreen from './jidelna';
-import NotificationSettingsScreen from './notification-settings';
 import OmluvnyListScreen from './omluvny-list';
 import PrichodyScreen from './prichody';
 import RoomsListScreen from './rooms-list';
 import RozvrhScreen from './rozvrh';
+import SettingsScreen from './settings';
 import TeachersListScreen from './teachers-list';
 import ZnamkyScreen from './znamky';
 
@@ -20,7 +24,10 @@ const Drawer = createDrawerNavigator();
 
 export default function DrawerLayout() {
   const { client, logout: globalLogout } = useSpseJecnaClient();
+  const { navigationTheme } = useAppTheme();
+  const { accountInfo } = useAccountInfo();
   const router = useRouter();
+  
   const handleLogout = async () => {
     if (client) {
       await client.logout();
@@ -30,23 +37,68 @@ export default function DrawerLayout() {
     globalLogout();
     router.replace('/login');
   };
+
+  const handleAccountPress = () => {
+    router.push('/settings/account');
+  };
+
   return (
     <Drawer.Navigator
       initialRouteName="Home"
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: navigationTheme.colors.card,
+        },
+        headerTintColor: navigationTheme.colors.text,
+        drawerStyle: {
+          backgroundColor: navigationTheme.colors.card,
+        },
+        drawerActiveTintColor: navigationTheme.colors.primary,
+        drawerInactiveTintColor: navigationTheme.colors.text,
+      }}
       drawerContent={props => (
         <>
           <DrawerContentScrollView {...props}>
             <DrawerItemList {...props} />
           </DrawerContentScrollView>
-          <Button
-            mode="contained"
-            onPress={handleLogout}
-            style={{ margin: 16, marginTop: 'auto', backgroundColor: '#fff' }}
-            labelStyle={{ color: '#23272e', fontWeight: 'bold' }}
-            icon="logout"
-          >
-            Odhlásit se
-          </Button>
+          
+          {/* Account Section */}
+          <View style={{ padding: 16, borderTopWidth: 1, borderTopColor: navigationTheme.colors.border }}>
+            <TouchableRipple onPress={handleAccountPress}>
+              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+                <ImageViewer
+                  imageUrl={accountInfo?.photoUrl}
+                  size={48}
+                  fallbackSource={require('../../assets/images/icon.png')}
+                />
+                <View style={{ marginLeft: 12, flex: 1 }}>
+                  <Text 
+                    variant="titleMedium" 
+                    style={{ 
+                      color: navigationTheme.colors.text,
+                      fontWeight: '600'
+                    }}
+                  >
+                    {accountInfo?.fullName || 'Načítání...'}
+                  </Text>
+                  <Text 
+                    variant="bodySmall" 
+                    style={{ 
+                      color: navigationTheme.colors.text,
+                      opacity: 0.7
+                    }}
+                  >
+                    {accountInfo?.class || ''} • {accountInfo?.username || ''}
+                  </Text>
+                </View>
+                <MaterialCommunityIcons 
+                  name="chevron-right" 
+                  size={20} 
+                  color={navigationTheme.colors.text} 
+                />
+              </View>
+            </TouchableRipple>
+          </View>
         </>
       )}
     >
@@ -125,12 +177,13 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
-        name="notification-settings"
-        component={NotificationSettingsScreen}
+        name="settings"
+        component={SettingsScreen}
         options={{
-          title: 'Notifikace',
+          title: 'Nastavení',
+          headerShown: true,
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="bell-outline" color={color} size={size} />
+            <MaterialCommunityIcons name="cog" color={color} size={size} />
           ),
         }}
       />

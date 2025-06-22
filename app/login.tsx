@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, HelperText, Surface, Text, TextInput } from 'react-native-paper';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
@@ -12,11 +12,32 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [checkedStored] = useState(false);
+  const [checkedStored, setCheckedStored] = useState(false);
   const router = useRouter();
   const setClient = useSpseJecnaClient((state) => state.setClient);
   const setCookies = useSpseJecnaClient((state) => state.setCookies);
   const client = new SpseJecnaClient();
+
+  // Check for stored credentials on component mount
+  useEffect(() => {
+    const checkStoredCredentials = async () => {
+      try {
+        const storedUsername = await SecureStore.getItemAsync('username');
+        const storedPassword = await SecureStore.getItemAsync('password');
+        
+        if (storedUsername && storedPassword) {
+          // Try to login with stored credentials silently
+          await handleLogin(storedUsername, storedPassword, true);
+        }
+      } catch (error) {
+        console.error('Error checking stored credentials:', error);
+      } finally {
+        setCheckedStored(true);
+      }
+    };
+
+    checkStoredCredentials();
+  }, []);
 
   const handleLogin = async (u?: string, p?: string, silent?: boolean) => {
     setLoading(true);

@@ -1,3 +1,4 @@
+import * as SecureStore from 'expo-secure-store';
 import { create } from 'zustand';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
 
@@ -14,5 +15,14 @@ export const useSpseJecnaClient = create<SpseJecnaClientState>((set) => ({
   cookies: '',
   setClient: (client) => set({ client }),
   setCookies: (cookies) => set({ cookies }),
-  logout: () => set({ client: null, cookies: '' }),
+  logout: async () => {
+    // Clear account info cache
+    try {
+      await SecureStore.deleteItemAsync('account_info');
+      await SecureStore.deleteItemAsync('account_info_timestamp');
+    } catch (err) {
+      console.warn('Failed to clear account info cache:', err);
+    }
+    set({ client: null, cookies: '' });
+  },
 })); 

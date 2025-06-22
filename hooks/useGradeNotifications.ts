@@ -1,14 +1,22 @@
-import * as BackgroundFetch from 'expo-background-fetch';
+import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 import { gradeNotificationService } from '../services/GradeNotificationService';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
+
+// Conditional import for background task
+let BackgroundTask: any = null;
+try {
+  BackgroundTask = require('expo-background-task');
+} catch (error) {
+  console.warn('expo-background-task not available in hook:', error);
+}
 
 export interface NotificationSettings {
   permissions: {
     status: 'granted' | 'denied' | 'undetermined';
     canAskAgain: boolean;
   };
-  backgroundFetchStatus: 'available' | 'denied' | 'restricted' | null;
+  backgroundTaskStatus: 'available' | 'denied' | 'restricted' | null;
 }
 
 export function useGradeNotifications() {
@@ -31,10 +39,16 @@ export function useGradeNotifications() {
           status: notificationSettings.permissions.status,
           canAskAgain: notificationSettings.permissions.canAskAgain,
         },
-        backgroundFetchStatus: notificationSettings.backgroundFetchStatus === BackgroundFetch.BackgroundFetchStatus.Available ? 'available' :
-                               notificationSettings.backgroundFetchStatus === BackgroundFetch.BackgroundFetchStatus.Denied ? 'denied' :
-                               notificationSettings.backgroundFetchStatus === BackgroundFetch.BackgroundFetchStatus.Restricted ? 'restricted' : null,
+        backgroundTaskStatus: BackgroundTask && notificationSettings.backgroundFetchStatus === BackgroundTask.BackgroundTaskStatus.Available ? 'available' :
+                               BackgroundTask && notificationSettings.backgroundFetchStatus === BackgroundTask.BackgroundTaskStatus.Restricted ? 'restricted' : 
+                               notificationSettings.backgroundFetchStatus === null ? null : null,
       });
+
+      // Load the enabled state from persistent storage
+      const savedEnabled = await SecureStore.getItemAsync('notificationsEnabled');
+      if (savedEnabled === 'true') {
+        setIsEnabled(true);
+      }
     } catch (error) {
       console.error('Error loading notification settings:', error);
     }
@@ -45,6 +59,7 @@ export function useGradeNotifications() {
     try {
       const granted = await gradeNotificationService.requestPermissions();
       setIsEnabled(granted);
+      await SecureStore.setItemAsync('notificationsEnabled', granted.toString());
       await loadSettings();
       return granted;
     } catch (error) {
@@ -60,6 +75,7 @@ export function useGradeNotifications() {
     try {
       await gradeNotificationService.startBackgroundFetch();
       setIsEnabled(true);
+      await SecureStore.setItemAsync('notificationsEnabled', 'true');
       await loadSettings();
     } catch (error) {
       console.error('Error starting notifications:', error);
@@ -73,6 +89,7 @@ export function useGradeNotifications() {
     try {
       await gradeNotificationService.stopBackgroundFetch();
       setIsEnabled(false);
+      await SecureStore.setItemAsync('notificationsEnabled', 'false');
       await loadSettings();
     } catch (error) {
       console.error('Error stopping notifications:', error);

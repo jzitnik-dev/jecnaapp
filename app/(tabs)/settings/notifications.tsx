@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Card, Switch, Text, useTheme } from 'react-native-paper';
-import { useGradeNotifications } from '../../hooks/useGradeNotifications';
+import { useGradeNotifications } from '../../../hooks/useGradeNotifications';
 
 export default function NotificationSettingsScreen() {
   const theme = useTheme();
@@ -45,7 +45,7 @@ export default function NotificationSettingsScreen() {
   const getBackgroundFetchStatusText = () => {
     if (!settings) return 'Načítání...';
     
-    switch (settings.backgroundFetchStatus) {
+    switch (settings.backgroundTaskStatus) {
       case 'available':
         return 'Dostupné';
       case 'denied':
@@ -53,7 +53,7 @@ export default function NotificationSettingsScreen() {
       case 'restricted':
         return 'Omezeno';
       case null:
-        return 'Neznámý stav';
+        return 'Nedostupné';
       default:
         return 'Neznámý stav';
     }
@@ -202,6 +202,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   infoText: {
-    lineHeight: 18,
+    lineHeight: 20,
   },
 });

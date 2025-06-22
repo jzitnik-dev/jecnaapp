@@ -16,12 +16,15 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
   const periodCount = periods.length;
   const cellWidth = Math.max(120, Math.floor((screenWidth - 24) / (periodCount + 1)));
   const cellHeight = 90;
-  const isDark = theme.dark;
+  
+  // Use theme colors instead of hardcoded dark/light colors
   const tableBg = theme.colors.surface;
-  const cellBg = isDark ? '#23272e' : '#fff';
-  const headerBg = isDark ? '#181a20' : '#f3f4fa';
+  const cellBg = theme.colors.surfaceVariant;
+  const headerBg = theme.colors.surface;
   const textColor = theme.colors.onSurface;
   const borderColor = theme.colors.outline;
+  const secondaryTextColor = theme.colors.onSurfaceVariant;
+  const accentColor = theme.colors.primary;
 
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
@@ -69,7 +72,7 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
               }
             ]}>
               <Text style={[styles.headerText, { color: textColor }]}>{period.number}</Text>
-              <Text style={[styles.timeText, { color: isDark ? '#aaa' : '#888' }]}>{period.time}</Text>
+              <Text style={[styles.timeText, { color: secondaryTextColor }]}>{period.time}</Text>
             </View>
           ))}
         </View>
@@ -105,8 +108,8 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
                       style={[
                         styles.lessonSquare,
                         {
-                          backgroundColor: isDark ? '#23272e' : '#f3f4fa',
-                          borderColor: isDark ? '#333' : '#ddd',
+                          backgroundColor: cellBg,
+                          borderColor: borderColor,
                           borderBottomWidth: isSplit && i === 0 ? 1 : 0,
                           borderRightWidth: 0,
                           borderLeftWidth: 0,
@@ -124,7 +127,7 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
                     >
                       <View style={{ position: 'absolute', top: 6, left: 6, right: 6, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <Text style={[styles.teacherSquare, {
-                          color: isDark ? '#90caf9' : '#4a6fa5',
+                          color: accentColor,
                           fontSize: 12,
                           flex: 1,
                           marginRight: 4
@@ -135,7 +138,7 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
                             alignItems: 'center',
                           }}>
                             <Text style={[styles.roomSquare, {
-                              color: isDark ? '#bbb' : '#888',
+                              color: secondaryTextColor,
                               fontSize: 11,
                               fontWeight: '500'
                             }]} numberOfLines={1}>{lesson.room}</Text>
@@ -151,7 +154,7 @@ export function TimetableGrid({ periods, days, style, onTeacherPress, onRoomPres
                         }]} numberOfLines={1} ellipsizeMode="tail">{lesson.subject}</Text>
                         {lesson.group ? (
                           <Text style={[styles.groupSquare, {
-                            color: isDark ? '#aaa' : '#666',
+                            color: secondaryTextColor,
                             fontSize: 11,
                             marginTop: 2,
                             textAlign: 'center'

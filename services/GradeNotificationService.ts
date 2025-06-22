@@ -1,4 +1,3 @@
-import * as BackgroundFetch from 'expo-background-fetch';
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import * as TaskManager from 'expo-task-manager';
@@ -26,8 +25,17 @@ export interface GradeNotification {
   teacher?: string;
 }
 
+// Conditional import for background task
+let BackgroundTask: any = null;
+try {
+  BackgroundTask = require('expo-background-task');
+} catch (error) {
+  console.warn('expo-background-task not available:', error);
+}
+
 export class GradeNotificationService {
   private client: SpseJecnaClient | null = null;
+  private backgroundTaskAvailable: boolean = false;
 
   constructor() {
     this.setupBackgroundTask();
@@ -35,6 +43,34 @@ export class GradeNotificationService {
 
   setClient(client: SpseJecnaClient) {
     this.client = client;
+  }
+
+  private async setupBackgroundTask() {
+    if (!BackgroundTask) {
+      console.warn('Background task not available');
+      this.backgroundTaskAvailable = false;
+      return;
+    }
+
+    try {
+      // Check if background task is available
+      await BackgroundTask.getStatusAsync();
+      this.backgroundTaskAvailable = true;
+      
+      TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
+        try {
+          console.log('Background task: Checking for new grades...');
+          await this.checkForNewGrades();
+          return BackgroundTask.BackgroundTaskResult.Success;
+        } catch (error) {
+          console.error('Background task error:', error);
+          return BackgroundTask.BackgroundTaskResult.Failed;
+        }
+      });
+    } catch (error) {
+      console.warn('Background task not available:', error);
+      this.backgroundTaskAvailable = false;
+    }
   }
 
   async requestPermissions(): Promise<boolean> {
@@ -51,48 +87,49 @@ export class GradeNotificationService {
       return false;
     }
 
-    // Request background fetch permissions
-    await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-      minimumInterval: 60 * 60, // 1 hour in seconds
-      stopOnTerminate: false,
-      startOnBoot: true,
-    });
+    // Only check background task permissions if available
+    if (this.backgroundTaskAvailable && BackgroundTask) {
+      try {
+        const backgroundTaskStatus = await BackgroundTask.getStatusAsync();
+        if (backgroundTaskStatus === BackgroundTask.BackgroundTaskStatus.Restricted) {
+          console.log('Background task permission restricted');
+          return false;
+        }
+      } catch (error) {
+        console.warn('Background task status check failed:', error);
+      }
+    }
 
     return true;
   }
 
-  private setupBackgroundTask() {
-    TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
-      try {
-        console.log('Background task: Checking for new grades...');
-        await this.checkForNewGrades();
-        return BackgroundFetch.BackgroundFetchResult.NewData;
-      } catch (error) {
-        console.error('Background task error:', error);
-        return BackgroundFetch.BackgroundFetchResult.Failed;
-      }
-    });
-  }
-
   async startBackgroundFetch(): Promise<void> {
+    if (!this.backgroundTaskAvailable || !BackgroundTask) {
+      console.log('Background task not available, skipping registration');
+      return;
+    }
+
     try {
-      await BackgroundFetch.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-        minimumInterval: 60 * 60, // 1 hour in seconds
-        stopOnTerminate: false,
-        startOnBoot: true,
+      await BackgroundTask.registerTaskAsync(BACKGROUND_FETCH_TASK, {
+        minimumInterval: 60 * 60 * 1000, // 1 hour in milliseconds
       });
-      console.log('Background fetch registered');
+      console.log('Background task registered');
     } catch (error) {
-      console.error('Failed to register background fetch:', error);
+      console.error('Failed to register background task:', error);
     }
   }
 
   async stopBackgroundFetch(): Promise<void> {
+    if (!this.backgroundTaskAvailable || !BackgroundTask) {
+      console.log('Background task not available, skipping unregistration');
+      return;
+    }
+
     try {
-      await BackgroundFetch.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
-      console.log('Background fetch unregistered');
+      await BackgroundTask.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
+      console.log('Background task unregistered');
     } catch (error) {
-      console.error('Failed to unregister background fetch:', error);
+      console.error('Failed to unregister background task:', error);
     }
   }
 
@@ -229,10 +266,18 @@ export class GradeNotificationService {
 
   async getNotificationSettings(): Promise<{
     permissions: Notifications.NotificationPermissionsStatus;
-    backgroundFetchStatus: BackgroundFetch.BackgroundFetchStatus | null;
+    backgroundFetchStatus: any | null;
   }> {
     const permissions = await Notifications.getPermissionsAsync();
-    const backgroundFetchStatus = await BackgroundFetch.getStatusAsync();
+    
+    let backgroundFetchStatus: any | null = null;
+    if (this.backgroundTaskAvailable && BackgroundTask) {
+      try {
+        backgroundFetchStatus = await BackgroundTask.getStatusAsync();
+      } catch (error) {
+        console.warn('Failed to get background task status:', error);
+      }
+    }
     
     return {
       permissions,

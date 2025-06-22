@@ -1,52 +1,44 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
+import { ThemeProvider } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect } from 'react';
-import { MD3DarkTheme, Provider as PaperProvider } from 'react-native-paper';
+import { Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
+import { DarkTheme, DefaultTheme } from '@react-navigation/native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
+import { useAppTheme } from '../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 
 const queryClient = new QueryClient();
 
-const customDarkTheme = {
-  ...MD3DarkTheme,
-  colors: {
-    ...MD3DarkTheme.colors,
-    primary: '#666',
-    onPrimary: '#fff',
-    background: '#000000',
-    surface: '#121212',
-    surfaceVariant: '#1c1e24',
-    secondary: '#1c1e24',
-    onSecondary: '#fff',
-    outline: '#666',
-    elevation: {
-      ...MD3DarkTheme.colors.elevation,
-      level0: '#000000',
-      level1: '#121212',
-      level2: '#121212',
-      level3: '#121212',
-      level4: '#121212',
-      level5: '#121212',
-    },
-  },
-};
-
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const { client, setClient } = useSpseJecnaClient();
+  const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
+  
+  // Load fonts with better error handling - make it optional
+  const [fontsLoaded, fontError] = useFonts({
+    'SpaceMono': require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
+
+  useEffect(() => {
+    const loadTheme = async () => {
+      try {
+        await loadThemeSettings();
+      } catch (error) {
+        console.error('Error loading theme settings:', error);
+      }
+    };
+    loadTheme();
+  }, [loadThemeSettings]);
 
   useEffect(() => {
     const initializeClient = async () => {
@@ -71,6 +63,9 @@ export default function RootLayout() {
           await SecureStore.deleteItemAsync('username');
           await SecureStore.deleteItemAsync('password');
         }
+      } else {
+        // Redirect to login
+        router.replace("/login");
       }
     };
 
@@ -79,15 +74,32 @@ export default function RootLayout() {
     }
   }, [client, setClient]);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  // Log font errors but don't block the app
+  if (fontError) {
+    console.error('Font loading error:', fontError);
+  }
+
+  // Don't wait for fonts to load in production, only in development
+  const shouldWaitForFonts = __DEV__;
+
+  if (shouldWaitForFonts && !fontsLoaded) {
     return null;
   }
 
+  // Create a hybrid theme that extends the default React Navigation theme
+  const baseTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
+  const hybridTheme = {
+    ...baseTheme,
+    colors: {
+      ...baseTheme.colors,
+      ...navigationTheme.colors,
+    },
+  };
+
   return (
     <QueryClientProvider client={queryClient}>
-      <PaperProvider theme={customDarkTheme}>
-        <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
+      <PaperProvider theme={currentTheme}>
+        <ThemeProvider value={hybridTheme}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <NotificationProvider>
               <Stack>

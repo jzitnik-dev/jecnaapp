@@ -49,7 +49,7 @@
           "color": "#ffffff"
         }
       ],
-      "expo-background-fetch"
+      "expo-background-task"
     ],
     "experiments": {
       "typedRoutes": true

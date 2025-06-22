@@ -1,9 +1,10 @@
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Image, Modal, RefreshControl, Text as RNText, ScrollView, StyleSheet, View } from 'react-native';
+import { RefreshControl, Text as RNText, ScrollView, StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import { ActivityIndicator, Divider, Text, useTheme } from 'react-native-paper';
 import type { TimetableDay, TimetablePeriod } from '../../../api/SpseJecnaClient';
+import { TeacherImageViewer } from '../../../components/TeacherImageViewer';
 import { TimetableGrid } from '../../../components/TimetableGrid';
 import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 
@@ -18,7 +19,6 @@ export default function TeacherScreen() {
   const [info, setInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchData = async () => {
@@ -77,28 +77,10 @@ export default function TeacherScreen() {
       contentContainerStyle={{ padding: 0 }}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
     >
-      <Modal
-        visible={modalVisible}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <Pressable style={styles.modalBackground} onPress={() => setModalVisible(false)}>
-          <Image
-            source={{ uri: info.photo }}
-            style={styles.fullscreenImage}
-            resizeMode="contain"
-          />
-        </Pressable>
-      </Modal>
       <View style={[styles.hero, { backgroundColor: theme.colors.surfaceVariant, marginHorizontal: 16 }]}> 
         <View style={{ flexDirection: 'row', alignItems: 'center', paddingTop: 24, paddingHorizontal: 24 }}>
           <View style={styles.photoShadow}>
-            {info.photo && (
-              <Pressable onPress={() => setModalVisible(true)}>
-                <Image source={{ uri: info.photo }} style={styles.photo} />
-              </Pressable>
-            )}
+            <TeacherImageViewer imageUrl={info.photo} />
           </View>
           <View style={{ flex: 1 }}>
             <Text variant="headlineLarge" style={[styles.name, { color: theme.colors.onSurface, fontWeight: 'bold', marginTop: 0 }]}>{routeName || info.name}</Text>
@@ -207,12 +189,6 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.08)',
     marginRight: 14,
   },
-  photo: {
-    width: 120,
-    height: 150,
-    borderRadius: 20,
-    backgroundColor: '#222',
-  },
   heroText: {
     flex: 1,
     justifyContent: 'center',
@@ -269,6 +245,4 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   link: { color: '#2196f3', textDecorationLine: 'underline' },
-  modalBackground: { flex: 1, backgroundColor: 'rgba(0,0,0,0.95)', justifyContent: 'center', alignItems: 'center' },
-  fullscreenImage: { width: '90%', height: '90%' },
 }); 
