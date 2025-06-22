@@ -128,6 +128,7 @@ export default function ZnamkyScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
+    await checkForNewGrades();
     setRefreshing(false);
   };
 
@@ -198,15 +199,6 @@ export default function ZnamkyScreen() {
         ))}
       </Menu>
       {(isFetching || isLoading) && <ActivityIndicator size={18} style={{ marginLeft: 8 }} />}
-      <Button
-        mode="outlined"
-        onPress={checkForNewGrades}
-        icon="bell-outline"
-        compact
-        style={{ marginLeft: 'auto' }}
-      >
-        Kontrola
-      </Button>
     </ScrollView>
   );
 

@@ -149,16 +149,17 @@ export class SpseJecnaClient {
   }
 
   private async getLoginToken(): Promise<string> {
+    await fetch(`${this.baseUrl}/user/role?role=student`);
     const response = await fetch(`${this.baseUrl}/`, {
       method: 'GET',
       headers: this.buildHeaders({
         'Accept-Encoding': 'gzip',
-        // No hardcoded If-Modified-Since here
       }),
       credentials: 'include',
     });
     const html = await response.text();
     this.updateCookies(response);
+    console.log(html)
     const token = this.extractToken3(html);
     if (!token) throw new Error('Login token not found');
     return token;

@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, HelperText, Surface, Text, TextInput } from 'react-native-paper';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
@@ -12,31 +12,11 @@ export default function LoginScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-  const [checkedStored, setCheckedStored] = useState(false);
+  const [checkedStored] = useState(false);
   const router = useRouter();
   const setClient = useSpseJecnaClient((state) => state.setClient);
   const setCookies = useSpseJecnaClient((state) => state.setCookies);
   const client = new SpseJecnaClient();
-
-  useEffect(() => {
-    setClient(client);
-    (async () => {
-      const isLoggedIn = await client.isLoggedIn();
-      if (isLoggedIn) {
-        router.replace('/(tabs)');
-        return;
-      }
-
-      const savedUsername = await SecureStore.getItemAsync('username');
-      const savedPassword = await SecureStore.getItemAsync('password');
-      if (savedUsername && savedPassword) {
-        setUsername(savedUsername);
-        setPassword(savedPassword);
-        await handleLogin(savedUsername, savedPassword, true);
-      }
-      setCheckedStored(true);
-    })();
-  }, []);
 
   const handleLogin = async (u?: string, p?: string, silent?: boolean) => {
     setLoading(true);

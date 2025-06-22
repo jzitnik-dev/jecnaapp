@@ -21,8 +21,11 @@
         "RECEIVE_BOOT_COMPLETED",
         "WAKE_LOCK",
         "VIBRATE",
-        "INTERNET"
-      ]
+        "INTERNET",
+        "android.permission.RECEIVE_BOOT_COMPLETED",
+        "android.permission.WAKE_LOCK"
+      ],
+      "package": "cz.jzitnik.JecnaMobile"
     },
     "web": {
       "bundler": "metro",
@@ -50,6 +53,12 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "fa28708e-72c2-4d2e-9a95-29f9084e995e"
+      }
     }
   }
 }
