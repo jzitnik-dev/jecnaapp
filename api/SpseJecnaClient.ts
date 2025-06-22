@@ -1,6 +1,8 @@
 import { selectAll } from 'css-select';
 import type { Element } from 'domhandler';
+import * as SecureStore from 'expo-secure-store';
 import { parseDocument } from 'htmlparser2';
+import { iCanteenClient } from './iCanteenClient';
 
 export type Grade = {
   value: number | 'N' | 'Pochvala'; // 1-5, 'N' (absence), or 'Pochvala'
@@ -71,9 +73,39 @@ export type Timetable = {
   meta?: TimetableMeta;
 };
 
+export type OmluvnyListAbsence = {
+  date: string; // e.g. '11.6. (středa)'
+  count: number; // total hours
+  countUnexcused?: number; // unexcused hours, if present
+  href?: string; // link to detail, if present
+};
+
+export type OmluvnyListResult = {
+  years: { id: string; label: string }[];
+  selectedYearId: string;
+  absences: OmluvnyListAbsence[];
+};
+
+export type TimetableEntry = {
+  day: string;
+  time: string;
+  subject: string;
+};
+
+export type UcebnaData = {
+  title: string;
+  floor: string;
+  phone: string;
+  manager: string;
+  timetable: TimetableEntry[];
+};
+
 export class SpseJecnaClient {
   private readonly baseUrl = 'https://www.spsejecna.cz';
   private cookies: string = '';
+  private canteenClient: iCanteenClient | null = null;
+  private username: string = '';
+  private password: string = '';
 
   // This is for the fucking iOS people, who are not able to use the same headers as Android. Fucking idiots. The stupid spsejecna website is blocking requests on iOS just randomly probably because If-Modified-Since is not set or is not set correctly.
   // I hate them so much. This stupid shit, why did I choose to make it also for iOS. And if some of you fucking idiots will say that it does not work 100% I will find you and tickle you on your feet in the middle of the night.
@@ -142,7 +174,10 @@ export class SpseJecnaClient {
     return !response.url.includes('/user/need-login') && !html.includes("Pro další postup je vyžadováno přihlášení uživatele.");
   }
 
-    public async login(username: string, password: string): Promise<boolean> {
+  public async login(username: string, password: string): Promise<boolean> {
+    this.username = username;
+    this.password = password;
+    
     const token3 = await this.getLoginToken();
     const form = new URLSearchParams();
     form.append('user', username);
@@ -161,6 +196,8 @@ export class SpseJecnaClient {
     const data = selectAll('.message.message-error', document.children) as Element[];
     if (data.length === 0) {
       this.updateCookies(response);
+      this.canteenClient = new iCanteenClient();
+      await this.canteenClient.setup(username, password);
       return true;
     }
     return false;
@@ -325,6 +362,35 @@ export class SpseJecnaClient {
 
   public setCookies(cookies: string) {
     this.cookies = cookies;
+  }
+
+  public async getCanteenClient(): Promise<iCanteenClient> {
+    if (!this.canteenClient) {
+      // If we don't have credentials stored, try to get them from SecureStore
+      if (!this.username || !this.password) {
+        try {
+          this.username = await SecureStore.getItemAsync('username') || '';
+          this.password = await SecureStore.getItemAsync('password') || '';
+        } catch (error) {
+          console.error('Error retrieving credentials from SecureStore:', error);
+        }
+      }
+      
+      if (!this.username || !this.password) {
+        throw new Error('iCanteenClient not initialized. Please login first with username and password.');
+      }
+      
+      // Check if we're logged in to the main system
+      const isLoggedIn = await this.isLoggedIn();
+      if (!isLoggedIn) {
+        throw new Error('Not logged in to SPŠE Ječná. Please login first.');
+      }
+      
+      // Create and set up the iCanteenClient if it doesn't exist
+      this.canteenClient = new iCanteenClient();
+      await this.canteenClient.setup(this.username, this.password);
+    }
+    return this.canteenClient;
   }
 
   public async logout(): Promise<void> {
@@ -1017,5 +1083,69 @@ export class SpseJecnaClient {
       days.push({ date, events });
     }
     return { years, selectedYearId, months, selectedMonthId, days };
+  }
+
+  /**
+   * Fetches the omluvný list (absence list) from /absence/student
+   */
+  public async getOmluvnyList(yearId?: string): Promise<OmluvnyListResult> {
+    let url = '/absence/student';
+    const params = new URLSearchParams();
+    if (yearId) params.append('schoolYearId', yearId);
+    if ([...params].length > 0) url += '?' + params.toString();
+    const html = await this.fetchHtml(url);
+    const document = parseDocument(html);
+    // Year select
+    const yearSelect = selectAll('select#schoolYearId', document.children)[0] as Element | undefined;
+    const years: { id: string; label: string }[] = [];
+    let selectedYearId = '';
+    if (yearSelect) {
+      const options = selectAll('option', [yearSelect]) as Element[];
+      for (const opt of options) {
+        const id = opt.attribs.value;
+        const label = opt.children.find(c => c.type === 'text')?.data?.trim() || '';
+        const selected = !!opt.attribs.selected;
+        if (selected) selectedYearId = id;
+        years.push({ id, label });
+      }
+    }
+    // Table rows
+    const rows = selectAll('table.absence-list tr', document.children) as Element[];
+    const absences: OmluvnyListAbsence[] = [];
+    for (const row of rows) {
+      const tds = selectAll('td', [row]);
+      if (tds.length < 2) continue;
+      const dateTd = tds[0] as Element;
+      const countTd = tds[1] as Element;
+      // Date and href
+      let date = '';
+      let href = undefined;
+      const a = selectAll('a', [dateTd])[0] as Element | undefined;
+      if (a && a.children.find(c => c.type === 'text')) {
+        date = a.children.find((c) => c.type === 'text')?.data?.trim() || '';
+        if (a.attribs && a.attribs.href) href = a.attribs.href;
+      } else {
+        date = dateTd.children.find((c) => c.type === 'text')?.data?.trim() || '';
+      }
+      // Count and unexcused
+      let count = 0;
+      let countUnexcused: number | undefined = undefined;
+      // e.g. '<strong>1 hodina</strong> z toho <strong style="color:red">1 neomluvena</strong>'
+      const strongs = selectAll('strong', [countTd]) as Element[];
+      if (strongs.length > 0) {
+        // First strong: total hours
+        const countText = strongs[0].children.find(c => c.type === 'text')?.data?.trim() || '';
+        const m = countText.match(/(\d+)/);
+        if (m) count = parseInt(m[1], 10);
+        // Second strong: unexcused
+        if (strongs.length > 1) {
+          const unexcusedText = strongs[1].children.find(c => c.type === 'text')?.data?.trim() || '';
+          const m2 = unexcusedText.match(/(\d+)/);
+          if (m2) countUnexcused = parseInt(m2[1], 10);
+        }
+      }
+      absences.push({ date, count, countUnexcused, href });
+    }
+    return { years, selectedYearId, absences };
   }
 } 
