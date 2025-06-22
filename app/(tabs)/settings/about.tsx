@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import React from 'react';
 import { Linking, ScrollView, StyleSheet } from 'react-native';
@@ -118,16 +119,7 @@ export default function AboutScreen() {
               { color: theme.colors.onSurfaceVariant, marginTop: 8 },
             ]}
           >
-            Made with love ❤️ by{' '}
-            <Text
-              style={{
-                color: theme.colors.primary,
-                textDecorationLine: 'underline',
-              }}
-              onPress={() => Linking.openURL('https://jzitnik.dev')}
-            >
-              Jakub Žitník
-            </Text>
+            Made with <MaterialCommunityIcons name="heart" size={14} color={theme.colors.error} /> by <Text style={{ color: theme.colors.primary, textDecorationLine: 'underline' }} onPress={() => Linking.openURL('https://jzitnik.dev')}>Jakub Žitník</Text>
           </Text>
         </Card.Content>
       </Card>

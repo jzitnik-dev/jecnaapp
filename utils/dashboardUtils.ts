@@ -1,4 +1,5 @@
 import type { SubjectGrades, Timetable } from '../api/SpseJecnaClient';
+import { getCurrentDateTime } from './manualDateTime';
 
 export interface GradeStats {
   average: number;
@@ -222,10 +223,10 @@ export function calculateTimetableStats(timetable: Timetable): TimetableStats {
 }
 
 export function getCurrentAndNextLesson(timetable: Timetable): {
-  currentLesson?: LessonInfo;
-  nextLesson?: LessonInfo;
+  currentLessons: LessonInfo[];
+  nextLessons: LessonInfo[];
 } {
-  const now = new Date();
+  const now = getCurrentDateTime();
   const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();
@@ -237,10 +238,10 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
 
   // Find today's lessons
   const today = timetable.days.find(d => d.day === currentDayName);
-  if (!today) return {};
+  if (!today) return { currentLessons: [], nextLessons: [] };
 
-  let currentLesson: LessonInfo | undefined;
-  let nextLesson: LessonInfo | undefined;
+  let currentLessons: LessonInfo[] = [];
+  let nextLessons: LessonInfo[] = [];
 
   // Check each period
   for (let i = 0; i < today.cells.length; i++) {
@@ -249,7 +250,6 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
 
     if (!cell || cell.length === 0 || !period) continue;
 
-    const lesson = cell[0]; // Take first lesson if multiple
     const [startTime, endTime] = period.time.split(' - ');
     const [startHour, startMinute] = startTime.split(':').map(Number);
     const [endHour, endMinute] = endTime.split(':').map(Number);
@@ -257,54 +257,73 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
     const startTimeMinutes = startHour * 60 + startMinute;
     const endTimeMinutes = endHour * 60 + endMinute;
 
-    const lessonInfo: LessonInfo = {
-      subject: lesson.subject,
-      teacher: lesson.teacher,
-      teacherFull: lesson.teacherFull || lesson.teacher,
-      teacherCode: lesson.teacher,
-      room: lesson.room,
-      time: period.time,
-      day: today.day,
-      startTime,
-      endTime,
-      period: period.number,
-      isCurrent: false,
-      isNext: false,
-    };
-
     // Check if this is the current lesson
     if (currentTime >= startTimeMinutes && currentTime < endTimeMinutes) {
-      lessonInfo.isCurrent = true;
-      const timeUntilEnd = endTimeMinutes - currentTime;
-      const hoursLeft = Math.floor(timeUntilEnd / 60);
-      const minutesLeft = timeUntilEnd % 60;
+      // Create lesson info for each lesson in the cell
+      for (const lesson of cell) {
+        const lessonInfo: LessonInfo = {
+          subject: lesson.subject,
+          teacher: lesson.teacher,
+          teacherFull: lesson.teacherFull || lesson.teacher,
+          teacherCode: lesson.teacher,
+          room: lesson.room,
+          time: period.time,
+          day: today.day,
+          startTime,
+          endTime,
+          period: period.number,
+          isCurrent: true,
+          isNext: false,
+        };
 
-      if (hoursLeft > 0) {
-        lessonInfo.timeUntilEnd = `${hoursLeft}h ${minutesLeft}m`;
-      } else {
-        lessonInfo.timeUntilEnd = `${minutesLeft}m`;
+        const timeUntilEnd = endTimeMinutes - currentTime;
+        const hoursLeft = Math.floor(timeUntilEnd / 60);
+        const minutesLeft = timeUntilEnd % 60;
+
+        if (hoursLeft > 0) {
+          lessonInfo.timeUntilEnd = `${hoursLeft}h ${minutesLeft}m`;
+        } else {
+          lessonInfo.timeUntilEnd = `${minutesLeft}m`;
+        }
+
+        currentLessons.push(lessonInfo);
       }
-
-      currentLesson = lessonInfo;
     }
     // Check if this is the next lesson
-    else if (currentTime < startTimeMinutes && !nextLesson) {
-      lessonInfo.isNext = true;
-      const timeUntilStart = startTimeMinutes - currentTime;
-      const hoursLeft = Math.floor(timeUntilStart / 60);
-      const minutesLeft = timeUntilStart % 60;
+    else if (currentTime < startTimeMinutes && nextLessons.length === 0) {
+      // Create lesson info for each lesson in the cell
+      for (const lesson of cell) {
+        const lessonInfo: LessonInfo = {
+          subject: lesson.subject,
+          teacher: lesson.teacher,
+          teacherFull: lesson.teacherFull || lesson.teacher,
+          teacherCode: lesson.teacher,
+          room: lesson.room,
+          time: period.time,
+          day: today.day,
+          startTime,
+          endTime,
+          period: period.number,
+          isCurrent: false,
+          isNext: true,
+        };
 
-      if (hoursLeft > 0) {
-        lessonInfo.timeUntilStart = `${hoursLeft}h ${minutesLeft}m`;
-      } else {
-        lessonInfo.timeUntilStart = `${minutesLeft}m`;
+        const timeUntilStart = startTimeMinutes - currentTime;
+        const hoursLeft = Math.floor(timeUntilStart / 60);
+        const minutesLeft = timeUntilStart % 60;
+
+        if (hoursLeft > 0) {
+          lessonInfo.timeUntilStart = `${hoursLeft}h ${minutesLeft}m`;
+        } else {
+          lessonInfo.timeUntilStart = `${minutesLeft}m`;
+        }
+
+        nextLessons.push(lessonInfo);
       }
-
-      nextLesson = lessonInfo;
     }
   }
 
-  return { currentLesson, nextLesson };
+  return { currentLessons, nextLessons };
 }
 
 export function getNextLesson(timetable: Timetable):
@@ -316,15 +335,15 @@ export function getNextLesson(timetable: Timetable):
       day: string;
     }
   | undefined {
-  const { nextLesson } = getCurrentAndNextLesson(timetable);
-  if (!nextLesson) return undefined;
+  const { nextLessons } = getCurrentAndNextLesson(timetable);
+  if (nextLessons.length === 0) return undefined;
 
   return {
-    subject: nextLesson.subject,
-    teacher: nextLesson.teacher,
-    room: nextLesson.room,
-    time: nextLesson.time,
-    day: nextLesson.day,
+    subject: nextLessons[0].subject,
+    teacher: nextLessons[0].teacher,
+    room: nextLessons[0].room,
+    time: nextLessons[0].time,
+    day: nextLessons[0].day,
   };
 }
 

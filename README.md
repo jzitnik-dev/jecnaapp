@@ -2,8 +2,7 @@
 
 Neoficiální mobilní aplikace pro studenty a učitele SPŠE Ječná. Umožňuje rychlý přístup k rozvrhu, známkám, učitelům, jídelníčku a dalším školním informacím v moderním a přehledném rozhraní.
 
-## 📱 Funkce
-
+## Funkce
 - Zobrazení rozvrhu hodin
 - Přehled známek a průměrů
 - Seznam učitelů a učeben
@@ -13,7 +12,7 @@ Neoficiální mobilní aplikace pro studenty a učitele SPŠE Ječná. Umožňuj
 - Notifikace na nové známky
 - Moderní design a podpora světlého/tmavého režimu
 
-## 🚀 Instalace a spuštění
+## Instalace a spuštění
 
 1. **Klonuj repozitář:**
    ```bash
@@ -38,20 +37,19 @@ Neoficiální mobilní aplikace pro studenty a učitele SPŠE Ječná. Umožňuj
    npm run ios
    ```
 
-## 🛠️ Vývoj
-
+## Vývoj
 - Projekt je postaven na [React Native](https://reactnative.dev/) a [Expo](https://expo.dev/).
 - Navigace je řešena pomocí [expo-router](https://expo.github.io/router/docs/).
 - Stylování a komponenty: [react-native-paper](https://callstack.github.io/react-native-paper/)
 
-## 📄 Licence
+## Licence
 
 Tento projekt je licencován pod GNU General Public License v3.0. Podrobnosti najdeš v souboru [COPYING](COPYING).
+
+## Přispívání (Contributing)
+
+Rád uvítám jakékoliv příspěvky, nápady nebo hlášení chyb! Podrobné informace o tom, jak přispět, najdeš v [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ---
 
 Tato aplikace není oficiálně spojena se SPŠE Ječná.
-
-## 🧑‍💻 Přispívání (Contributing)
-
-Rád uvítám jakékoliv příspěvky, nápady nebo hlášení chyb! Podrobné informace o tom, jak přispět, najdeš v [CONTRIBUTING.md](CONTRIBUTING.md).

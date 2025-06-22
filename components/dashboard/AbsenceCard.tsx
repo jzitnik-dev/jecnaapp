@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
@@ -15,12 +16,20 @@ export function AbsenceCard() {
         elevation={2}
       >
         <Card.Content>
-          <Text
-            variant="titleLarge"
-            style={[styles.title, { color: theme.colors.onSurface }]}
-          >
-            📋 Omluvené hodiny
-          </Text>
+          <View style={styles.titleContainer}>
+            <MaterialCommunityIcons
+              name="clipboard-text"
+              size={24}
+              color={theme.colors.onSurface}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              variant="titleLarge"
+              style={[styles.title, { color: theme.colors.onSurface }]}
+            >
+              Omluvené hodiny
+            </Text>
+          </View>
           <Text
             variant="bodyMedium"
             style={[
@@ -42,12 +51,20 @@ export function AbsenceCard() {
         elevation={2}
       >
         <Card.Content>
-          <Text
-            variant="titleLarge"
-            style={[styles.title, { color: theme.colors.onSurface }]}
-          >
-            📋 Omluvené hodiny
-          </Text>
+          <View style={styles.titleContainer}>
+            <MaterialCommunityIcons
+              name="clipboard-text"
+              size={24}
+              color={theme.colors.onSurface}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              variant="titleLarge"
+              style={[styles.title, { color: theme.colors.onSurface }]}
+            >
+              Omluvené hodiny
+            </Text>
+          </View>
           <Text
             variant="bodyMedium"
             style={[styles.errorText, { color: theme.colors.error }]}
@@ -65,12 +82,20 @@ export function AbsenceCard() {
       elevation={2}
     >
       <Card.Content>
-        <Text
-          variant="titleLarge"
-          style={[styles.title, { color: theme.colors.onSurface }]}
-        >
-          📋 Omluvené hodiny
-        </Text>
+        <View style={styles.titleContainer}>
+          <MaterialCommunityIcons
+            name="clipboard-text"
+            size={24}
+            color={theme.colors.onSurface}
+            style={{ marginRight: 8 }}
+          />
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
+            Omluvené hodiny
+          </Text>
+        </View>
 
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
@@ -137,9 +162,13 @@ const styles = StyleSheet.create({
     margin: 16,
     borderRadius: 16,
   },
+  titleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   title: {
     fontWeight: 'bold',
-    marginBottom: 16,
   },
   statsContainer: {
     flexDirection: 'row',

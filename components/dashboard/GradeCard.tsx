@@ -1,3 +1,4 @@
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
@@ -5,8 +6,8 @@ import { Card, Text, useTheme } from 'react-native-paper';
 import type { SubjectGrades } from '../../api/SpseJecnaClient';
 import type { GradeStats } from '../../utils/dashboardUtils';
 import {
-  getGradeChartData,
-  getGradeTrendChartData,
+    getGradeChartData,
+    getGradeTrendChartData,
 } from '../../utils/dashboardUtils';
 
 interface GradeCardProps {
@@ -186,7 +187,13 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
           variant="titleLarge"
           style={[styles.title, { color: theme.colors.onSurface }]}
         >
-          📊 Známky
+          <MaterialCommunityIcons
+            name="chart-bar"
+            size={24}
+            color={theme.colors.onSurface}
+            style={{ marginRight: 8 }}
+          />
+          Známky
         </Text>
 
         {/* Key Metrics */}
@@ -271,12 +278,20 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
         {/* Best and Worst Subjects */}
         <View style={styles.subjectsContainer}>
           <View style={styles.subjectCard}>
-            <Text
-              variant="titleSmall"
-              style={[styles.subjectTitle, { color: theme.colors.primary }]}
-            >
-              🏆 Nejlepší předmět
-            </Text>
+            <View style={styles.subjectTitleContainer}>
+              <MaterialCommunityIcons
+                name="trophy"
+                size={16}
+                color={theme.colors.primary}
+                style={{ marginRight: 4 }}
+              />
+              <Text
+                variant="titleSmall"
+                style={[styles.subjectTitle, { color: theme.colors.primary }]}
+              >
+                Nejlepší předmět
+              </Text>
+            </View>
             <Text
               variant="bodyMedium"
               style={[styles.subjectName, { color: theme.colors.onSurface }]}
@@ -295,12 +310,20 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
           </View>
 
           <View style={styles.subjectCard}>
-            <Text
-              variant="titleSmall"
-              style={[styles.subjectTitle, { color: theme.colors.error }]}
-            >
-              ⚠️ Nejtěžší předmět
-            </Text>
+            <View style={styles.subjectTitleContainer}>
+              <MaterialCommunityIcons
+                name="alert"
+                size={16}
+                color={theme.colors.error}
+                style={{ marginRight: 4 }}
+              />
+              <Text
+                variant="titleSmall"
+                style={[styles.subjectTitle, { color: theme.colors.error }]}
+              >
+                Nejtěžší předmět
+              </Text>
+            </View>
             <Text
               variant="bodyMedium"
               style={[styles.subjectName, { color: theme.colors.onSurface }]}
@@ -381,9 +404,13 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.03)',
     marginHorizontal: 4,
   },
+  subjectTitleContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
   subjectTitle: {
     fontWeight: '600',
-    marginBottom: 4,
   },
   subjectName: {
     fontWeight: '500',
