@@ -1,19 +1,23 @@
 import React from 'react';
 import { Dimensions, StyleSheet, View } from 'react-native';
-import { BarChart } from 'react-native-chart-kit';
+import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Card, Text, useTheme } from 'react-native-paper';
+import type { SubjectGrades } from '../../api/SpseJecnaClient';
 import type { GradeStats } from '../../utils/dashboardUtils';
-import { getGradeChartData } from '../../utils/dashboardUtils';
+import { getGradeChartData, getGradeTrendChartData } from '../../utils/dashboardUtils';
 
 interface GradeCardProps {
   gradeStats: GradeStats;
+  grades: SubjectGrades[];
 }
 
-const screenWidth = Math.min(Dimensions.get('window').width - 80, 300);
+const screenWidth = Dimensions.get('window').width - 32; // Full width minus margins
 
-export function GradeCard({ gradeStats }: GradeCardProps) {
+export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const theme = useTheme();
+  
   const chartData = getGradeChartData(gradeStats);
+  const trendData = getGradeTrendChartData(grades);
 
   const chartConfig = {
     backgroundColor: theme.colors.surface,
@@ -32,7 +36,14 @@ export function GradeCard({ gradeStats }: GradeCardProps) {
     },
   };
 
-  const renderChart = () => {
+  const lineChartConfig = {
+    ...chartConfig,
+    decimalPlaces: 1,
+    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+    strokeWidth: 2,
+  };
+
+  const renderBarChart = () => {
     try {
       return (
         <BarChart
@@ -48,7 +59,7 @@ export function GradeCard({ gradeStats }: GradeCardProps) {
         />
       );
     } catch (error) {
-      console.warn('Chart rendering error:', error);
+      console.warn('Bar chart rendering error:', error);
       return (
         <View style={[styles.chartFallback, { backgroundColor: theme.colors.surfaceVariant }]}>
           <Text style={[styles.chartFallbackText, { color: theme.colors.onSurfaceVariant }]}>
@@ -63,6 +74,52 @@ export function GradeCard({ gradeStats }: GradeCardProps) {
               5: {gradeStats.gradeDistribution[5] || 0}
             </Text>
           </View>
+        </View>
+      );
+    }
+  };
+
+  const renderLineChart = () => {
+    try {
+      // Check if we have valid data
+      if (!trendData || !trendData.labels || trendData.labels.length === 0 || 
+          !trendData.datasets || trendData.datasets.length === 0 || 
+          !trendData.datasets[0].data || trendData.datasets[0].data.length === 0) {
+        return (
+          <View style={[styles.chartFallback, { backgroundColor: theme.colors.surfaceVariant }]}>
+            <Text style={[styles.chartFallbackText, { color: theme.colors.onSurfaceVariant }]}>
+              Trend známek:
+            </Text>
+            <Text style={[styles.gradeText, { color: theme.colors.onSurfaceVariant }]}>
+              Žádná data s daty
+            </Text>
+          </View>
+        );
+      }
+
+      return (
+        <LineChart
+          data={trendData}
+          width={screenWidth}
+          height={180}
+          chartConfig={lineChartConfig}
+          style={styles.chart}
+          bezier
+          fromZero={false}
+          yAxisLabel=""
+          yAxisSuffix=""
+        />
+      );
+    } catch (error) {
+      console.warn('Line chart rendering error:', error);
+      return (
+        <View style={[styles.chartFallback, { backgroundColor: theme.colors.surfaceVariant }]}>
+          <Text style={[styles.chartFallbackText, { color: theme.colors.onSurfaceVariant }]}>
+            Trend známek:
+          </Text>
+          <Text style={[styles.gradeText, { color: theme.colors.onSurfaceVariant }]}>
+            Chyba při vykreslování
+          </Text>
         </View>
       );
     }
@@ -110,7 +167,15 @@ export function GradeCard({ gradeStats }: GradeCardProps) {
           <Text variant="titleMedium" style={[styles.chartTitle, { color: theme.colors.onSurface }]}>
             Rozložení známek
           </Text>
-          {renderChart()}
+          {renderBarChart()}
+        </View>
+
+        {/* Trend Chart */}
+        <View style={styles.chartContainer}>
+          <Text variant="titleMedium" style={[styles.chartTitle, { color: theme.colors.onSurface }]}>
+            Trend známek (měsíc)
+          </Text>
+          {renderLineChart()}
         </View>
 
         {/* Best and Worst Subjects */}

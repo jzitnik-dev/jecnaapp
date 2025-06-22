@@ -3,6 +3,7 @@ import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { ActivityIndicator, Button, Card, Text, useTheme } from 'react-native-paper';
 import { ImageViewer } from '../../components/ImageViewer';
+import { AbsenceCard } from '../../components/dashboard/AbsenceCard';
 import { GradeCard } from '../../components/dashboard/GradeCard';
 import { NextLessonCard } from '../../components/dashboard/NextLessonCard';
 import { useDashboardData } from '../../hooks/useDashboardData';
@@ -108,15 +109,6 @@ export default function HomeScreen() {
                 Známek
               </Text>
             </View>
-            
-            <View style={styles.quickStat}>
-              <Text variant="titleLarge" style={[styles.quickStatValue, { color: theme.colors.onPrimary }]}>
-                {timetable ? 'Rozvrh' : 'N/A'}
-              </Text>
-              <Text variant="bodySmall" style={[styles.quickStatLabel, { color: theme.colors.onPrimary }]}>
-                Dostupné
-              </Text>
-            </View>
           </View>
         </Card.Content>
       </Card>
@@ -125,14 +117,10 @@ export default function HomeScreen() {
       <NextLessonCard timetable={timetable} />
 
       {/* Grade Statistics Card */}
-      <GradeCard gradeStats={gradeStats} />
+      <GradeCard gradeStats={gradeStats} grades={grades} />
 
-      {/* Cache Info */}
-      <View style={styles.cacheInfo}>
-        <Text variant="bodySmall" style={[styles.cacheText, { color: theme.colors.onSurfaceVariant }]}>
-          💾 Data jsou cachována pro rychlejší načítání
-        </Text>
-      </View>
+      {/* Absence Card */}
+      <AbsenceCard />
     </ScrollView>
   );
 }

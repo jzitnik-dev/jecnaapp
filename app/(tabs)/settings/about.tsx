@@ -60,7 +60,7 @@ export default function AboutScreen() {
             icon="email-outline"
             style={styles.contactButton}
           >
-            your.email@example.com
+            email@jzitnik.dev
           </Button>
           
           <Button

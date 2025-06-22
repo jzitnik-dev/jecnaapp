@@ -339,4 +339,120 @@ export function getTimetableChartData(timetableStats: TimetableStats) {
       data: dayOrder.map(day => timetableStats.lessonsByDay[day] || 0),
     }],
   };
+}
+
+export function getGradeTrendChartData(grades: SubjectGrades[]) {
+  // Collect all grades with dates
+  const allGrades: Array<{ value: number; date: string; weight: number }> = [];
+  
+  for (const subject of grades) {
+    if (!subject || !subject.splits) continue;
+    
+    for (const split of subject.splits) {
+      if (!split || !split.grades) continue;
+      
+      for (const grade of split.grades) {
+        if (!grade || typeof grade.value !== 'number' || grade.value < 1 || grade.value > 5) continue;
+        if (!grade.date) continue;
+        
+        allGrades.push({
+          value: grade.value,
+          date: grade.date,
+          weight: grade.weight || 1,
+        });
+      }
+    }
+  }
+  
+  console.log('All grades with dates:', allGrades.length);
+  
+  if (allGrades.length === 0) {
+    // Return fallback data to prevent chart error
+    return {
+      labels: ['Žádná data'],
+      datasets: [{
+        data: [0],
+        color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+        strokeWidth: 2,
+      }],
+    };
+  }
+  
+  // Sort by date
+  allGrades.sort((a, b) => {
+    const dateA = parseDate(a.date);
+    const dateB = parseDate(b.date);
+    return dateA.getTime() - dateB.getTime();
+  });
+  
+  // Group by months
+  const monthlyAverages: { [monthKey: string]: { total: number; weight: number; count: number } } = {};
+  
+  for (const grade of allGrades) {
+    const date = parseDate(grade.date);
+    const monthKey = `${date.getFullYear()}-${date.getMonth() + 1}`;
+    
+    if (!monthlyAverages[monthKey]) {
+      monthlyAverages[monthKey] = { total: 0, weight: 0, count: 0 };
+    }
+    
+    monthlyAverages[monthKey].total += grade.value * grade.weight;
+    monthlyAverages[monthKey].weight += grade.weight;
+    monthlyAverages[monthKey].count += 1;
+  }
+  
+  console.log('Monthly averages:', monthlyAverages);
+  
+  // Convert to chart data and filter out months with no grades
+  const chartData = Object.entries(monthlyAverages)
+    .filter(([_, data]) => data.count > 0)
+    .map(([monthKey, data]) => {
+      const [year, month] = monthKey.split('-');
+      const monthNames = ['Led', 'Úno', 'Bře', 'Dub', 'Kvě', 'Čer', 'Čvc', 'Srp', 'Zář', 'Říj', 'Lis', 'Pro'];
+      const monthIndex = parseInt(month) - 1;
+      
+      // Ensure monthIndex is valid
+      if (monthIndex < 0 || monthIndex >= monthNames.length) {
+        console.warn('Invalid month index:', monthIndex, 'for monthKey:', monthKey);
+        return null;
+      }
+      
+      return {
+        label: monthNames[monthIndex],
+        average: data.weight > 0 ? data.total / data.weight : 0,
+      };
+    })
+    .filter(item => item !== null && item.average > 0);
+  
+  console.log('Chart data:', chartData);
+  
+  // If no valid data, return fallback
+  if (chartData.length === 0) {
+    return {
+      labels: ['Žádná data'],
+      datasets: [{
+        data: [0],
+        color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+        strokeWidth: 2,
+      }],
+    };
+  }
+  
+  const result = {
+    labels: chartData.map(item => item!.label),
+    datasets: [{
+      data: chartData.map(item => item!.average),
+      color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+      strokeWidth: 2,
+    }],
+  };
+  
+  console.log('Final result:', result);
+  return result;
+}
+
+// Helper function to parse DD.MM.YYYY format
+function parseDate(dateString: string): Date {
+  const [day, month, year] = dateString.split('.').map(Number);
+  return new Date(year, month - 1, day); // month - 1 because Date constructor uses 0-based months
 } 
