@@ -4,6 +4,8 @@ import * as SecureStore from 'expo-secure-store';
 import { parseDocument } from 'htmlparser2';
 import { iCanteenClient } from './iCanteenClient';
 
+const extraordURL = 'https://jecnarozvrh.jzitnik.dev';
+
 export type Grade = {
   value: number | 'N' | 'Pochvala'; // 1-5, 'N' (absence), or 'Pochvala'
   weight: number; // 1 for normal, 0.5 for small, 0 for pochvala
@@ -123,6 +125,14 @@ export type AccountInfo = {
     bankAccount: string;
   };
   photoUrl?: string;
+};
+
+export type ExtraordinaryTimetable = {
+  schedule: Record<string, (string | null)[]>[];
+  props: {
+    date: string;
+    priprava: boolean;
+  }[];
 };
 
 export class SpseJecnaClient {
@@ -517,7 +527,7 @@ export class SpseJecnaClient {
   }
 
   public async logout(): Promise<void> {
-    const response = await fetch(`${this.baseUrl}/user/logout`, {
+    await fetch(`${this.baseUrl}/user/logout`, {
       method: 'GET',
       headers: {
         ...(this.cookies ? { Cookie: this.cookies } : {}),
@@ -559,6 +569,13 @@ export class SpseJecnaClient {
       }
     }
     return { type, date, message };
+  }
+
+  public async getExtraordinaryTimetable(): Promise<ExtraordinaryTimetable> {
+    const res = await fetch(extraordURL);
+    const json = await res.json();
+
+    return json;
   }
 
   public async getTimetable(

@@ -11,10 +11,31 @@ import {
   useTheme,
 } from 'react-native-paper';
 import type {
+  ExtraordinaryTimetable,
   TimetableDay,
   TimetableLesson,
   TimetablePeriod,
 } from '../api/SpseJecnaClient';
+
+type BaseProps = {
+  periods: TimetablePeriod[];
+  days: TimetableDay[];
+  style?: any;
+  onTeacherPress?: (teacherCode: string, teacherFull?: string) => void;
+  onRoomPress?: (roomCode: string) => void;
+};
+
+type WithExtraordinary = BaseProps & {
+  extraordinary: ExtraordinaryTimetable;
+  class: string;
+};
+
+type WithoutExtraordinary = BaseProps & {
+  extraordinary?: undefined | null;
+  class?: string;
+};
+
+type TimetableGridProps = WithExtraordinary | WithoutExtraordinary;
 
 export function TimetableGrid({
   periods,
@@ -22,13 +43,9 @@ export function TimetableGrid({
   style,
   onTeacherPress,
   onRoomPress,
-}: {
-  periods: TimetablePeriod[];
-  days: TimetableDay[];
-  style?: any;
-  onTeacherPress?: (teacherCode: string, teacherFull?: string) => void;
-  onRoomPress?: (roomCode: string) => void;
-}) {
+  extraordinary,
+  class: className,
+}: TimetableGridProps) {
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
   const periodCount = periods.length;
@@ -72,6 +89,9 @@ export function TimetableGrid({
       setTimeout(() => onRoomPress(code), 100);
     }
   };
+
+  const date = new Date(2025, 5, 23);
+  const dayNumberMondayStart = (date.getDay() + 6) % 7;
 
   return (
     <>
@@ -132,167 +152,217 @@ export function TimetableGrid({
         </View>
         <Divider style={{ height: 1, backgroundColor: borderColor }} />
         {/* Day rows */}
-        {days.map((day, dayIdx) => (
-          <View key={day.day + dayIdx} style={styles.row}>
-            <View
-              style={[
-                styles.dayCell,
-                {
-                  width: cellWidth,
-                  backgroundColor: headerBg,
-                  borderBottomLeftRadius: dayIdx === days.length - 1 ? 18 : 0,
-                  borderColor,
-                },
-              ]}
-            >
-              <Text style={[styles.dayText, { color: textColor }]}>
-                {day.day}
-              </Text>
-            </View>
-            {day.cells.map((cell, periodIdx) => {
-              const isSplit = cell && cell.length > 1;
-              return (
-                <View
-                  key={periodIdx}
-                  style={[
-                    styles.cell,
-                    {
-                      width: cellWidth,
-                      height: cellHeight,
-                      backgroundColor: cellBg,
-                      borderBottomRightRadius:
-                        dayIdx === days.length - 1 &&
-                        periodIdx === day.cells.length - 1
-                          ? 18
-                          : 0,
-                      borderColor,
-                      borderRightWidth:
-                        periodIdx === day.cells.length - 1 ? 0 : 1,
-                    },
-                  ]}
-                >
-                  {cell && cell.length > 0
-                    ? cell.map((lesson, i) => (
-                        <Pressable
-                          key={i}
-                          onPress={() => handleLessonPress(lesson)}
-                          style={[
-                            styles.lessonSquare,
-                            {
-                              backgroundColor: cellBg,
-                              borderColor: borderColor,
-                              borderBottomWidth: isSplit && i === 0 ? 1 : 0,
-                              borderRightWidth: 0,
-                              borderLeftWidth: 0,
-                              borderTopWidth: 0,
-                              height: isSplit ? cellHeight / 2 : cellHeight,
-                              width: '100%',
-                              flex: 1,
-                              margin: 0,
-                              padding: 6,
-                              borderRadius: 0,
-                              justifyContent: 'flex-start',
-                              alignItems: 'stretch',
-                            },
-                          ]}
-                        >
-                          <View
-                            style={{
-                              position: 'absolute',
-                              top: 6,
-                              left: 6,
-                              right: 6,
-                              flexDirection: 'row',
-                              justifyContent: 'space-between',
-                              alignItems: 'flex-start',
-                            }}
+        {days.map((day, dayIdx) => {
+          const addDays = dayIdx - dayNumberMondayStart;
+          const newDate = new Date(
+            date.getTime() + addDays * 24 * 60 * 60 * 1000
+          )
+            .toISOString()
+            .slice(0, 10);
+
+          const extraIndex = extraordinary?.props.findIndex(
+            el => el.date === newDate
+          );
+          const isInExtra = extraIndex !== -1 && extraIndex !== undefined;
+          const extra = isInExtra
+            ? extraordinary?.schedule[extraIndex][className]
+            : undefined;
+
+          return (
+            <View key={day.day + dayIdx} style={styles.row}>
+              <View
+                style={[
+                  styles.dayCell,
+                  {
+                    width: cellWidth,
+                    backgroundColor: headerBg,
+                    borderBottomLeftRadius: dayIdx === days.length - 1 ? 18 : 0,
+                    borderColor,
+                  },
+                ]}
+              >
+                <Text style={[styles.dayText, { color: textColor }]}>
+                  {day.day}
+                </Text>
+                {isInExtra && extraordinary?.props[extraIndex].priprava ? (
+                  <Text style={{ color: secondaryTextColor }}>(příprava)</Text>
+                ) : null}
+              </View>
+              {day.cells.map((cell, periodIdx) => {
+                if (extra && extra[periodIdx]) {
+                  return (
+                    <View
+                      key={periodIdx}
+                      style={[
+                        styles.cell,
+                        {
+                          width: cellWidth,
+                          height: cellHeight,
+                          backgroundColor: cellBg,
+                          borderBottomRightRadius:
+                            dayIdx === days.length - 1 &&
+                            periodIdx === day.cells.length - 1
+                              ? 18
+                              : 0,
+                          borderColor,
+                          borderRightWidth:
+                            periodIdx === day.cells.length - 1 ? 0 : 1,
+                        },
+                      ]}
+                    >
+                      <Text
+                        ellipsizeMode="tail"
+                        style={{ textAlign: 'center' }}
+                      >
+                        {extra[periodIdx]}
+                      </Text>
+                    </View>
+                  );
+                }
+                const isSplit = cell && cell.length > 1;
+                return (
+                  <View
+                    key={periodIdx}
+                    style={[
+                      styles.cell,
+                      {
+                        width: cellWidth,
+                        height: cellHeight,
+                        backgroundColor: cellBg,
+                        borderBottomRightRadius:
+                          dayIdx === days.length - 1 &&
+                          periodIdx === day.cells.length - 1
+                            ? 18
+                            : 0,
+                        borderColor,
+                        borderRightWidth:
+                          periodIdx === day.cells.length - 1 ? 0 : 1,
+                      },
+                    ]}
+                  >
+                    {cell && cell.length > 0
+                      ? cell.map((lesson, i) => (
+                          <Pressable
+                            key={i}
+                            onPress={() => handleLessonPress(lesson)}
+                            style={[
+                              styles.lessonSquare,
+                              {
+                                backgroundColor: cellBg,
+                                borderColor: borderColor,
+                                borderBottomWidth: isSplit && i === 0 ? 1 : 0,
+                                borderRightWidth: 0,
+                                borderLeftWidth: 0,
+                                borderTopWidth: 0,
+                                height: isSplit ? cellHeight / 2 : cellHeight,
+                                width: '100%',
+                                flex: 1,
+                                margin: 0,
+                                padding: 6,
+                                borderRadius: 0,
+                                justifyContent: 'flex-start',
+                                alignItems: 'stretch',
+                              },
+                            ]}
                           >
-                            <Text
-                              style={[
-                                styles.teacherSquare,
-                                {
-                                  color: accentColor,
-                                  fontSize: 12,
-                                  flex: 1,
-                                  marginRight: 4,
-                                },
-                              ]}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
+                            <View
+                              style={{
+                                position: 'absolute',
+                                top: 6,
+                                left: 6,
+                                right: 6,
+                                flexDirection: 'row',
+                                justifyContent: 'space-between',
+                                alignItems: 'flex-start',
+                              }}
                             >
-                              {lesson.teacher}
-                            </Text>
-                            {lesson.room ? (
-                              <View
-                                style={{
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                }}
-                              >
-                                <Text
-                                  style={[
-                                    styles.roomSquare,
-                                    {
-                                      color: secondaryTextColor,
-                                      fontSize: 11,
-                                      fontWeight: '500',
-                                    },
-                                  ]}
-                                  numberOfLines={1}
-                                >
-                                  {lesson.room}
-                                </Text>
-                              </View>
-                            ) : null}
-                          </View>
-                          <View
-                            style={{
-                              flex: 1,
-                              justifyContent: 'center',
-                              alignItems: 'center',
-                            }}
-                          >
-                            <Text
-                              style={[
-                                styles.subjectSquare,
-                                {
-                                  color: textColor,
-                                  fontSize: 15,
-                                  fontWeight: '600',
-                                  textAlign: 'center',
-                                },
-                              ]}
-                              numberOfLines={1}
-                              ellipsizeMode="tail"
-                            >
-                              {lesson.subject}
-                            </Text>
-                            {lesson.group ? (
                               <Text
                                 style={[
-                                  styles.groupSquare,
+                                  styles.teacherSquare,
                                   {
-                                    color: secondaryTextColor,
-                                    fontSize: 11,
-                                    marginTop: 2,
+                                    color: accentColor,
+                                    fontSize: 12,
+                                    flex: 1,
+                                    marginRight: 4,
+                                  },
+                                ]}
+                                numberOfLines={1}
+                                ellipsizeMode="tail"
+                              >
+                                {lesson.teacher}
+                              </Text>
+                              {lesson.room ? (
+                                <View
+                                  style={{
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                  }}
+                                >
+                                  <Text
+                                    style={[
+                                      styles.roomSquare,
+                                      {
+                                        color: secondaryTextColor,
+                                        fontSize: 11,
+                                        fontWeight: '500',
+                                      },
+                                    ]}
+                                    numberOfLines={1}
+                                  >
+                                    {lesson.room}
+                                  </Text>
+                                </View>
+                              ) : null}
+                            </View>
+                            <View
+                              style={{
+                                flex: 1,
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                              }}
+                            >
+                              <Text
+                                style={[
+                                  styles.subjectSquare,
+                                  {
+                                    color: textColor,
+                                    fontSize: 15,
+                                    fontWeight: '600',
                                     textAlign: 'center',
                                   },
                                 ]}
                                 numberOfLines={1}
                                 ellipsizeMode="tail"
                               >
-                                {lesson.group}
+                                {lesson.subject}
                               </Text>
-                            ) : null}
-                          </View>
-                        </Pressable>
-                      ))
-                    : null}
-                </View>
-              );
-            })}
-          </View>
-        ))}
+                              {lesson.group ? (
+                                <Text
+                                  style={[
+                                    styles.groupSquare,
+                                    {
+                                      color: secondaryTextColor,
+                                      fontSize: 11,
+                                      marginTop: 2,
+                                      textAlign: 'center',
+                                    },
+                                  ]}
+                                  numberOfLines={1}
+                                  ellipsizeMode="tail"
+                                >
+                                  {lesson.group}
+                                </Text>
+                              ) : null}
+                            </View>
+                          </Pressable>
+                        ))
+                      : null}
+                  </View>
+                );
+              })}
+            </View>
+          );
+        })}
       </Surface>
       <Portal>
         <Modal

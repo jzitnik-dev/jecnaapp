@@ -1,5 +1,5 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   createDrawerNavigator,
   DrawerContentScrollView,
@@ -134,11 +134,7 @@ export default function DrawerLayout() {
         options={{
           title: 'Rozvrh',
           drawerIcon: ({ color, size }) => (
-            <IconSymbol
-              size={size}
-              name="chevron.left.forwardslash.chevron.right"
-              color={color}
-            />
+            <MaterialCommunityIcons name="calendar" color={color} size={size} />
           ),
         }}
       />
@@ -148,7 +144,7 @@ export default function DrawerLayout() {
         options={{
           title: 'Známky',
           drawerIcon: ({ color, size }) => (
-            <IconSymbol size={size} name="paperplane.fill" color={color} />
+            <MaterialCommunityIcons name="star" color={color} size={size} />
           ),
         }}
       />
@@ -210,11 +206,7 @@ export default function DrawerLayout() {
         options={{
           title: 'Jídelna',
           drawerIcon: ({ color, size }) => (
-            <MaterialCommunityIcons
-              name="file-document-edit-outline"
-              color={color}
-              size={size}
-            />
+            <Ionicons name="restaurant-outline" size={size} color={color} />
           ),
         }}
       />

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -16,13 +16,19 @@ import {
   Text,
   useTheme,
 } from 'react-native-paper';
-import type { Timetable } from '../../api/SpseJecnaClient';
+import type {
+  ExtraordinaryTimetable,
+  Timetable,
+} from '../../api/SpseJecnaClient';
 import { TimetableGrid } from '../../components/TimetableGrid';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
+import * as SecureStore from 'expo-secure-store';
+import { useAccountInfo } from '@/hooks/useAccountInfo';
 
 export default function RozvrhScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
+  const { accountInfo } = useAccountInfo();
   const [yearMenuVisible, setYearMenuVisible] = useState(false);
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
@@ -41,6 +47,34 @@ export default function RozvrhScreen() {
   });
   const [refreshing, setRefreshing] = useState(false);
   const router = useRouter();
+  const [extraenabled, setExtraEnabled] = useState(false);
+  const [showExtra, setShowExtra] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const enabled =
+        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
+        'true';
+      if (enabled) {
+        setExtraEnabled(true);
+        setShowExtra(true);
+      }
+    })();
+  }, []);
+  const { data: extraordinaryData, refetch: extraRefetch } =
+    useQuery<ExtraordinaryTimetable>({
+      queryKey: ['extraordinarytimetable', selectedYear, selectedPeriod],
+      queryFn: async () => {
+        if (!client) throw new Error('Not logged in');
+        return await client.getExtraordinaryTimetable();
+      },
+      enabled: !!client && showExtra, // fetch only if client exists and showExtra is true
+    });
+
+  useEffect(() => {
+    if (showExtra) {
+      extraRefetch();
+    }
+  }, [showExtra, extraRefetch]);
 
   // Handle selects
   const meta = data?.meta;
@@ -124,6 +158,21 @@ export default function RozvrhScreen() {
           zIndex: 10,
         }}
       >
+        {extraenabled && (
+          <Button
+            mode="outlined"
+            style={{
+              backgroundColor: showExtra ? theme.colors.primary : undefined,
+            }}
+            labelStyle={{
+              color: showExtra ? theme.colors.background : theme.colors.primary,
+            }}
+            onPress={() => setShowExtra(prev => !prev)}
+          >
+            Mimořádný rozvrh
+          </Button>
+        )}
+
         {/* Year select */}
         <Menu
           visible={yearMenuVisible}
@@ -191,12 +240,14 @@ export default function RozvrhScreen() {
           <TimetableGrid
             periods={data.periods}
             days={data.days}
-            onTeacherPress={(code, fullName) => {
+            onTeacherPress={code => {
               if (typeof code === 'string' && code.length > 0) {
                 router.push(`/teachers/${code}`);
               }
             }}
             onRoomPress={room => router.push(`/ucebna/${room}`)}
+            extraordinary={showExtra ? extraordinaryData : null}
+            class={accountInfo?.class || 'sakjdlkajsdlkjasd'}
           />
         </ScrollView>
       </ScrollView>

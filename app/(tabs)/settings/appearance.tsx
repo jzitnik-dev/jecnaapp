@@ -8,7 +8,17 @@ import {
   Switch,
   Text,
   useTheme,
+  Portal,
+  Modal,
 } from 'react-native-paper';
+import ColorPicker, {
+  Preview,
+  Panel1,
+  HueSlider,
+  OpacitySlider,
+  Swatches,
+} from 'reanimated-color-picker';
+import { runOnJS } from 'react-native-reanimated';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 
 export default function AppearanceScreen() {
@@ -38,6 +48,10 @@ export default function AppearanceScreen() {
 
   const predefinedThemes = getPredefinedThemes();
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [pickerColor, setPickerColor] = useState<string>('#ffffff');
+
   useEffect(() => {
     if (customColors) {
       setLocalCustomColors(customColors);
@@ -48,19 +62,29 @@ export default function AppearanceScreen() {
     await setSelectedTheme(themeName);
   };
 
-  const handleCustomColorChange = async (colorKey: string, value: string) => {
-    const newColors = { ...localCustomColors, [colorKey]: value };
-    setLocalCustomColors(newColors);
-    if (useCustomColors) {
-      await setCustomColors(newColors);
-    }
-  };
-
   const handleCustomColorsToggle = async (enabled: boolean) => {
     await setUseCustomColors(enabled);
     if (enabled) {
       await setCustomColors(localCustomColors);
     }
+  };
+
+  // Open color picker modal for given color key
+  const openColorPicker = (key: string, currentColor: string) => {
+    setEditingKey(key);
+    setPickerColor(currentColor);
+    setModalVisible(true);
+  };
+
+  // Save selected color into local and app customColors
+  const savePickedColor = () => {
+    if (editingKey) {
+      const updatedColors = { ...localCustomColors, [editingKey]: pickerColor };
+      setLocalCustomColors(updatedColors);
+      setCustomColors(updatedColors);
+    }
+    setModalVisible(false);
+    setEditingKey(null);
   };
 
   return (
@@ -207,10 +231,7 @@ export default function AppearanceScreen() {
                         ]}
                       />
                     )}
-                    onPress={() => {
-                      // Here you would open a color picker
-                      console.log('Open color picker for:', key);
-                    }}
+                    onPress={() => openColorPicker(key, value)}
                   />
                   <Divider />
                 </View>
@@ -219,6 +240,41 @@ export default function AppearanceScreen() {
           </Card.Content>
         </Card>
       )}
+
+      <Portal>
+        <Modal
+          visible={modalVisible}
+          onDismiss={() => setModalVisible(false)}
+          contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
+        >
+          <Text style={{ marginBottom: 10, color: theme.colors.onSurface }}>
+            Vyberte barvu pro: {editingKey}
+          </Text>
+
+          <ColorPicker
+            style={{ width: '100%', height: 320 }}
+            value={pickerColor}
+            onComplete={color => {
+              'worklet';
+              runOnJS(setPickerColor)(color.hex);
+            }}
+          >
+            <Preview />
+            <Panel1 style={{ flex: 1, marginVertical: 20 }} />
+            <HueSlider style={{ height: 30, marginVertical: 10 }} />
+            <OpacitySlider style={{ height: 30, marginVertical: 10 }} />
+            <Swatches />
+          </ColorPicker>
+
+          <Button
+            mode="contained"
+            onPress={savePickedColor}
+            style={{ marginTop: 16 }}
+          >
+            Uložit
+          </Button>
+        </Modal>
+      </Portal>
     </ScrollView>
   );
 }
@@ -272,5 +328,10 @@ const styles = StyleSheet.create({
     height: 24,
     borderRadius: 12,
     marginRight: 8,
+  },
+  modalContainer: {
+    margin: 20,
+    padding: 20,
+    borderRadius: 10,
   },
 });

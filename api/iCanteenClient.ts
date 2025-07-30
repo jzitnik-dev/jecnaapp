@@ -48,7 +48,11 @@ export class iCanteenClient {
     params.append('j_username', username);
     params.append('j_password', password);
     params.append('terminal', 'false');
+    params.append('printer', 'false');
+    params.append('keyboard', 'false');
+    params.append('status', 'true');
     params.append('_spring_security_remember_me', 'false'); // fixed field name
+    params.append('_', new Date().toString());
     params.append(
       'targetUrl',
       '/faces/secured/main.jsp?status=true&printer=&keyboard='
@@ -76,7 +80,6 @@ export class iCanteenClient {
         response.status,
         response.url.substring(0, 200)
       );
-      throw new Error(`Login failed with error code: ${errorCode}`);
     }
 
     // If we reach here, login was successful

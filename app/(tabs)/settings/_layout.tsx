@@ -42,6 +42,13 @@ export default function SettingsLayout() {
         }}
       />
       <Stack.Screen
+        name="extraordinarySchedule"
+        options={{
+          title: 'Mimořádný rozvrh',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
         name="about"
         options={{
           title: 'O aplikaci',

@@ -11,7 +11,8 @@
     "lint": "expo lint",
     "lint:fix": "expo lint --fix",
     "format": "prettier --write .",
-    "format:check": "prettier --check ."
+    "format:check": "prettier --check .",
+    "build:dev-apk": "eas build --profile development --platform android"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
@@ -42,6 +43,7 @@
     "expo-symbols": "~0.4.5",
     "expo-system-ui": "~5.0.9",
     "expo-task-manager": "^13.1.5",
+    "expo-updates": "^0.28.17",
     "expo-web-browser": "~14.2.0",
     "htmlparser2": "^10.0.0",
     "react": "19.0.0",
@@ -57,6 +59,7 @@
     "react-native-svg": "15.11.2",
     "react-native-web": "~0.20.0",
     "react-native-webview": "13.13.5",
+    "reanimated-color-picker": "^4.1.0",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

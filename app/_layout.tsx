@@ -18,6 +18,7 @@ import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
+import { useDashboardData } from '@/hooks/useDashboardData';
 
 const queryClient = new QueryClient();
 
@@ -26,6 +27,7 @@ export default function RootLayout() {
   const { client, setClient } = useSpseJecnaClient();
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
+  const { refresh } = useDashboardData();
 
   // Load fonts with better error handling - make it optional
   const [fontsLoaded, fontError] = useFonts({
@@ -59,6 +61,7 @@ export default function RootLayout() {
       if (savedUsername && savedPassword) {
         try {
           await newClient.login(savedUsername, savedPassword);
+          refresh();
           console.log('Auto-login successful');
         } catch (error) {
           console.log('Auto-login failed:', error);
