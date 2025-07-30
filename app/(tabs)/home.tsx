@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
@@ -14,11 +14,21 @@ import { GradeCard } from '../../components/dashboard/GradeCard';
 import { NextLessonCard } from '../../components/dashboard/NextLessonCard';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { calculateGradeStats } from '../../utils/dashboardUtils';
+import * as SecureStore from 'expo-secure-store';
 
 export default function HomeScreen() {
   const theme = useTheme();
   const { grades, timetable, accountInfo, loading, error, refresh } =
     useDashboardData();
+  const [showProfilePicture, setShowProfilePicture] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setShowProfilePicture(
+        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
+      );
+    })();
+  });
 
   const gradeStats = calculateGradeStats(grades);
 
@@ -96,11 +106,15 @@ export default function HomeScreen() {
       >
         <Card.Content style={styles.welcomeContent}>
           <View style={styles.welcomeHeader}>
-            <ImageViewer
-              imageUrl={accountInfo?.photoUrl}
-              size={60}
-              fallbackSource={require('../../assets/images/icon.png')}
-            />
+            {showProfilePicture && (
+              <View style={{ marginRight: 16 }}>
+                <ImageViewer
+                  imageUrl={accountInfo?.photoUrl}
+                  size={60}
+                  fallbackSource={require('../../assets/images/icon.png')}
+                />
+              </View>
+            )}
             <View style={styles.welcomeText}>
               <Text
                 variant="headlineSmall"
@@ -232,7 +246,6 @@ const styles = StyleSheet.create({
   },
   welcomeText: {
     flex: 1,
-    marginLeft: 16,
   },
   welcomeTitle: {
     fontWeight: 'bold',

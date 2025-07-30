@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Alert,
   RefreshControl,
@@ -20,12 +20,22 @@ import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
+import * as SecureStore from 'expo-secure-store';
 
 export default function AccountScreen() {
   const theme = useTheme();
   const { currentTheme: appTheme } = useAppTheme();
   const { accountInfo, loading, error, refresh } = useAccountInfo();
   const { logout } = useSpseJecnaClient();
+  const [showProfilePicture, setShowProfilePicture] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setShowProfilePicture(
+        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
+      );
+    })();
+  }, []);
 
   const handleLogout = () => {
     Alert.alert('Odhlásit se', 'Opravdu se chcete odhlásit?', [
@@ -112,11 +122,15 @@ export default function AccountScreen() {
       >
         <Card.Content style={styles.profileContent}>
           <View style={styles.profileHeader}>
-            <ImageViewer
-              imageUrl={accountInfo?.photoUrl}
-              size={80}
-              fallbackSource={require('../../../assets/images/icon.png')}
-            />
+            {showProfilePicture && (
+              <View style={{ marginRight: 16 }}>
+                <ImageViewer
+                  imageUrl={accountInfo?.photoUrl}
+                  size={80}
+                  fallbackSource={require('../../../assets/images/icon.png')}
+                />
+              </View>
+            )}
             <View style={styles.profileInfo}>
               <Text
                 variant="headlineSmall"
@@ -323,7 +337,6 @@ const styles = StyleSheet.create({
   },
   profileInfo: {
     flex: 1,
-    marginLeft: 16,
   },
   card: {
     margin: 16,

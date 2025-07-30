@@ -1,4 +1,4 @@
-import { MaterialIcons } from '@expo/vector-icons';
+import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import React, { useState } from 'react';
 import {
@@ -275,7 +275,7 @@ export default function ZnamkyScreen() {
     <ScrollView
       horizontal
       showsHorizontalScrollIndicator={false}
-      style={{ maxHeight: 56 }}
+      style={{ height: 73 }}
       contentContainerStyle={{
         flexDirection: 'row',
         gap: 12,
@@ -283,6 +283,7 @@ export default function ZnamkyScreen() {
         paddingTop: 12,
         alignItems: 'center',
         zIndex: 10,
+        paddingBottom: 12,
       }}
     >
       {/* Year select */}
@@ -335,6 +336,14 @@ export default function ZnamkyScreen() {
           />
         ))}
       </Menu>
+      <Button
+        mode={plannerMode ? 'contained' : 'outlined'}
+        onPress={() => setPlannerMode(!plannerMode)}
+        style={{ marginRight: 12 }}
+      >
+        {plannerMode ? 'Plánovač známek: Zapnuto' : 'Plánovač známek: Vypnuto'}
+      </Button>
+
       {(isFetching || isLoading) && (
         <ActivityIndicator size={18} style={{ marginLeft: 8 }} />
       )}
@@ -355,23 +364,6 @@ export default function ZnamkyScreen() {
           />
         }
       >
-        <View
-          style={{
-            flexDirection: 'row',
-            alignItems: 'center',
-            marginBottom: 16,
-          }}
-        >
-          <Button
-            mode={plannerMode ? 'contained' : 'outlined'}
-            onPress={() => setPlannerMode(!plannerMode)}
-            style={{ marginRight: 12 }}
-          >
-            {plannerMode
-              ? 'Plánovač známek: Zapnuto'
-              : 'Plánovač známek: Vypnuto'}
-          </Button>
-        </View>
         {isLoading && <ActivityIndicator style={{ marginTop: 24 }} />}
         {error && (
           <Text style={{ color: 'red', marginTop: 24 }}>{String(error)}</Text>
@@ -498,9 +490,9 @@ export default function ZnamkyScreen() {
                                 marginRight: 6,
                                 marginBottom: 6,
                                 backgroundColor: '#4CAF50',
+                                display: 'flex',
                               }}
                               textStyle={{ color: '#fff', fontWeight: 'bold' }}
-                              icon="star"
                               onPress={async () => {
                                 const href = (grade as any).href;
                                 if (!href || !client) return;
@@ -524,7 +516,18 @@ export default function ZnamkyScreen() {
                                 setPochvalaLoading(false);
                               }}
                             >
-                              {grade.note || 'Pochvala'}
+                              <View
+                                style={{
+                                  height: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  flexDirection: 'row',
+                                  gap: 4,
+                                }}
+                              >
+                                <Ionicons name="star" size={14} color="#fff" />
+                                <Text>{grade.note || 'Pochvala'}</Text>
+                              </View>
                             </Chip>
                           ) : (
                             <GradeSquare
@@ -705,6 +708,7 @@ const styles = StyleSheet.create({
     padding: 16,
   },
   scrollContent: {
+    paddingTop: 0,
     padding: 16,
     alignItems: 'stretch',
     minHeight: Dimensions.get('window').height - 100,

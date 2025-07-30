@@ -58,6 +58,7 @@ export default function LoginScreen() {
         await SecureStore.setItemAsync('password', p ?? password);
         setClient(client);
         setCookies(client.getCookies());
+        setError(null);
         router.replace('/(tabs)');
       } else {
         setError('Login failed. Check your credentials.');
@@ -67,7 +68,7 @@ export default function LoginScreen() {
         }
       }
     } catch (e: any) {
-      if (e.message == 'Login token not found') {
+      if (e.message === 'Login token not found') {
         await client.logout();
         await SecureStore.deleteItemAsync('username');
         await SecureStore.deleteItemAsync('password');

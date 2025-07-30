@@ -115,11 +115,11 @@ export type AccountInfo = {
   classNumber: string;
   privateEmail: string;
   schoolEmail: string;
-  parents: Array<{
+  parents: {
     name: string;
     phone: string;
     email: string;
-  }>;
+  }[];
   sposa: {
     variableSymbol: string;
     bankAccount: string;
@@ -351,48 +351,28 @@ export class SpseJecnaClient {
         const tdChildren = tds[0].children;
         // Special handling for Chování: look for Pochvala
         if (subject === 'Chování') {
-          // Find all <a class="link"> with label containing 'Pochvala'
           const pochvaly: Grade[] = [];
-          for (let i = 0; i < tdChildren.length; i++) {
-            const node = tdChildren[i];
-            if (
-              node.type === 'tag' &&
-              node.name === 'span' &&
-              node.attribs &&
-              node.attribs.style &&
-              node.attribs.style.includes('float: left')
-            ) {
-              // This span contains the <a class="link"> for Pochvala
-              const a = (node.children || []).find(
-                c =>
-                  c.type === 'tag' &&
-                  c.name === 'a' &&
-                  c.attribs &&
-                  c.attribs.class === 'link'
-              ) as Element | undefined;
-              if (a) {
-                const labelSpan = (a.children || []).find(
-                  c =>
-                    c.type === 'tag' &&
-                    c.name === 'span' &&
-                    c.attribs &&
-                    c.attribs.class === 'label'
-                ) as Element | undefined;
-                const label =
-                  labelSpan &&
-                  labelSpan.children.find(c => c.type === 'text')?.data?.trim();
-                const href = a.attribs && a.attribs.href;
-                if (label && label.includes('Pochvala')) {
-                  pochvaly.push({
-                    value: 'Pochvala',
-                    weight: 0,
-                    note: label,
-                    href,
-                  });
-                }
-              }
+
+          // Find all <a class="link"> elements in tdChildren
+          const allLinks = selectAll('a.link', tdChildren as Element[]);
+
+          for (const a of allLinks) {
+            const labelSpan = selectAll('span.label', [a])[0];
+            const label = labelSpan?.children
+              .find(c => c.type === 'text')
+              ?.data?.trim();
+            const href = a.attribs?.href;
+
+            if (label && label.includes('Pochvala')) {
+              pochvaly.push({
+                value: 'Pochvala',
+                weight: 0,
+                note: label,
+                href,
+              });
             }
           }
+
           splits.push({ label: '', grades: pochvaly });
         } else {
           for (let i = 0; i < tdChildren.length; i++) {
@@ -912,7 +892,7 @@ export class SpseJecnaClient {
       document.children
     )[0] as Element | undefined;
     let periods: { number: number; time: string }[] = [];
-    let days: {
+    const days: {
       day: string;
       cells: (import('./SpseJecnaClient').TimetableLesson[] | null)[];
     }[] = [];

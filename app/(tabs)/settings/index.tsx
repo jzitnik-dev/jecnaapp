@@ -47,6 +47,15 @@ export default function SettingsScreen() {
           />
         </Link>
         <Divider />
+        <Link href="/(tabs)/settings/advancedSettings" asChild>
+          <List.Item
+            title="Rozšířené nastavení"
+            description="Pokročilé nastavení aplikace"
+            left={props => <List.Icon {...props} icon="tune" />}
+            right={props => <List.Icon {...props} icon="chevron-right" />}
+          />
+        </Link>
+        <Divider />
         <Link href="/(tabs)/settings/about" asChild>
           <List.Item
             title="O aplikaci"

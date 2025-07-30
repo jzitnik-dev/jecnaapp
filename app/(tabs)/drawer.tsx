@@ -6,14 +6,12 @@ import {
   DrawerItemList,
 } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Linking, View } from 'react-native';
 import { Text, TouchableRipple } from 'react-native-paper';
 import { ImageViewer } from '../../components/ImageViewer';
 import { useAccountInfo } from '../../hooks/useAccountInfo';
 import { useAppTheme } from '../../hooks/useAppTheme';
-import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 import HomeScreen from './home';
 import JidelnaScreen from './jidelna';
 import OmluvnyListScreen from './omluvny-list';
@@ -23,28 +21,58 @@ import RozvrhScreen from './rozvrh';
 import SettingsScreen from './settings';
 import TeachersListScreen from './teachers-list';
 import ZnamkyScreen from './znamky';
+import MoodleIcon from '@/components/icons/Moodle';
+import * as SecureStore from 'expo-secure-store';
 
 const Drawer = createDrawerNavigator();
 
 export default function DrawerLayout() {
-  const { client, logout: globalLogout } = useSpseJecnaClient();
   const { navigationTheme } = useAppTheme();
   const { accountInfo } = useAccountInfo();
   const router = useRouter();
+  const [showProfilePicture, setShowProfilePicture] = useState(false);
 
-  const handleLogout = async () => {
-    if (client) {
-      await client.logout();
-    }
-    await SecureStore.deleteItemAsync('username');
-    await SecureStore.deleteItemAsync('password');
-    globalLogout();
-    router.replace('/login');
-  };
+  useEffect(() => {
+    (async () => {
+      setShowProfilePicture(
+        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
+      );
+    })();
+  }, []);
 
   const handleAccountPress = () => {
     router.push('/settings/account');
   };
+
+  const pages = [
+    {
+      name: 'Mimořádný rozvrh',
+      url: 'https://www.spsejecna.cz/suplovani',
+      icon: (
+        <Ionicons
+          name="calendar"
+          size={24}
+          color={navigationTheme.colors.text}
+        />
+      ),
+    },
+    {
+      name: 'Moodle',
+      url: 'https://moodle.spsejecna.cz',
+      icon: <MoodleIcon color={navigationTheme.colors.text} />,
+    },
+    {
+      name: 'Originální stránky',
+      url: 'https://spsejecna.cz',
+      icon: (
+        <MaterialCommunityIcons
+          name="web"
+          size={24}
+          color={navigationTheme.colors.text}
+        />
+      ),
+    },
+  ];
 
   return (
     <Drawer.Navigator
@@ -64,6 +92,63 @@ export default function DrawerLayout() {
         <>
           <DrawerContentScrollView {...props}>
             <DrawerItemList {...props} />
+
+            {/* Divider */}
+            <View
+              style={{
+                height: 1,
+                backgroundColor: navigationTheme.colors.border,
+                marginVertical: 8,
+                marginHorizontal: 16,
+              }}
+            />
+
+            {pages.map((page, idx) => (
+              <View
+                key={idx}
+                style={{
+                  borderRadius: 9999,
+                  overflow: 'hidden', // important to clip ripple
+                }}
+              >
+                <TouchableRipple
+                  onPress={() => Linking.openURL(page.url)}
+                  borderless={false}
+                  rippleColor={`${navigationTheme.colors.onBackground}50`}
+                  style={{
+                    paddingVertical: 15, // match drawer item height (around 48px total)
+                    paddingHorizontal: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <>
+                    <View
+                      style={{ flexDirection: 'row', alignItems: 'center' }}
+                    >
+                      {page.icon}
+                      <Text
+                        style={{
+                          marginLeft: 12,
+                          color: navigationTheme.colors.text,
+                          fontWeight: '600',
+                          fontSize: 16, // match drawer font size
+                        }}
+                      >
+                        {page.name}
+                      </Text>
+                    </View>
+
+                    <Ionicons
+                      name="open-outline"
+                      size={20}
+                      color={navigationTheme.colors.text}
+                    />
+                  </>
+                </TouchableRipple>
+              </View>
+            ))}
           </DrawerContentScrollView>
 
           {/* Account Section */}
@@ -79,15 +164,18 @@ export default function DrawerLayout() {
                 style={{
                   flexDirection: 'row',
                   alignItems: 'center',
-                  marginBottom: 12,
                 }}
               >
-                <ImageViewer
-                  imageUrl={accountInfo?.photoUrl}
-                  size={48}
-                  fallbackSource={require('../../assets/images/icon.png')}
-                />
-                <View style={{ marginLeft: 12, flex: 1 }}>
+                {showProfilePicture && (
+                  <View style={{ marginRight: 12 }}>
+                    <ImageViewer
+                      imageUrl={accountInfo?.photoUrl}
+                      size={48}
+                      fallbackSource={require('../../assets/images/icon.png')}
+                    />
+                  </View>
+                )}
+                <View style={{ flex: 1 }}>
                   <Text
                     variant="titleMedium"
                     style={{
