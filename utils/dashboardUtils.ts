@@ -414,7 +414,6 @@ export function getGradeTrendChartData(grades: SubjectGrades[]) {
       datasets: [
         {
           data: [0],
-          color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
           strokeWidth: 2,
         },
       ],
@@ -496,7 +495,6 @@ export function getGradeTrendChartData(grades: SubjectGrades[]) {
       datasets: [
         {
           data: [0],
-          color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
           strokeWidth: 2,
         },
       ],
@@ -508,7 +506,6 @@ export function getGradeTrendChartData(grades: SubjectGrades[]) {
     datasets: [
       {
         data: chartData.map(item => item!.average),
-        color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
         strokeWidth: 2,
       },
     ],

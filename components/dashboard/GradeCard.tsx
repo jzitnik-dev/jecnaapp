@@ -6,8 +6,8 @@ import { Card, Text, useTheme } from 'react-native-paper';
 import type { SubjectGrades } from '../../api/SpseJecnaClient';
 import type { GradeStats } from '../../utils/dashboardUtils';
 import {
-    getGradeChartData,
-    getGradeTrendChartData,
+  getGradeChartData,
+  getGradeTrendChartData,
 } from '../../utils/dashboardUtils';
 
 interface GradeCardProps {
@@ -23,12 +23,38 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const chartData = getGradeChartData(gradeStats);
   const trendData = getGradeTrendChartData(grades);
 
+  function hexToRgba(hex: string, opacity = 1) {
+    let r = 0,
+      g = 0,
+      b = 0;
+
+    // Remove leading #
+    if (hex[0] === '#') {
+      hex = hex.slice(1);
+    }
+
+    // 3 digits hex
+    if (hex.length === 3) {
+      r = parseInt(hex[0] + hex[0], 16);
+      g = parseInt(hex[1] + hex[1], 16);
+      b = parseInt(hex[2] + hex[2], 16);
+
+      // 6 digits hex
+    } else if (hex.length === 6) {
+      r = parseInt(hex.substring(0, 2), 16);
+      g = parseInt(hex.substring(2, 4), 16);
+      b = parseInt(hex.substring(4, 6), 16);
+    }
+
+    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
+  }
+
   const chartConfig = {
     backgroundColor: theme.colors.surface,
     backgroundGradientFrom: theme.colors.surface,
     backgroundGradientTo: theme.colors.surface,
     decimalPlaces: 0,
-    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+    color: (opacity = 1) => hexToRgba(theme.colors.primary, opacity),
     labelColor: (opacity = 1) => theme.colors.onSurface,
     style: {
       borderRadius: 16,
@@ -43,7 +69,7 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const lineChartConfig = {
     ...chartConfig,
     decimalPlaces: 1,
-    color: (opacity = 1) => `rgba(76, 175, 80, ${opacity})`,
+    color: (opacity = 1) => hexToRgba(theme.colors.primary, opacity),
     strokeWidth: 2,
   };
 

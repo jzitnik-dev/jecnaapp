@@ -34,7 +34,7 @@ export default function AppearanceScreen() {
   } = useAppTheme();
 
   const [localCustomColors, setLocalCustomColors] = useState({
-    primary: '#666',
+    primary: '#666666',
     background: '#000000',
     surface: '#121212',
     surfaceVariant: '#1c1e24',
@@ -43,7 +43,7 @@ export default function AppearanceScreen() {
     card: '#121212',
     text: '#ffffff',
     border: '#333333',
-    notification: '#666',
+    notification: '#666666',
   });
 
   const predefinedThemes = getPredefinedThemes();
@@ -245,7 +245,10 @@ export default function AppearanceScreen() {
         <Modal
           visible={modalVisible}
           onDismiss={() => setModalVisible(false)}
-          contentContainerStyle={[styles.modalContainer, { backgroundColor: theme.colors.surface }]}
+          contentContainerStyle={[
+            styles.modalContainer,
+            { backgroundColor: theme.colors.surface },
+          ]}
         >
           <Text style={{ marginBottom: 10, color: theme.colors.onSurface }}>
             Vyberte barvu pro: {editingKey}
