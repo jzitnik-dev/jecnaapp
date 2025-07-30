@@ -90,8 +90,9 @@ export function TimetableGrid({
     }
   };
 
-  const date = new Date(2025, 5, 23);
-  const dayNumberMondayStart = (date.getDay() + 6) % 7;
+  const date = new Date();
+  const dayNumberMondayStart =
+    date.getDay() === 0 ? -1 : date.getDay() === 6 ? -2 : date.getDay() - 1;
 
   return (
     <>
