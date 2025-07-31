@@ -12,7 +12,8 @@
     "lint:fix": "expo lint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "build:dev-apk": "eas build --profile development --platform android"
+    "build:dev-apk": "eas build --profile development --platform android",
+    "build:prod-apk": "eas build --platform android --profile production"
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
