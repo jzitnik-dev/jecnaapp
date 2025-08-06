@@ -24,6 +24,10 @@ import { TimetableGrid } from '../../components/TimetableGrid';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
 import * as SecureStore from 'expo-secure-store';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
+import {
+  getTimetableSelections,
+  saveTimetableSelections,
+} from '../../utils/timetableStorage';
 
 export default function RozvrhScreen() {
   const { client } = useSpseJecnaClient();
@@ -96,6 +100,14 @@ export default function RozvrhScreen() {
     setRefreshing(false);
   };
 
+  useEffect(() => {
+    (async () => {
+      const selections = await getTimetableSelections();
+      if (selections.year) setSelectedYear(selections.year);
+      if (selections.period) setSelectedPeriod(selections.period);
+    })();
+  }, []);
+
   if (!client) {
     return (
       <View style={styles.centered}>
@@ -119,9 +131,10 @@ export default function RozvrhScreen() {
         <Text style={{ color: 'red', marginTop: 24 }}>{String(error)}</Text>
         <Button
           mode="contained"
-          onPress={() => {
+          onPress={async () => {
             setSelectedYear(undefined);
             setSelectedPeriod(undefined);
+            await saveTimetableSelections(undefined, undefined);
             refetch();
           }}
           style={{ marginTop: 16 }}
@@ -188,6 +201,7 @@ export default function RozvrhScreen() {
               key={y.id}
               onPress={() => {
                 setSelectedYear(y.id);
+                saveTimetableSelections(y.id, selectedPeriod);
                 setYearMenuVisible(false);
               }}
               title={y.label}
@@ -210,6 +224,7 @@ export default function RozvrhScreen() {
               key={p.id}
               onPress={() => {
                 setSelectedPeriod(p.id);
+                saveTimetableSelections(selectedYear, p.id);
                 setPeriodMenuVisible(false);
               }}
               title={p.label}

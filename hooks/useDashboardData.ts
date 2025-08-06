@@ -1,15 +1,29 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type {
   AccountInfo,
   SubjectGrades,
   Timetable,
 } from '../api/SpseJecnaClient';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
+import { getTimetableSelections } from '@/utils/timetableStorage';
 
 export function useDashboardData() {
   const { client } = useSpseJecnaClient();
   const queryClient = useQueryClient();
+
+  const [savedSelections, setSavedSelections] = useState<{
+    year?: string;
+    period?: string;
+  } | null>(null);
+
+  // Load saved timetable selections once on mount
+  useEffect(() => {
+    (async () => {
+      const selections = await getTimetableSelections();
+      setSavedSelections(selections);
+    })();
+  }, []);
 
   // Helper to check login status
   const isLoggedIn = async () => {
@@ -31,13 +45,20 @@ export function useDashboardData() {
 
   // Timetable query
   const timetableQuery = useQuery<Timetable | null, Error>({
-    queryKey: ['timetable'],
+    queryKey: ['timetable', savedSelections?.year, savedSelections?.period],
     queryFn: async () => {
       if (!(await isLoggedIn())) throw new Error('Not logged in');
       if (!client) throw new Error('Client not available');
+      // If we have saved selections, use them; else call without params
+      if (savedSelections?.year || savedSelections?.period) {
+        return client.getTimetable(
+          savedSelections.year,
+          savedSelections.period
+        );
+      }
       return client.getTimetable();
     },
-    enabled: !!client,
+    enabled: !!client && savedSelections !== null, // wait for saved selections to load
     staleTime: 30 * 60 * 1000,
   });
 
