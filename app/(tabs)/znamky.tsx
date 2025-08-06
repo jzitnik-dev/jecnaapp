@@ -1,6 +1,6 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Dimensions,
   RefreshControl,
@@ -27,6 +27,7 @@ import type {
 } from '../../api/SpseJecnaClient';
 import { useGradeNotifications } from '../../hooks/useGradeNotifications';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
+import { getZnamkySelections, saveZnamkySelections } from '@/utils/znamkyStorage';
 
 type Grade = GradeBase & { href?: string };
 
@@ -261,6 +262,14 @@ export default function ZnamkyScreen() {
     }));
   };
 
+  useEffect(() => {
+    (async () => {
+      const selections = await getZnamkySelections();
+      if (selections.year) setSelectedYear(selections.year);
+      if (selections.period) setSelectedPeriod(selections.period);
+    })();
+  }, []);
+
   if (!client) {
     return (
       <View style={styles.centered}>
@@ -305,6 +314,7 @@ export default function ZnamkyScreen() {
             key={y.id}
             onPress={() => {
               setSelectedYear(y.id);
+              saveZnamkySelections(y.id, selectedPeriod);
               setYearMenuVisible(false);
             }}
             title={y.label}
@@ -330,6 +340,7 @@ export default function ZnamkyScreen() {
             key={p.id}
             onPress={() => {
               setSelectedPeriod(p.id);
+              saveZnamkySelections(selectedYear, p.id);
               setPeriodMenuVisible(false);
             }}
             title={p.label}

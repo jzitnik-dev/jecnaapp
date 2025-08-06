@@ -192,7 +192,8 @@ export default function DrawerLayout() {
                       opacity: 0.7,
                     }}
                   >
-                    {accountInfo?.class || ''} • {accountInfo?.username || ''}
+                    {accountInfo?.username || ''} • {accountInfo?.class || ''} •{' '}
+                    {accountInfo?.groups}
                   </Text>
                 </View>
                 <MaterialCommunityIcons

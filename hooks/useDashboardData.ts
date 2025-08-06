@@ -7,6 +7,7 @@ import type {
 } from '../api/SpseJecnaClient';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
 import { getTimetableSelections } from '@/utils/timetableStorage';
+import { getZnamkySelections } from '@/utils/znamkyStorage';
 
 export function useDashboardData() {
   const { client } = useSpseJecnaClient();
@@ -17,11 +18,19 @@ export function useDashboardData() {
     period?: string;
   } | null>(null);
 
+  const [savedSelectionsZnamky, setSavedSelectionsZnamky] = useState<{
+    year?: string;
+    period?: string;
+  } | null>(null);
+
   // Load saved timetable selections once on mount
   useEffect(() => {
     (async () => {
       const selections = await getTimetableSelections();
       setSavedSelections(selections);
+
+      const selectionsZnamky = await getZnamkySelections();
+      setSavedSelectionsZnamky(selectionsZnamky);
     })();
   }, []);
 
@@ -37,6 +46,14 @@ export function useDashboardData() {
     queryFn: async () => {
       if (!(await isLoggedIn())) throw new Error('Not logged in');
       if (!client) throw new Error('Client not available');
+
+      if (savedSelectionsZnamky?.year || savedSelectionsZnamky?.period) {
+        return client.getZnamky(
+          savedSelectionsZnamky.year,
+          savedSelectionsZnamky.period
+        );
+      }
+
       return client.getZnamky();
     },
     enabled: !!client,

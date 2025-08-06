@@ -135,7 +135,8 @@ export default function HomeScreen() {
                 variant="bodyMedium"
                 style={[styles.welcomeClass, { color: theme.colors.onPrimary }]}
               >
-                {accountInfo?.class || ''} • {accountInfo?.username || ''}
+                {accountInfo?.username || ''} • {accountInfo?.class || ''} •{' '}
+                {accountInfo?.groups}
               </Text>
             </View>
           </View>
