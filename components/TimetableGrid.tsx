@@ -385,6 +385,12 @@ export function TimetableGrid({
                   {modalLesson.className || '-'}
                 </Text>
               </Text>
+              <Text style={{ marginBottom: 8 }}>
+                Celý název:{' '}
+                <Text style={{ fontWeight: 'bold' }}>
+                  {modalLesson.subjectLong || '-'}
+                </Text>
+              </Text>
               {modalLesson.group && (
                 <Text style={{ marginBottom: 8 }}>
                   Skupina:{' '}
