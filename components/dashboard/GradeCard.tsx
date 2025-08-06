@@ -69,7 +69,6 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const lineChartConfig = {
     ...chartConfig,
     decimalPlaces: 1,
-    color: (opacity = 1) => hexToRgba(theme.colors.primary, opacity),
     strokeWidth: 2,
   };
 
