@@ -497,13 +497,17 @@ export default function ZnamkyScreen() {
                       <View style={styles.gradesRow}>
                         {split.grades.map((grade, i) =>
                           subject.subject === 'Chování' &&
-                          grade.value === 'Pochvala' ? (
+                          (grade.value === 'Pochvala' ||
+                            grade.value === 'Důtka') ? (
                             <Chip
                               key={i}
                               style={{
                                 marginRight: 6,
                                 marginBottom: 6,
-                                backgroundColor: '#4CAF50',
+                                backgroundColor:
+                                  grade.value === 'Důtka'
+                                    ? '#b50b0b'
+                                    : '#4CAF50',
                                 display: 'flex',
                               }}
                               textStyle={{ color: '#fff', fontWeight: 'bold' }}
@@ -539,7 +543,15 @@ export default function ZnamkyScreen() {
                                   gap: 4,
                                 }}
                               >
-                                <Ionicons name="star" size={14} color="#fff" />
+                                <Ionicons
+                                  name={
+                                    grade.value === 'Pochvala'
+                                      ? 'star'
+                                      : 'close-outline'
+                                  }
+                                  size={14}
+                                  color="#fff"
+                                />
                                 <Text>{grade.note || 'Pochvala'}</Text>
                               </View>
                             </Chip>

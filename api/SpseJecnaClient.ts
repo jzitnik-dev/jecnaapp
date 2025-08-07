@@ -8,7 +8,7 @@ import { default as serialize } from 'dom-serializer';
 const extraordURL = 'https://jecnarozvrh.jzitnik.dev';
 
 export type Grade = {
-  value: number | 'N' | 'Pochvala'; // 1-5, 'N' (absence), or 'Pochvala'
+  value: number | 'N' | 'Pochvala' | 'Důtka'; // 1-5, 'N' (absence), or 'Pochvala'
   weight: number; // 1 for normal, 0.5 for small, 0 for pochvala
   date?: string;
   note?: string;
@@ -386,6 +386,13 @@ export class SpseJecnaClient {
             if (label && label.includes('Pochvala')) {
               pochvaly.push({
                 value: 'Pochvala',
+                weight: 0,
+                note: label,
+                href,
+              });
+            } else if (label && label.includes('Důtka')) {
+              pochvaly.push({
+                value: 'Důtka',
                 weight: 0,
                 note: label,
                 href,
