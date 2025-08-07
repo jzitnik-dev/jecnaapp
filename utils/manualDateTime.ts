@@ -11,18 +11,19 @@ export const getCurrentDateTime = () => {
   if (useCustomDate) {
     const now = new Date();
     const customDate = new Date();
-    
+
     // Nastav den v týdnu
     const currentDay = now.getDay();
     const targetDay = customDay;
     const daysDiff = targetDay - currentDay;
     customDate.setDate(now.getDate() + daysDiff);
-    
+
     // Nastav čas
     customDate.setHours(customHour, customMinute, 0, 0);
-    
+
     return customDate;
   }
-  
+
   return new Date();
-}; 
+};
+

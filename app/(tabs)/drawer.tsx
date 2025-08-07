@@ -23,6 +23,7 @@ import TeachersListScreen from './teachers-list';
 import ZnamkyScreen from './znamky';
 import MoodleIcon from '@/components/icons/Moodle';
 import * as SecureStore from 'expo-secure-store';
+import NovinkyScreen from './novinky';
 
 const Drawer = createDrawerNavigator();
 
@@ -296,6 +297,17 @@ export default function DrawerLayout() {
           title: 'Jídelna',
           drawerIcon: ({ color, size }) => (
             <Ionicons name="restaurant-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="novinky"
+        component={NovinkyScreen}
+        options={{
+          title: 'Novinky',
+          headerShown: true,
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="newspaper" color={color} size={size} />
           ),
         }}
       />

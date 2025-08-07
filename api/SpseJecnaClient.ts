@@ -1,8 +1,9 @@
-import { selectAll } from 'css-select';
+import { selectAll, selectOne } from 'css-select';
 import type { Element } from 'domhandler';
 import * as SecureStore from 'expo-secure-store';
-import { parseDocument } from 'htmlparser2';
+import { DomUtils, parseDocument } from 'htmlparser2';
 import { iCanteenClient } from './iCanteenClient';
+import { default as serialize } from 'dom-serializer';
 
 const extraordURL = 'https://jecnarozvrh.jzitnik.dev';
 
@@ -139,6 +140,19 @@ export type LockerData = {
   number: number;
   location: string;
   period: string;
+};
+
+export type Event = {
+  title: string;
+  content: string;
+  author: string;
+  date: string;
+  onlyForSchool: boolean;
+  files?: {
+    url: string;
+    label: string;
+  }[];
+  images?: string[];
 };
 
 export class SpseJecnaClient {
@@ -522,6 +536,80 @@ export class SpseJecnaClient {
       credentials: 'include',
     });
     this.cookies = '';
+  }
+
+  public async getNews() {
+    const html = await this.fetchHtml('/');
+    const document = parseDocument(html);
+    const events = selectAll('div.event', document.children) as Element[];
+    const list: Event[] = [];
+
+    for (const event of events) {
+      const title = selectOne('.name h2 a', event.children) as Element;
+      const titleContent = title.children
+        .find(c => c.type === 'text')
+        ?.data?.trim();
+      const content = selectOne('.text', event.children) as Element;
+      const contentHtml = serialize(content.children);
+
+      // Files
+      let files = undefined;
+      const filesEl = selectOne('.files', event.children) as Element | null;
+      if (filesEl) {
+        files = [];
+        const filesList = selectAll('li', filesEl.children) as Element[];
+        for (const fileEl of filesList) {
+          const label = selectOne('a .label', fileEl.children) as Element;
+          const labelContent = label.children
+            .find(c => c.type === 'text')
+            ?.data?.trim();
+
+          const a = selectOne('a', fileEl.children) as Element;
+          const url = new URL(
+            a.attribs.href,
+            'https://spsejecna.cz'
+          ).toString();
+
+          files.push({
+            label: labelContent || '',
+            url,
+          });
+        }
+      }
+
+      // Images
+      let images = undefined;
+      const imagesEl = selectOne('.images', event.children) as Element | null;
+      if (imagesEl) {
+        images = [];
+        const imagesList = selectAll('a', imagesEl) as Element[];
+        for (const imageEl of imagesList) {
+          const url = new URL(
+            imageEl.attribs.href,
+            'http://spsejecna.cz'
+          ).toString();
+          images.push(url);
+        }
+      }
+
+      const footer = selectOne('.footer', event.children) as Element;
+      const footerContent = footer.children
+        .find(c => c.type === 'text')
+        ?.data?.trim();
+      const footerParts = footerContent?.split('|');
+
+      list.push({
+        title: titleContent || '',
+        content: contentHtml,
+        files,
+        images,
+        date: footerParts?.[0] || '',
+        author: footerParts?.[1] || '',
+        onlyForSchool: !!footerParts?.[2],
+      });
+    }
+
+    return list;
   }
 
   public async getLocker(): Promise<LockerData> {
