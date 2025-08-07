@@ -198,7 +198,10 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
 
         {/* Current Lessons */}
         {currentLessons.map((lesson, index) => (
-          <View key={index} style={[styles.lessonContainer, styles.currentLesson]}>
+          <View
+            key={index}
+            style={[styles.lessonContainer, styles.currentLesson]}
+          >
             <View style={styles.lessonHeader}>
               <View style={styles.statusContainer}>
                 <MaterialCommunityIcons

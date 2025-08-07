@@ -90,7 +90,7 @@ export default function RootLayout() {
     } else {
       setIsLoading(false); // 👈 If client already exists, stop loading
     }
-  }, [client, setClient]);
+  }, [client, setClient, router]);
 
   if (fontError) {
     console.error('Font loading error:', fontError);

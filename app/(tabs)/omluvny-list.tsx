@@ -39,7 +39,7 @@ export default function OmluvnyListScreen() {
         const result = await client.getOmluvnyList(yearId);
         setData(result);
         setSelectedYear(result.selectedYearId);
-      } catch (e) {
+      } catch {
         setError('Nepodařilo se načíst omluvný list.');
       } finally {
         setLoading(false);

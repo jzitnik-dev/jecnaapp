@@ -27,7 +27,10 @@ import type {
 } from '../../api/SpseJecnaClient';
 import { useGradeNotifications } from '../../hooks/useGradeNotifications';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
-import { getZnamkySelections, saveZnamkySelections } from '@/utils/znamkyStorage';
+import {
+  getZnamkySelections,
+  saveZnamkySelections,
+} from '@/utils/znamkyStorage';
 
 type Grade = GradeBase & { href?: string };
 
@@ -517,7 +520,7 @@ export default function ZnamkyScreen() {
                                   const detail =
                                     await client.getPochvalaDetail(href);
                                   setPochvalaDetail(detail);
-                                } catch (e) {
+                                } catch {
                                   setPochvalaDetail({
                                     type: '',
                                     date: '',

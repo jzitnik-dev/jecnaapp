@@ -25,27 +25,6 @@ export default function LoginScreen() {
   const setCookies = useSpseJecnaClient(state => state.setCookies);
   const client = new SpseJecnaClient();
 
-  // Check for stored credentials on component mount
-  useEffect(() => {
-    const checkStoredCredentials = async () => {
-      try {
-        const storedUsername = await SecureStore.getItemAsync('username');
-        const storedPassword = await SecureStore.getItemAsync('password');
-
-        if (storedUsername && storedPassword) {
-          // Try to login with stored credentials silently
-          await handleLogin(storedUsername, storedPassword, true);
-        }
-      } catch (error) {
-        console.error('Error checking stored credentials:', error);
-      } finally {
-        setCheckedStored(true);
-      }
-    };
-
-    checkStoredCredentials();
-  }, []);
-
   const handleLogin = async (u?: string, p?: string, silent?: boolean) => {
     setLoading(true);
     setError(null);
@@ -82,6 +61,27 @@ export default function LoginScreen() {
       setLoading(false);
     }
   };
+
+  // Check for stored credentials on component mount
+  useEffect(() => {
+    const checkStoredCredentials = async () => {
+      try {
+        const storedUsername = await SecureStore.getItemAsync('username');
+        const storedPassword = await SecureStore.getItemAsync('password');
+
+        if (storedUsername && storedPassword) {
+          // Try to login with stored credentials silently
+          await handleLogin(storedUsername, storedPassword, true);
+        }
+      } catch (error) {
+        console.error('Error checking stored credentials:', error);
+      } finally {
+        setCheckedStored(true);
+      }
+    };
+
+    checkStoredCredentials();
+  }, []);
 
   if (!checkedStored) {
     return (

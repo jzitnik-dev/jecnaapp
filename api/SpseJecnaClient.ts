@@ -1,7 +1,7 @@
 import { selectAll, selectOne } from 'css-select';
 import type { Element } from 'domhandler';
 import * as SecureStore from 'expo-secure-store';
-import { DomUtils, parseDocument } from 'htmlparser2';
+import { parseDocument } from 'htmlparser2';
 import { iCanteenClient } from './iCanteenClient';
 import { default as serialize } from 'dom-serializer';
 

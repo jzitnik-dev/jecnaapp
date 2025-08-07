@@ -41,7 +41,7 @@ export default function AdvancedSettings() {
           pendingEnabled ? 'true' : 'false'
         );
         await Updates.reloadAsync(); // Restart the app to apply changes
-      } catch (e) {
+      } catch {
         Alert.alert('Chyba', 'Nepodařilo se restartovat aplikaci.');
       }
     }
