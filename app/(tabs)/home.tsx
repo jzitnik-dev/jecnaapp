@@ -15,10 +15,11 @@ import { NextLessonCard } from '../../components/dashboard/NextLessonCard';
 import { useDashboardData } from '../../hooks/useDashboardData';
 import { calculateGradeStats } from '../../utils/dashboardUtils';
 import * as SecureStore from 'expo-secure-store';
+import { LockerCard } from '@/components/dashboard/LockerCard';
 
 export default function HomeScreen() {
   const theme = useTheme();
-  const { grades, timetable, accountInfo, loading, error, refresh } =
+  const { grades, timetable, accountInfo, loading, error, locker, refresh } =
     useDashboardData();
   const [showProfilePicture, setShowProfilePicture] = useState(false);
 
@@ -196,6 +197,8 @@ export default function HomeScreen() {
 
       {/* Absence Card */}
       <AbsenceCard />
+
+      <LockerCard lockerData={locker} />
     </ScrollView>
   );
 }

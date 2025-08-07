@@ -135,6 +135,12 @@ export type ExtraordinaryTimetable = {
   }[];
 };
 
+export type LockerData = {
+  number: number;
+  location: string;
+  period: string;
+};
+
 export class SpseJecnaClient {
   private readonly baseUrl = 'https://www.spsejecna.cz';
   private cookies: string = '';
@@ -518,6 +524,41 @@ export class SpseJecnaClient {
     this.cookies = '';
   }
 
+  public async getLocker(): Promise<LockerData> {
+    const html = await this.fetchHtml('/locker/student');
+    const document = parseDocument(html);
+    const labels = selectAll(
+      'main > .column-center > .list > li > .item > .label',
+      document.children
+    ) as Element[];
+    const label = labels[labels.length - 1];
+
+    const text = label?.children.find(c => c.type === 'text')?.data?.trim();
+
+    if (!text) {
+      throw new Error('Locker not found!');
+    }
+
+    const numberMatch = text.match(/skříňka č\. (\d+)/);
+    const number = numberMatch ? numberMatch[1] : null;
+
+    const parenMatch = text.match(/\(([^)]+)\)/);
+    const parenthesesText = parenMatch ? parenMatch[1] : null;
+
+    const afterParenMatch = text.match(/\)\s*(od.*)/);
+    const lastPart = afterParenMatch ? afterParenMatch[1] : null;
+
+    if (number === null || parenthesesText === null || lastPart == null) {
+      throw new Error('Locker not found!');
+    }
+
+    return {
+      number: parseInt(number),
+      location: parenthesesText,
+      period: lastPart,
+    };
+  }
+
   public async getPochvalaDetail(path: string): Promise<PochvalaDetail> {
     // path is like '/user-student/record?userStudentRecordId=7540'
     const html = await this.fetchHtml(path);
@@ -819,8 +860,7 @@ export class SpseJecnaClient {
       room = '',
       roomHref = '',
       consultation = '',
-      photo = '',
-      linka = '';
+      photo = '';
     if (profileTable) {
       const rows = selectAll('tr', [profileTable]) as Element[];
       for (const row of rows) {

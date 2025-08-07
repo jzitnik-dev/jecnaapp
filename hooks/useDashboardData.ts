@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import type {
   AccountInfo,
+  LockerData,
   SubjectGrades,
   Timetable,
 } from '../api/SpseJecnaClient';
@@ -91,6 +92,17 @@ export function useDashboardData() {
     staleTime: 30 * 60 * 1000,
   });
 
+  const lockerQuery = useQuery<LockerData | null, Error>({
+    queryKey: ['locker'],
+    queryFn: async () => {
+      if (!(await isLoggedIn())) throw new Error('Not logged in');
+      if (!client) throw new Error('Client not available');
+      return client.getLocker();
+    },
+    enabled: !!client,
+    staleTime: 30 * 60 * 1000,
+  });
+
   // Clear cache on logout
   useEffect(() => {
     if (!client) {
@@ -103,20 +115,24 @@ export function useDashboardData() {
     await queryClient.invalidateQueries({ queryKey: ['grades'] });
     await queryClient.invalidateQueries({ queryKey: ['timetable'] });
     await queryClient.invalidateQueries({ queryKey: ['accountInfo'] });
+    await queryClient.invalidateQueries({ queryKey: ['lockerQuery'] });
   };
 
   return {
     grades: gradesQuery.data ?? [],
     timetable: timetableQuery.data ?? null,
     accountInfo: accountInfoQuery.data ?? null,
+    locker: lockerQuery.data ?? null,
     loading:
       gradesQuery.isLoading ||
       timetableQuery.isLoading ||
-      accountInfoQuery.isLoading,
+      accountInfoQuery.isLoading ||
+      lockerQuery.isLoading,
     error:
       gradesQuery.error?.message ??
       timetableQuery.error?.message ??
       accountInfoQuery.error?.message ??
+      lockerQuery.error?.message ??
       null,
     refresh,
   };
