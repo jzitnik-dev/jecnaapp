@@ -240,8 +240,8 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
   const today = timetable.days.find(d => d.day === currentDayName);
   if (!today) return { currentLessons: [], nextLessons: [] };
 
-  let currentLessons: LessonInfo[] = [];
-  let nextLessons: LessonInfo[] = [];
+  const currentLessons: LessonInfo[] = [];
+  const nextLessons: LessonInfo[] = [];
 
   // Check each period
   for (let i = 0; i < today.cells.length; i++) {
@@ -378,7 +378,7 @@ export function getTimetableChartData(timetableStats: TimetableStats) {
 
 export function getGradeTrendChartData(grades: SubjectGrades[]) {
   // Collect all grades with dates
-  const allGrades: Array<{ value: number; date: string; weight: number }> = [];
+  const allGrades: { value: number; date: string; weight: number }[] = [];
 
   for (const subject of grades) {
     if (!subject || !subject.splits) continue;
