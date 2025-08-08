@@ -7,8 +7,8 @@ import {
 } from '@react-navigation/drawer';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
-import { Linking, View } from 'react-native';
-import { Text, TouchableRipple } from 'react-native-paper';
+import { Linking, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { ImageViewer } from '../../components/ImageViewer';
 import { useAccountInfo } from '../../hooks/useAccountInfo';
 import { useAppTheme } from '../../hooks/useAppTheme';
@@ -24,11 +24,13 @@ import ZnamkyScreen from './znamky';
 import MoodleIcon from '@/components/icons/Moodle';
 import * as SecureStore from 'expo-secure-store';
 import NovinkyScreen from './novinky';
+import useIsUpdateAvailable from '@/utils/updates';
 
 const Drawer = createDrawerNavigator();
 
 export default function DrawerLayout() {
   const { navigationTheme } = useAppTheme();
+  const theme = useTheme();
   const { accountInfo } = useAccountInfo();
   const router = useRouter();
   const [showProfilePicture, setShowProfilePicture] = useState(false);
@@ -75,10 +77,41 @@ export default function DrawerLayout() {
     },
   ];
 
+  const isUpdateAvailable = useIsUpdateAvailable();
+
   return (
     <Drawer.Navigator
       initialRouteName="Home"
-      screenOptions={{
+      screenOptions={({ navigation }) => ({
+        headerLeft: () => (
+          <TouchableOpacity
+            onPress={navigation.openDrawer}
+            style={{ marginLeft: 13, marginRight: 13 }}
+            accessibilityRole="button"
+            accessibilityLabel="Otevřít menu"
+          >
+            <View>
+              <Ionicons
+                name="menu"
+                size={25}
+                color={navigationTheme.colors.text}
+              />
+              {isUpdateAvailable && (
+                <View
+                  style={{
+                    position: 'absolute',
+                    top: 2,
+                    right: 0,
+                    width: 8,
+                    height: 8,
+                    borderRadius: 10,
+                    backgroundColor: navigationTheme.colors.primary,
+                  }}
+                />
+              )}
+            </View>
+          </TouchableOpacity>
+        ),
         headerStyle: {
           backgroundColor: navigationTheme.colors.card,
         },
@@ -88,10 +121,65 @@ export default function DrawerLayout() {
         },
         drawerActiveTintColor: navigationTheme.colors.primary,
         drawerInactiveTintColor: navigationTheme.colors.text,
-      }}
+      })}
       drawerContent={props => (
         <>
           <DrawerContentScrollView {...props}>
+            {isUpdateAvailable && (
+              <View
+                style={{
+                  borderRadius: 9999,
+                  overflow: 'hidden',
+                  marginBottom: 10,
+                }}
+              >
+                <TouchableRipple
+                  onPress={() =>
+                    Linking.openURL(
+                      'https://github.com/jzitnik-dev/jecnamobile/releases/latest'
+                    )
+                  }
+                  borderless={false}
+                  rippleColor={`${navigationTheme.colors.onBackground}50`}
+                  style={{
+                    paddingVertical: 15, // match drawer item height (around 48px total)
+                    paddingHorizontal: 16,
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                  }}
+                >
+                  <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                    <Ionicons
+                      name="cloud-upload-outline"
+                      size={24}
+                      color={navigationTheme.colors.text}
+                    />
+                    <View style={{ marginLeft: 12 }}>
+                      <Text
+                        style={{
+                          color: navigationTheme.colors.text,
+                          fontWeight: '600',
+                          fontSize: 16, // match drawer font size
+                        }}
+                      >
+                        Aktualizace k dispozici
+                      </Text>
+                      <Text
+                        style={{
+                          color: theme?.colors?.onSurfaceVariant,
+                          fontWeight: '600',
+                          fontSize: 13, // match drawer font size
+                        }}
+                      >
+                        Nová verze aplikace je k dispozici na GitHubu.
+                      </Text>
+                    </View>
+                  </View>
+                </TouchableRipple>
+              </View>
+            )}
+
             <DrawerItemList {...props} />
 
             {/* Divider */}

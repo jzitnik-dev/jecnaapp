@@ -208,18 +208,19 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
       elevation={3}
     >
       <Card.Content>
-        <Text
-          variant="titleLarge"
-          style={[styles.title, { color: theme.colors.onSurface }]}
-        >
+        <View style={{ display: 'flex', flexDirection: 'row', gap: 8 }}>
           <MaterialCommunityIcons
             name="chart-bar"
             size={24}
             color={theme.colors.onSurface}
-            style={{ marginRight: 8 }}
           />
-          Známky
-        </Text>
+          <Text
+            variant="titleLarge"
+            style={[styles.title, { color: theme.colors.onSurface }]}
+          >
+            Známky
+          </Text>
+        </View>
 
         {/* Key Metrics */}
         <View style={styles.metricsContainer}>
