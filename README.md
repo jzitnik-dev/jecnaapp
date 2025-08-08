@@ -13,9 +13,9 @@
 
 ## Screenshoty
 
-| Domovská obrazovka | Známky | Přidat hypotetickou známku |
+| Domovská obrazovka | Přidat hypotetickou známku | Známky |
 |--------------------|--------|----------------|
-| ![Homepage](./screenshots/homepage.jpg) | ![Známky](./screenshots/znamky.jpg) | ![Přidat známku](./screenshots/add-znamka.jpg) |
+| ![Homepage](./screenshots/homepage.jpg) | ![Přidat známku](./screenshots/add-znamka.jpg) | ![Známky](./screenshots/znamky.jpg) |
 
 | Učebna | Novinky | Nastavení |
 |--------|---------|------------|
@@ -43,7 +43,7 @@
 
 ### Android
 
-📦 [Stáhněte si nejnovější APK z Releases](releases)
+📦 [Stáhněte si nejnovější APK z Releases](https://github.com/jzitnik-dev/jecnaapp/releases)
 
 ### iOS
 
@@ -60,7 +60,7 @@ Pokud někdo používá Linux na telefonu, klidně mi dejte vědět – přepí�
 
 ---
 
-## 🔧 Vývoj
+## Vývoj
 
 **Aplikace je ve velmi rané fázi.**  
 Neočekávejte, že vše bude fungovat bez problémů. Nemám přístup ke všem typům účtů na testování.
