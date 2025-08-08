@@ -86,11 +86,10 @@ export default function DrawerLayout() {
         headerLeft: () => (
           <TouchableOpacity
             onPress={navigation.openDrawer}
-            style={{ marginLeft: 13, marginRight: 13 }}
             accessibilityRole="button"
             accessibilityLabel="Otevřít menu"
           >
-            <View>
+            <View style={{ marginLeft: 13, marginRight: 13 }}>
               <Ionicons
                 name="menu"
                 size={25}
