@@ -1,53 +1,101 @@
-# Ječná App
+<p align="center">
+  <img src="./assets/images/icon.svg" alt="App Icon" width="100"/>
+</p>
+<h1 align="center">Ječná App</h1>
+<p align="center"><b>Neoficiální mobilní aplikace pro studenty SPŠE Ječná</b></p>
 
-Neoficiální mobilní aplikace pro studenty SPŠE Ječná. Umožňuje rychlý přístup k rozvrhu, známkám, učitelům, jídelníčku a dalším školním informacím v moderním a přehledném rozhraní.
+<p align="center">
+  Rychlý přístup k rozvrhu, známkám, učitelům, jídelníčku a dalším školním informacím.<br/>
+  Vše v moderním, jednoduchém a přehledném rozhraní.
+</p>
+
+---
+
+## Screenshoty
+
+| Domovská obrazovka | Známky | Přidat hypotetickou známku |
+|--------------------|--------|----------------|
+| ![Homepage](./screenshots/homepage.jpg) | ![Známky](./screenshots/znamky.jpg) | ![Přidat známku](./screenshots/add-znamka.jpg) |
+
+| Učebna | Novinky | Nastavení |
+|--------|---------|------------|
+| ![Učebna](./screenshots/ucebna.jpg) | ![Novinky](./screenshots/novinky.jpg) | ![Nastavení](./screenshots/nastaveni.jpg) |
+
+---
 
 ## Funkce
+
 - Zobrazení rozvrhu
-- **Mimořádný rozvrh přímo ve stálém rovzrhu**
+- **Mimořádný rozvrh přímo ve stálém rozvrhu**
 - Přehled známek a průměrů
+- Plánovač známek
 - Seznam učitelů a učeben
 - Příchody a odchody
 - Omluvný list
 - Jídelníček
 - Notifikace na nové známky
-- Moderní design a podpora světlého/tmavého režimu a vlastních barev
+- Moderní design
+- Podpora světlého/tmavého režimu a vlastních barev
+
+---
 
 ## Instalace
 
 ### Android
 
-Stáhněte si nejnovější APK zde: Releases
+📦 [Stáhněte si nejnovější APK z Releases](releases)
 
 ### iOS
 
-Samozřejmě i když díky EU je na Apple sideloading, pokud chci aplikaci distribuovat musím mít i tak Apple Developer License, která stoji 99 USD. Já su chudý student to si fakt nemohu dovolit. Taky se vůbec do toho nyní nechci hrabat, takže aplikace je technicky vzato cross-platform, iOS stojí prostě za piču. Pokud si to někdo bude ochoten vykompilovat a signout sám, klidně opravím chyby na iOS. Poslední testing na iOS byl totiž ve velice rané fázi vývoje.
+Aplikace je technicky cross-platform, ale pro iOS není distribuovaná, protože:
+
+- Apple vyžaduje placenou vývojářskou licenci (99 USD ročně), kterou si nemohu dovolit.
+- Nemám zájem to momentálně řešit.
+
+Pokud si ji ale někdo vykompiluje a signe sám, rád opravím případné chyby.
 
 ### Linux
 
-Jestli z vás někdo běží Linux na telefonu, klidně mi dej te vědět, klidně celý kód přepíšu v Rustu jen kvůli vám LMAO.
-
-## Aktivní vývoj
-
-**Aplikace je ve velmi raném vývoji.** Prosím neočekávejte, že vše bude fungovat. Také nemám 20 různých účtů, na kterých bych otestoval úplně všechno. V případě chyby vytvořte Issue. V ideálním případě přiložte logy aplikace.
-
-### Aktuálně neotestované Funkce
-
-- Důtky: Neznám moc lidí, kteří by měli důtku nebo napomenutí, nejsem schopen pořádně otestovat funkčnost.
-
-### Známé chyby
-
-- **Objednávání z jídelníčku**: Bohužel nelze objednávat z jídelníčku, protože zkurvený iCanteen mi blockuje requesty že prý "Multiple browser tabs open" or smth. Kdyby někdo věděl jak to fixnout vytvořte issue, nebo pokud to fixnete PR, budu mg vděčný.
-- Odhlašování: Někdy aplikace některé lidi odhlásí for no reason. Stává se to málo, a nejsem schopen zjistit proč.
-
-## Licence
-
-Tento projekt je licencován pod GNU General Public License v3.0. Podrobnosti najdeš v souboru [COPYING](COPYING).
-
-## Přispívání (Contributing)
-
-Rád uvítám jakékoliv příspěvky, nápady nebo hlášení chyb! Podrobné informace o tom, jak přispět, najdeš v [CONTRIBUTING.md](CONTRIBUTING.md).
+Pokud někdo používá Linux na telefonu, klidně mi dejte vědět – přepíšu to celé do Rustu jen kvůli vám. *(možná)*
 
 ---
 
-Tato aplikace není oficiálně spojena se SPŠE Ječná.
+## 🔧 Vývoj
+
+**Aplikace je ve velmi rané fázi.**  
+Neočekávejte, že vše bude fungovat bez problémů. Nemám přístup ke všem typům účtů na testování.
+
+Chyby hlaste jako Issue. Ideálně přiložte logy aplikace.
+
+---
+
+### Neotestované funkce
+
+- Důtky a napomenutí – nemám jak otestovat, nevím o lidech, kteří je mají.
+
+### Známé chyby
+
+- **Objednávání z jídelníčku**  
+  iCanteen blokuje requesty s hláškou „Multiple browser tabs open“ nebo něco podobného.  
+  Pokud víš, jak to obejít, vytvoř Issue nebo PR.
+
+- **Odhlašování**  
+  Občas někoho odhlásí bez důvodu. Je to vzácné, ale zatím netuším proč.
+
+---
+
+## Licence
+
+Projekt je licencován pod GNU General Public License v3.0.  
+Podrobnosti najdeš v souboru [COPYING](COPYING).
+
+---
+
+## Přispívání
+
+Uvítám jakékoli příspěvky, nápady nebo hlášení chyb.  
+Podrobnosti najdeš v [CONTRIBUTING.md](CONTRIBUTING.md).
+
+---
+
+> *Tato aplikace není oficiálně spojena se SPŠE Ječná.*

@@ -25,8 +25,6 @@ export type CanteenMenuResult = {
 
 export class iCanteenClient {
   private readonly baseUrl = 'https://strav.nasejidelna.cz/0341';
-  private username?: string;
-  private password?: string;
 
   private async getCsrfToken() {
     const url = `${this.baseUrl}/faces/secured/main.jsp`;
@@ -37,9 +35,6 @@ export class iCanteenClient {
   }
 
   public async setup(username: string, password: string) {
-    this.username = username;
-    this.password = password;
-
     const url = `${this.baseUrl}/j_spring_security_check`;
     const csrf = (await this.getCsrfToken()) || '';
 
