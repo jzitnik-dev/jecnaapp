@@ -153,6 +153,7 @@ export function TimetableGrid({
         <Divider style={{ height: 1, backgroundColor: borderColor }} />
         {/* Day rows */}
         {days.map((day, dayIdx) => {
+          const isLast = dayIdx + 1 === days.length;
           const addDays = dayIdx - dayNumberMondayStart;
           const newDate = new Date(
             date.getTime() + addDays * 24 * 60 * 60 * 1000
@@ -183,6 +184,7 @@ export function TimetableGrid({
                     borderBottomLeftRadius: dayIdx === days.length - 1 ? 18 : 0,
                     minHeight: cellHeight,
                     borderColor,
+                    borderBottomWidth: isLast ? 0 : 1,
                   },
                 ]}
               >
@@ -194,6 +196,8 @@ export function TimetableGrid({
                 ) : null}
               </View>
               {day.cells.map((cell, periodIdx) => {
+                const isLastMult = periodIdx + 1 === day.cells.length;
+
                 if (extra && extra[periodIdx]) {
                   return (
                     <View
@@ -212,6 +216,7 @@ export function TimetableGrid({
                           borderColor,
                           borderRightWidth:
                             periodIdx === day.cells.length - 1 ? 0 : 1,
+                          borderBottomWidth: isLastMult && isLast ? 0 : 1,
                         },
                       ]}
                     >
@@ -242,6 +247,7 @@ export function TimetableGrid({
                         borderColor,
                         borderRightWidth:
                           periodIdx === day.cells.length - 1 ? 0 : 1,
+                        borderBottomWidth: isLast ? 0 : 1,
                       },
                     ]}
                   >
@@ -471,7 +477,6 @@ const styles = StyleSheet.create({
   dayCell: {
     padding: 8,
     borderRightWidth: 1,
-    borderBottomWidth: 1,
     borderColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
@@ -481,7 +486,6 @@ const styles = StyleSheet.create({
     fontSize: 17,
   },
   cell: {
-    borderBottomWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     padding: 0,
