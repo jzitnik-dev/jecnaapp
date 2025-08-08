@@ -53,7 +53,6 @@ export function TimetableGrid({
     120,
     Math.floor((screenWidth - 24) / (periodCount + 1))
   );
-  const cellHeight = 90;
 
   // Use theme colors instead of hardcoded dark/light colors
   const tableBg = theme.colors.surface;
@@ -169,6 +168,10 @@ export function TimetableGrid({
             ? extraordinary?.schedule[extraIndex][className]
             : undefined;
 
+          const cellHeight =
+            Math.max(2, Math.max(...day.cells.map(cell => cell?.length || 1))) *
+            45;
+
           return (
             <View key={day.day + dayIdx} style={styles.row}>
               <View
@@ -178,6 +181,7 @@ export function TimetableGrid({
                     width: cellWidth,
                     backgroundColor: headerBg,
                     borderBottomLeftRadius: dayIdx === days.length - 1 ? 18 : 0,
+                    minHeight: cellHeight,
                     borderColor,
                   },
                 ]}
@@ -471,7 +475,6 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
-    minHeight: 90,
   },
   dayText: {
     fontWeight: 'bold',
