@@ -82,7 +82,9 @@ export function calculateGradeStats(grades: SubjectGrades[]): GradeStats {
     4: 0,
     5: 0,
   };
-  const subjectAverages: { [key: string]: number[] } = {};
+  const subjectAverages: {
+    [key: string]: { value: number; weight: number }[];
+  } = {};
   let totalWeightedSum = 0;
   let totalWeight = 0;
   let totalGrades = 0;
@@ -91,7 +93,7 @@ export function calculateGradeStats(grades: SubjectGrades[]): GradeStats {
     for (const subject of grades) {
       if (!subject || !subject.splits) continue;
 
-      const subjectGrades: number[] = [];
+      const subjectGrades: { value: number; weight: number }[] = [];
 
       for (const split of subject.splits) {
         if (!split || !split.grades) continue;
@@ -104,11 +106,16 @@ export function calculateGradeStats(grades: SubjectGrades[]): GradeStats {
             grade.value >= 1 &&
             grade.value <= 5
           ) {
+            const weight = grade.weight ?? 1;
+
+            // Global stats
             gradeDistribution[grade.value]++;
             totalGrades++;
-            totalWeightedSum += grade.value * (grade.weight || 1);
-            totalWeight += grade.weight || 1;
-            subjectGrades.push(grade.value);
+            totalWeightedSum += grade.value * weight;
+            totalWeight += weight;
+
+            // Per subject
+            subjectGrades.push({ value: grade.value, weight });
           }
         }
       }
@@ -124,13 +131,18 @@ export function calculateGradeStats(grades: SubjectGrades[]): GradeStats {
   const average = totalWeight > 0 ? totalWeightedSum / totalWeight : 0;
   const subjectsWithGrades = Object.keys(subjectAverages).length;
 
-  // Find best and worst subjects
+  // Find best and worst subjects using weighted averages
   let bestSubject = { subject: 'Žádné', average: 0 };
   let worstSubject = { subject: 'Žádné', average: 0 };
 
   try {
     for (const [subject, grades] of Object.entries(subjectAverages)) {
-      const avg = grades.reduce((sum, grade) => sum + grade, 0) / grades.length;
+      const totalW = grades.reduce((sum, g) => sum + g.weight, 0);
+      const avg =
+        totalW > 0
+          ? grades.reduce((sum, g) => sum + g.value * g.weight, 0) / totalW
+          : 0;
+
       if (bestSubject.average === 0 || avg < bestSubject.average) {
         bestSubject = { subject, average: avg };
       }
