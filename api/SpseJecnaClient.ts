@@ -691,19 +691,7 @@ export class SpseJecnaClient {
     const res = await fetch(extraordURL);
     const json = await res.json();
 
-    return {
-      schedule: [
-        {
-          C1c: ['Never gonna give you up', '2'],
-        },
-      ],
-      props: [
-        {
-          date: '2025-08-04',
-          priprava: false,
-        },
-      ],
-    };
+    return json;
   }
 
   public async getTimetable(

@@ -1,5 +1,5 @@
 // Manuální úprava času a dne pro testování
-export const useCustomDate = true;
+export const useCustomDate = false;
 
 // Manuální hodnoty pro čas a den
 export const customDay = 1; // den v týdnu (1-7, kde 1 = pondělí)
