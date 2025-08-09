@@ -135,7 +135,7 @@ export default function DrawerLayout() {
                 <TouchableRipple
                   onPress={() =>
                     Linking.openURL(
-                      'https://github.com/jzitnik-dev/jecnamobile/releases/latest'
+                      'https://github.com/jzitnik-dev/jecnaapp/releases/latest'
                     )
                   }
                   borderless={false}
