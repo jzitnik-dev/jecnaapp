@@ -3,6 +3,7 @@ import {
   DarkTheme,
   DefaultTheme,
 } from '@react-navigation/native';
+import { AppState, ActivityIndicator, View } from 'react-native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
@@ -18,7 +19,6 @@ import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
-import { ActivityIndicator, View } from 'react-native';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -54,20 +54,19 @@ export default function RootLayout() {
 
   useEffect(() => {
     const initializeClient = async () => {
-      setIsLoading(true); // 👈 Start loading
-      const newClient = new SpseJecnaClient();
-      setClient(newClient);
+      const activeClient = client ?? new SpseJecnaClient();
+      if (!client) setClient(activeClient);
 
       try {
-        const isLoggedIn = await newClient.isLoggedIn();
-        if (isLoggedIn) {
-          console.log('User is already logged in');
-        } else {
+        const isLoggedIn = await activeClient.isLoggedIn();
+        if (!isLoggedIn) {
           const savedUsername = await SecureStore.getItemAsync('username');
           const savedPassword = await SecureStore.getItemAsync('password');
+
           if (savedUsername && savedPassword) {
             try {
-              await newClient.login(savedUsername, savedPassword);
+              await activeClient.login(savedUsername, savedPassword);
+              console.log('Auto-login successful');
             } catch (error) {
               console.log('Auto-login failed:', error);
               await SecureStore.deleteItemAsync('username');
@@ -81,15 +80,22 @@ export default function RootLayout() {
       } catch (error) {
         console.error('Initialization error:', error);
       } finally {
-        setIsLoading(false); // 👈 Stop loading regardless of result
+        setIsLoading(false);
       }
     };
 
-    if (!client) {
-      initializeClient();
-    } else {
-      setIsLoading(false); // 👈 If client already exists, stop loading
-    }
+    // Run once at mount
+    setIsLoading(true);
+    initializeClient();
+
+    // Run when app comes to foreground
+    const subscription = AppState.addEventListener('change', state => {
+      if (state === 'active') {
+        initializeClient();
+      }
+    });
+
+    return () => subscription.remove();
   }, [client, setClient, router]);
 
   if (fontError) {
