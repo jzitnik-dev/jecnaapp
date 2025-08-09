@@ -3,7 +3,7 @@ import {
   type CanteenMenuResult,
 } from '@/api/iCanteenClient';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
-import { useThemeColor } from '@/hooks/useThemeColor';
+import { useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
@@ -39,10 +39,11 @@ export default function Jidelna() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [ordering, setOrdering] = useState<string | null>(null);
+  const theme = useTheme();
 
-  const backgroundColor = useThemeColor({}, 'background');
-  const textColor = useThemeColor({}, 'text');
-  const cardBackground = useThemeColor({}, 'background');
+  const backgroundColor = theme.colors.background;
+  const textColor = theme.colors.onBackground;
+  const cardBackground = theme.colors.surface;
 
   const { client: spseClient } = useSpseJecnaClient();
 

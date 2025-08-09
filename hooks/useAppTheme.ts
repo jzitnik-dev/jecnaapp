@@ -4,6 +4,7 @@ import { create } from 'zustand';
 
 interface ThemeColors {
   primary: string;
+  onPrimary: string;
   background: string;
   surface: string;
   surfaceVariant: string;
@@ -36,6 +37,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#4caf50',
       notification: '#4caf50',
+      onPrimary: '#000000',
     },
   },
   {
@@ -52,6 +54,7 @@ const predefinedThemes: Theme[] = [
       text: '#000000',
       border: '#e0e0e0',
       notification: '#1976d2',
+      onPrimary: '#000000',
     },
   },
   {
@@ -68,6 +71,7 @@ const predefinedThemes: Theme[] = [
       text: '#000000',
       border: '#000000',
       notification: '#000000',
+      onPrimary: '#000000',
     },
   },
   {
@@ -84,6 +88,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#ffffff',
       notification: '#ffffff',
+      onPrimary: '#ffffff',
     },
   },
   {
@@ -100,6 +105,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#ff9800',
       notification: '#ff9800',
+      onPrimary: '#000000',
     },
   },
   {
@@ -116,6 +122,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#f44336',
       notification: '#f44336',
+      onPrimary: '#000000',
     },
   },
   {
@@ -132,6 +139,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#2196f3',
       notification: '#2196f3',
+      onPrimary: '#000000',
     },
   },
   {
@@ -148,6 +156,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#9c27b0',
       notification: '#9c27b0',
+      onPrimary: '#000000',
     },
   },
   {
@@ -164,6 +173,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#e91e63',
       notification: '#e91e63',
+      onPrimary: '#000000',
     },
   },
   {
@@ -180,6 +190,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#009688',
       notification: '#009688',
+      onPrimary: '#000000',
     },
   },
   {
@@ -196,6 +207,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#ffc107',
       notification: '#ffc107',
+      onPrimary: '#000000',
     },
   },
 ];
@@ -218,7 +230,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
   selectedTheme: 'Default',
   customColors: null,
   useCustomColors: false,
-  currentTheme: MD3DarkTheme,
+  currentTheme: {},
   navigationTheme: {
     dark: true,
     colors: {
@@ -317,8 +329,9 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
           background: themeColors.background,
           surface: themeColors.surface,
           surfaceVariant: themeColors.surfaceVariant,
-          onSurface: themeColors.onSurface,
           onSurfaceVariant: themeColors.onSurfaceVariant,
+          onPrimary: themeColors.onPrimary,
+          onSurface: themeColors.onSurface,
           elevation: {
             level0: themeColors.background,
             level1: themeColors.surface,
@@ -344,7 +357,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
           // Required properties for React Navigation v7
           onBackground: themeColors.onSurface,
           onCard: themeColors.onSurface,
-          onPrimary: isDark ? '#000000' : '#ffffff',
+          onPrimary: themeColors.onPrimary,
           onSurface: themeColors.onSurface,
         },
       };

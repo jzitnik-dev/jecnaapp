@@ -15,8 +15,7 @@ import type {
   OmluvnyListAbsence,
   OmluvnyListResult,
 } from '../../api/SpseJecnaClient';
-import { ThemedText } from '../../components/ThemedText';
-import { ThemedView } from '../../components/ThemedView';
+import { Text } from 'react-native-paper';
 
 export default function OmluvnyListScreen() {
   const { client } = useSpseJecnaClient();
@@ -64,7 +63,7 @@ export default function OmluvnyListScreen() {
   };
 
   const renderAbsence = ({ item }: { item: OmluvnyListAbsence }) => (
-    <ThemedView
+    <View
       style={{
         marginHorizontal: 16,
         marginVertical: 8,
@@ -84,26 +83,26 @@ export default function OmluvnyListScreen() {
         disabled={!item.href}
         style={({ pressed }) => [{ opacity: pressed && item.href ? 0.6 : 1 }]}
       >
-        <ThemedText
+        <Text
           style={{ fontSize: 18, fontWeight: 'bold', color: theme.colors.text }}
         >
           {item.date}
-        </ThemedText>
+        </Text>
       </Pressable>
       <View
         style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}
       >
-        <ThemedText style={{ fontSize: 16, color: theme.colors.text }}>
+        <Text style={{ fontSize: 16, color: theme.colors.text }}>
           {item.count} hodin{item.count === 1 ? 'a' : 'y'}
-        </ThemedText>
+        </Text>
         {typeof item.countUnexcused === 'number' && (
-          <ThemedText style={{ fontSize: 16, color: 'red', marginLeft: 12 }}>
+          <Text style={{ fontSize: 16, color: 'red', marginLeft: 12 }}>
             {item.countUnexcused} neomluvena
             {item.countUnexcused === 1 ? '' : 'y'}
-          </ThemedText>
+          </Text>
         )}
       </View>
-    </ThemedView>
+    </View>
   );
 
   if (!client) {
@@ -120,9 +119,9 @@ export default function OmluvnyListScreen() {
           size="large"
           color={theme.colors.primary || theme.colors.text}
         />
-        <ThemedText style={{ marginTop: 16, color: theme.colors.text }}>
+        <Text style={{ marginTop: 16, color: theme.colors.text }}>
           Načítám klienta…
-        </ThemedText>
+        </Text>
       </View>
     );
   }
@@ -132,19 +131,9 @@ export default function OmluvnyListScreen() {
       style={{
         flex: 1,
         backgroundColor: theme.colors.background,
-        paddingTop: insets.top,
+        paddingTop: 16,
       }}
     >
-      <ThemedText
-        style={{
-          fontSize: 28,
-          fontWeight: 'bold',
-          margin: 16,
-          color: theme.colors.text,
-        }}
-      >
-        Omluvný list
-      </ThemedText>
       {data && data.years.length > 0 && (
         <View
           style={{
@@ -173,11 +162,11 @@ export default function OmluvnyListScreen() {
           style={{ marginTop: 32 }}
         />
       ) : error ? (
-        <ThemedText style={{ color: 'red', margin: 16 }}>{error}</ThemedText>
+        <Text style={{ color: 'red', margin: 16 }}>{error}</Text>
       ) : !data || data.absences.length === 0 ? (
-        <ThemedText style={{ margin: 16, color: theme.colors.text }}>
+        <Text style={{ margin: 16, color: theme.colors.text }}>
           Žádné absence v tomto školním roce.
-        </ThemedText>
+        </Text>
       ) : (
         <FlatList
           data={data.absences}
