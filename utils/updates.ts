@@ -2,8 +2,8 @@ import Constants from 'expo-constants';
 import { useEffect, useState } from 'react';
 
 export function gt(v1: string, v2: string): boolean {
-  const a = v1.split('.').map(Number);
-  const b = v2.split('.').map(Number);
+  const a = v1.replace('v', '').split('.').map(Number);
+  const b = v2.replace('v', '').split('.').map(Number);
 
   for (let i = 0; i < Math.max(a.length, b.length); i++) {
     const numA = a[i] || 0;
@@ -14,8 +14,7 @@ export function gt(v1: string, v2: string): boolean {
   return false;
 }
 
-const URL =
-  'https://api.github.com/repos/jzitnik-dev/jecnaapp/releases/latest';
+const URL = 'https://api.github.com/repos/jzitnik-dev/jecnaapp/releases/latest';
 
 export default function useIsUpdateAvailable() {
   const [isUpdate, setIsUpdate] = useState(false);
