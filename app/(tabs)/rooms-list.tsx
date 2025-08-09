@@ -47,20 +47,22 @@ export default function RoomsListScreen() {
         placeholder="Hledat učebnu..."
         value={search}
         onChangeText={setSearch}
-        style={{ margin: 16, marginBottom: 0, borderRadius: 16 }}
+        style={{ margin: 16, marginBottom: 8, borderRadius: 16 }}
         inputStyle={{ fontSize: 18 }}
       />
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" />
-          <Text>Načítám učebny…</Text>
+          <ActivityIndicator size="large" color={theme.colors.onBackground} />
+          <Text style={{ color: theme.colors.onBackground }}>
+            Načítám učebny…
+          </Text>
         </View>
       ) : error ? (
         <View style={styles.centered}>
           <Text style={{ color: 'red' }}>{error}</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8 }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
           {filtered.length === 0 ? (
             <Text
               style={{

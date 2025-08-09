@@ -177,7 +177,10 @@ export default function TeacherScreen() {
             info.room && (
               <View style={[styles.infoRow, { marginBottom: 6 }]}>
                 <Text style={styles.infoLabel}>Kabinet:</Text>
-                <Text style={styles.infoValue} selectable={true}>
+                <Text
+                  style={[styles.infoValue, { color: theme.colors.onSurface }]}
+                  selectable={true}
+                >
                   {info.room}
                 </Text>
               </View>
@@ -186,7 +189,10 @@ export default function TeacherScreen() {
           {info.consultation && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Konzultační hodiny:</Text>
-              <Text style={styles.infoValue} selectable={true}>
+              <Text
+                style={[styles.infoValue, { color: theme.colors.onSurface }]}
+                selectable={true}
+              >
                 {info.consultation}
               </Text>
             </View>
@@ -194,7 +200,10 @@ export default function TeacherScreen() {
           {info.email && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>E-mail:</Text>
-              <Text style={styles.infoValue} selectable={true}>
+              <Text
+                style={[styles.infoValue, { color: theme.colors.onSurface }]}
+                selectable={true}
+              >
                 {info.email}
               </Text>
             </View>
@@ -202,7 +211,10 @@ export default function TeacherScreen() {
           {info.privateEmail && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Soukromý e-mail:</Text>
-              <Text style={styles.infoValue} selectable={true}>
+              <Text
+                style={[styles.infoValue, { color: theme.colors.onSurface }]}
+                selectable={true}
+              >
                 {info.privateEmail}
               </Text>
             </View>
@@ -210,7 +222,10 @@ export default function TeacherScreen() {
           {info.phone && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Telefon:</Text>
-              <Text style={styles.infoValue} selectable={true}>
+              <Text
+                style={[styles.infoValue, { color: theme.colors.onSurface }]}
+                selectable={true}
+              >
                 {info.phone}
               </Text>
             </View>
@@ -218,7 +233,10 @@ export default function TeacherScreen() {
           {info.privatePhone && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Soukromý telefon:</Text>
-              <Text style={styles.infoValue} selectable={true}>
+              <Text
+                style={[styles.infoValue, { color: theme.colors.onSurface }]}
+                selectable={true}
+              >
                 {info.privatePhone}
               </Text>
             </View>
@@ -352,7 +370,6 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: 15,
-    color: '#fff',
     flex: 1,
     flexWrap: 'wrap',
     marginLeft: 14,

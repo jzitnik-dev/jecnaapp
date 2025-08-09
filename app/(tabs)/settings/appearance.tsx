@@ -35,6 +35,7 @@ export default function AppearanceScreen() {
 
   const [localCustomColors, setLocalCustomColors] = useState({
     primary: '#666666',
+    onPrimary: '#ffffff',
     background: '#000000',
     surface: '#121212',
     surfaceVariant: '#1c1e24',
@@ -160,6 +161,14 @@ export default function AppearanceScreen() {
                 />
               </View>
               <Button
+                labelStyle={{
+                  color:
+                    selectedTheme === themeOption.name ? '#000000' : '#ffffff',
+                }}
+                style={{
+                  backgroundColor:
+                    selectedTheme === themeOption.name ? '#ffffff' : '#000000',
+                }}
                 mode={
                   selectedTheme === themeOption.name ? 'contained' : 'outlined'
                 }

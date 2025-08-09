@@ -71,7 +71,7 @@ const predefinedThemes: Theme[] = [
       text: '#000000',
       border: '#000000',
       notification: '#000000',
-      onPrimary: '#000000',
+      onPrimary: '#ffffff',
     },
   },
   {
@@ -88,7 +88,7 @@ const predefinedThemes: Theme[] = [
       text: '#ffffff',
       border: '#ffffff',
       notification: '#ffffff',
-      onPrimary: '#ffffff',
+      onPrimary: '#000000',
     },
   },
   {
@@ -332,6 +332,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
           onSurfaceVariant: themeColors.onSurfaceVariant,
           onPrimary: themeColors.onPrimary,
           onSurface: themeColors.onSurface,
+          onBackground: themeColors.text,
           elevation: {
             level0: themeColors.background,
             level1: themeColors.surface,
@@ -355,7 +356,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
           border: themeColors.border,
           notification: themeColors.notification,
           // Required properties for React Navigation v7
-          onBackground: themeColors.onSurface,
+          onBackground: themeColors.text,
           onCard: themeColors.onSurface,
           onPrimary: themeColors.onPrimary,
           onSurface: themeColors.onSurface,

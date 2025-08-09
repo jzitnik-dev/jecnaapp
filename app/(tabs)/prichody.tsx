@@ -114,8 +114,14 @@ export default function PrichodyScreen() {
       </View>
       {loading ? (
         <View style={styles.centered}>
-          <ActivityIndicator size="large" />
-          <Text>Načítám příchody…</Text>
+          <ActivityIndicator size="large" color={theme.colors.primary} />
+          <Text
+            style={{
+              marginTop: 16,
+            }}
+          >
+            Načítám příchody…
+          </Text>
         </View>
       ) : error ? (
         <View style={styles.centered}>

@@ -49,7 +49,7 @@ export default function TeachersListScreen() {
         placeholder="Hledat učitele..."
         value={search}
         onChangeText={setSearch}
-        style={{ margin: 16, marginBottom: 0, borderRadius: 16 }}
+        style={{ margin: 16, marginBottom: 8, borderRadius: 16 }}
         inputStyle={{ fontSize: 18 }}
       />
       {loading ? (
@@ -62,7 +62,7 @@ export default function TeachersListScreen() {
           <Text style={{ color: 'red' }}>{error}</Text>
         </View>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8 }}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
           {filtered.length === 0 ? (
             <Text
               style={{

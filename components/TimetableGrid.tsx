@@ -313,7 +313,7 @@ export function TimetableGrid({
                                     style={[
                                       styles.roomSquare,
                                       {
-                                        color: secondaryTextColor,
+                                        color: accentColor,
                                         fontSize: 11,
                                         fontWeight: '500',
                                       },

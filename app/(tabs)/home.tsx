@@ -45,7 +45,7 @@ export default function HomeScreen() {
           { backgroundColor: theme.colors.background },
         ]}
       >
-        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <ActivityIndicator size="large" color={theme.colors.onBackground} />
         <Text
           style={[styles.loadingText, { color: theme.colors.onBackground }]}
         >

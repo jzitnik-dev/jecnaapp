@@ -409,7 +409,13 @@ export default function ZnamkyScreen() {
                 ]}
               >
                 <View style={styles.subjectHeader}>
-                  <Text variant="titleMedium" style={styles.subjectName}>
+                  <Text
+                    variant="titleMedium"
+                    style={[
+                      styles.subjectName,
+                      { color: theme.colors.onSurface },
+                    ]}
+                  >
                     {subject.subject}
                   </Text>
                   {subject.finalGrade && (
@@ -430,7 +436,11 @@ export default function ZnamkyScreen() {
                       style={{ marginLeft: 8 }}
                       compact
                     >
-                      <MaterialIcons name="add" size={22} color="#fff" />
+                      <MaterialIcons
+                        name="add"
+                        size={22}
+                        color={theme.colors.onSurface}
+                      />
                     </Button>
                   )}
                 </View>
@@ -760,7 +770,6 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     fontSize: 18,
     flex: 1,
-    color: '#fff',
   },
   finalGradeChip: {
     marginLeft: 12,

@@ -5,12 +5,9 @@ import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Linking,
   RefreshControl,
   View,
 } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import type {
   OmluvnyListAbsence,
   OmluvnyListResult,
@@ -20,7 +17,6 @@ import { Text } from 'react-native-paper';
 export default function OmluvnyListScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
-  const insets = useSafeAreaInsets();
   const [data, setData] = useState<OmluvnyListResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -76,29 +72,30 @@ export default function OmluvnyListScreen() {
         elevation: 2,
       }}
     >
-      <Pressable
-        onPress={() =>
-          item.href && Linking.openURL('https://www.spsejecna.cz' + item.href)
-        }
-        disabled={!item.href}
-        style={({ pressed }) => [{ opacity: pressed && item.href ? 0.6 : 1 }]}
+      <Text
+        style={{ fontSize: 18, fontWeight: 'bold', color: theme.colors.text }}
       >
-        <Text
-          style={{ fontSize: 18, fontWeight: 'bold', color: theme.colors.text }}
-        >
-          {item.date}
-        </Text>
-      </Pressable>
+        {item.date}
+      </Text>
       <View
         style={{ flexDirection: 'row', alignItems: 'center', marginTop: 8 }}
       >
-        <Text style={{ fontSize: 16, color: theme.colors.text }}>
-          {item.count} hodin{item.count === 1 ? 'a' : 'y'}
+        <Text style={{ fontSize: 16, color: theme.colors.primary }}>
+          {item.count} hodin
+          {item.count === 1
+            ? 'a'
+            : item.count >= 2 && item.count <= 4
+              ? 'y'
+              : ''}
         </Text>
         {typeof item.countUnexcused === 'number' && (
           <Text style={{ fontSize: 16, color: 'red', marginLeft: 12 }}>
-            {item.countUnexcused} neomluvena
-            {item.countUnexcused === 1 ? '' : 'y'}
+            z toho {item.countUnexcused} neomluven
+            {item.countUnexcused === 1
+              ? 'á'
+              : item.countUnexcused >= 2 && item.countUnexcused <= 4
+                ? 'é'
+                : 'ých'}
           </Text>
         )}
       </View>
@@ -140,14 +137,21 @@ export default function OmluvnyListScreen() {
             marginHorizontal: 16,
             marginBottom: 8,
             borderRadius: 12,
-            backgroundColor: theme.colors.card,
             padding: 8,
+            backgroundColor: theme.colors.card,
+            shadowColor: '#000',
+            shadowOpacity: 0.06,
+            shadowRadius: 8,
+            elevation: 2,
           }}
         >
           <Picker
             selectedValue={selectedYear}
             onValueChange={onYearChange}
-            style={{ color: theme.colors.text }}
+            style={{
+              color: theme.colors.text,
+              backgroundColor: theme.colors.card,
+            }}
           >
             {data.years.map(year => (
               <Picker.Item key={year.id} label={year.label} value={year.id} />

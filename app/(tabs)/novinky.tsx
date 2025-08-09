@@ -68,7 +68,7 @@ export default function NovinkyScreen() {
                   {event.title}
                 </PaperText>
 
-                <PaperText style={{ color: colors.secondary }}>
+                <PaperText style={{ color: colors.onSurfaceVariant }}>
                   {event.author.trim()} • {event.date.trim()}{' '}
                   {event.onlyForSchool && '• Pouze pro školu'}
                 </PaperText>

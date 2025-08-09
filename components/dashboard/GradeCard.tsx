@@ -308,14 +308,14 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
               <MaterialCommunityIcons
                 name="trophy"
                 size={16}
-                color={theme.colors.primary}
+                color={'#4CAF50'}
                 style={{ marginRight: 4 }}
               />
               <Text
                 variant="titleSmall"
-                style={[styles.subjectTitle, { color: theme.colors.primary }]}
+                style={[styles.subjectTitle, { color: '#4CAF50' }]}
               >
-                Nejlepší předmět
+                Nejlehčí předmět
               </Text>
             </View>
             <Text
@@ -340,12 +340,12 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
               <MaterialCommunityIcons
                 name="alert"
                 size={16}
-                color={theme.colors.error}
+                color={'#F44336'}
                 style={{ marginRight: 4 }}
               />
               <Text
                 variant="titleSmall"
-                style={[styles.subjectTitle, { color: theme.colors.error }]}
+                style={[styles.subjectTitle, { color: '#F44336' }]}
               >
                 Nejtěžší předmět
               </Text>
@@ -426,6 +426,8 @@ const styles = StyleSheet.create({
   subjectCard: {
     flex: 1,
     padding: 12,
+    paddingLeft: 6,
+    paddingRight: 6,
     borderRadius: 12,
     backgroundColor: 'rgba(0, 0, 0, 0.03)',
     marginHorizontal: 4,
