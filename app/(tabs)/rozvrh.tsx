@@ -66,7 +66,7 @@ export default function RozvrhScreen() {
   }, []);
   const { data: extraordinaryData, refetch: extraRefetch } =
     useQuery<ExtraordinaryTimetable>({
-      queryKey: ['extraordinarytimetable', selectedYear, selectedPeriod],
+      queryKey: ['extraordinarytimetable'],
       queryFn: async () => {
         if (!client) throw new Error('Not logged in');
         return await client.getExtraordinaryTimetable();

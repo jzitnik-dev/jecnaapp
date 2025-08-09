@@ -3,9 +3,16 @@ import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
-import type { Timetable } from '../../api/SpseJecnaClient';
-import type { LessonInfo } from '../../utils/dashboardUtils';
+import type {
+  ExtraordinaryTimetable,
+  Timetable,
+} from '../../api/SpseJecnaClient';
+import type { LessonInfo, StaticLesson } from '../../utils/dashboardUtils';
 import { getCurrentAndNextLesson } from '../../utils/dashboardUtils';
+import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
+import { useQuery } from '@tanstack/react-query';
+import * as SecureStore from 'expo-secure-store';
+import { useAccountInfo } from '@/hooks/useAccountInfo';
 
 interface NextLessonCardProps {
   timetable?: Timetable | null;
@@ -18,12 +25,40 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
     currentLessons: LessonInfo[];
     nextLessons: LessonInfo[];
   }>({ currentLessons: [], nextLessons: [] });
+  const { client } = useSpseJecnaClient();
+
+  const [extraenabled, setExtraenabled] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const enabled =
+        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
+        'true';
+      if (enabled) {
+        setExtraenabled(true);
+      }
+    })();
+  }, []);
+
+  const { data: extraordinaryData } = useQuery<ExtraordinaryTimetable>({
+    queryKey: ['extraordinarytimetable'],
+    queryFn: async () => {
+      if (!client) throw new Error('Not logged in');
+      return await client.getExtraordinaryTimetable();
+    },
+    enabled: !!client && extraenabled,
+  });
+
+  const { accountInfo } = useAccountInfo();
 
   useEffect(() => {
-    if (!timetable) return;
+    if (!timetable || !client || !accountInfo?.class) return;
 
-    const updateLessonInfo = () => {
-      const info = getCurrentAndNextLesson(timetable);
+    const updateLessonInfo = async () => {
+      const info = await getCurrentAndNextLesson(
+        timetable,
+        extraordinaryData,
+        accountInfo?.class
+      );
       setLessonInfo(info);
     };
 
@@ -31,7 +66,7 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
     const interval = setInterval(updateLessonInfo, 30000); // Update every 30 seconds
 
     return () => clearInterval(interval);
-  }, [timetable]);
+  }, [timetable, client, extraordinaryData, accountInfo]);
 
   const { currentLessons, nextLessons } = lessonInfo;
 
@@ -127,53 +162,55 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
     );
   }
 
-  const renderLessonDetails = (lesson: LessonInfo) => (
-    <View style={styles.lessonDetails}>
-      <TouchableOpacity
-        style={styles.detailRow}
-        onPress={() => handleTeacherPress(lesson.teacherCode)}
-      >
-        <MaterialCommunityIcons
-          name="account"
-          size={20}
-          color={theme.colors.onSurfaceVariant}
-        />
-        <Text
-          variant="bodyMedium"
-          style={[styles.detailText, { color: theme.colors.primary }]}
+  const renderLessonDetails = (lesson: StaticLesson) => {
+    return (
+      <View style={styles.lessonDetails}>
+        <TouchableOpacity
+          style={styles.detailRow}
+          onPress={() => handleTeacherPress(lesson.teacherCode)}
         >
-          {lesson.teacherFull}
-        </Text>
-        <MaterialCommunityIcons
-          name="chevron-right"
-          size={16}
-          color={theme.colors.onSurfaceVariant}
-        />
-      </TouchableOpacity>
+          <MaterialCommunityIcons
+            name="account"
+            size={20}
+            color={theme.colors.onSurfaceVariant}
+          />
+          <Text
+            variant="bodyMedium"
+            style={[styles.detailText, { color: theme.colors.primary }]}
+          >
+            {lesson.teacherFull}
+          </Text>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={16}
+            color={theme.colors.onSurfaceVariant}
+          />
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={styles.detailRow}
-        onPress={() => handleRoomPress(lesson.room)}
-      >
-        <MaterialCommunityIcons
-          name="door"
-          size={20}
-          color={theme.colors.onSurfaceVariant}
-        />
-        <Text
-          variant="bodyMedium"
-          style={[styles.detailText, { color: theme.colors.secondary }]}
+        <TouchableOpacity
+          style={styles.detailRow}
+          onPress={() => handleRoomPress(lesson.room)}
         >
-          {lesson.room}
-        </Text>
-        <MaterialCommunityIcons
-          name="chevron-right"
-          size={16}
-          color={theme.colors.onSurfaceVariant}
-        />
-      </TouchableOpacity>
-    </View>
-  );
+          <MaterialCommunityIcons
+            name="door"
+            size={20}
+            color={theme.colors.onSurfaceVariant}
+          />
+          <Text
+            variant="bodyMedium"
+            style={[styles.detailText, { color: theme.colors.secondary }]}
+          >
+            {lesson.room}
+          </Text>
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={16}
+            color={theme.colors.onSurfaceVariant}
+          />
+        </TouchableOpacity>
+      </View>
+    );
+  };
 
   return (
     <Card
@@ -197,119 +234,268 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
         </View>
 
         {/* Current Lessons */}
-        {currentLessons.map((lesson, index) => (
-          <View
-            key={index}
-            style={[styles.lessonContainer, styles.currentLesson]}
-          >
-            <View style={styles.lessonHeader}>
-              <View style={styles.statusContainer}>
-                <MaterialCommunityIcons
-                  name="play-circle"
-                  size={24}
-                  color={theme.colors.primary}
-                />
-                <Text
-                  variant="titleMedium"
-                  style={[styles.statusText, { color: theme.colors.primary }]}
-                >
-                  Právě probíhá
-                </Text>
+        {currentLessons.map((lesson, index) => {
+          if (lesson.kind === 'extraordinary') {
+            return (
+              <View
+                key={index}
+                style={[styles.lessonContainer, styles.currentLesson]}
+              >
+                <View style={styles.lessonHeader}>
+                  <View style={styles.statusContainer}>
+                    <MaterialCommunityIcons
+                      name="alert-circle"
+                      size={24}
+                      color={theme.colors.primary}
+                    />
+                    <Text
+                      variant="titleMedium"
+                      style={[
+                        styles.statusText,
+                        { color: theme.colors.primary },
+                      ]}
+                    >
+                      Mimořádná změna!
+                    </Text>
+                  </View>
+
+                  <View style={styles.countdownContainer}>
+                    <Text
+                      variant="titleMedium"
+                      style={[styles.countdown, { color: theme.colors.error }]}
+                    >
+                      {lesson.timeUntilEnd}
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={[
+                        styles.countdownLabel,
+                        { color: theme.colors.onSurfaceVariant },
+                      ]}
+                    >
+                      do konce
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.subjectContainer}>
+                  <Text
+                    variant="headlineSmall"
+                    style={[styles.subject, { color: theme.colors.primary }]}
+                  >
+                    {lesson.extraOrdinaryData}
+                  </Text>
+                  <Text
+                    variant="bodyMedium"
+                    style={[
+                      styles.time,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    {lesson.time} • {lesson.period}. hodina
+                  </Text>
+                </View>
+              </View>
+            );
+          }
+
+          return (
+            <View
+              key={index}
+              style={[styles.lessonContainer, styles.currentLesson]}
+            >
+              <View style={styles.lessonHeader}>
+                <View style={styles.statusContainer}>
+                  <MaterialCommunityIcons
+                    name="play-circle"
+                    size={24}
+                    color={theme.colors.primary}
+                  />
+                  <Text
+                    variant="titleMedium"
+                    style={[styles.statusText, { color: theme.colors.primary }]}
+                  >
+                    Právě probíhá
+                  </Text>
+                </View>
+
+                <View style={styles.countdownContainer}>
+                  <Text
+                    variant="titleMedium"
+                    style={[styles.countdown, { color: theme.colors.error }]}
+                  >
+                    {lesson.timeUntilEnd}
+                  </Text>
+                  <Text
+                    variant="bodySmall"
+                    style={[
+                      styles.countdownLabel,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    do konce
+                  </Text>
+                </View>
               </View>
 
-              <View style={styles.countdownContainer}>
+              <View style={styles.subjectContainer}>
                 <Text
-                  variant="titleMedium"
-                  style={[styles.countdown, { color: theme.colors.error }]}
+                  variant="headlineSmall"
+                  style={[styles.subject, { color: theme.colors.primary }]}
                 >
-                  {lesson.timeUntilEnd}
+                  {lesson.subject}
                 </Text>
                 <Text
-                  variant="bodySmall"
+                  variant="bodyMedium"
                   style={[
-                    styles.countdownLabel,
+                    styles.time,
                     { color: theme.colors.onSurfaceVariant },
                   ]}
                 >
-                  do konce
+                  {lesson.time} • {lesson.period}. hodina
                 </Text>
               </View>
-            </View>
 
-            <View style={styles.subjectContainer}>
-              <Text
-                variant="headlineSmall"
-                style={[styles.subject, { color: theme.colors.primary }]}
-              >
-                {lesson.subject}
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={[styles.time, { color: theme.colors.onSurfaceVariant }]}
-              >
-                {lesson.time} • {lesson.period}. hodina
-              </Text>
+              {renderLessonDetails(lesson)}
             </View>
-
-            {renderLessonDetails(lesson)}
-          </View>
-        ))}
+          );
+        })}
 
         {/* Next Lessons */}
-        {nextLessons.map((lesson, index) => (
-          <View key={index} style={[styles.lessonContainer, styles.nextLesson]}>
-            <View style={styles.lessonHeader}>
-              <View style={styles.statusContainer}>
-                <MaterialCommunityIcons
-                  name="clock-outline"
-                  size={24}
-                  color={theme.colors.secondary}
-                />
-                <Text
-                  variant="titleMedium"
-                  style={[styles.statusText, { color: theme.colors.secondary }]}
-                >
-                  Další hodina
-                </Text>
+        {nextLessons.map((lesson, index) => {
+          if (lesson.kind === 'extraordinary') {
+            return (
+              <View
+                key={index}
+                style={[styles.lessonContainer, styles.nextLesson]}
+              >
+                <View style={styles.lessonHeader}>
+                  <View style={styles.statusContainer}>
+                    <MaterialCommunityIcons
+                      name="clock-outline"
+                      size={24}
+                      color={theme.colors.secondary}
+                    />
+                    <Text
+                      variant="titleMedium"
+                      style={[
+                        styles.statusText,
+                        { color: theme.colors.secondary },
+                      ]}
+                    >
+                      Mimořádná změna
+                    </Text>
+                  </View>
+
+                  <View style={styles.countdownContainer}>
+                    <Text
+                      variant="titleMedium"
+                      style={[
+                        styles.countdown,
+                        { color: theme.colors.secondary },
+                      ]}
+                    >
+                      {lesson.timeUntilStart}
+                    </Text>
+                    <Text
+                      variant="bodySmall"
+                      style={[
+                        styles.countdownLabel,
+                        { color: theme.colors.onSurfaceVariant },
+                      ]}
+                    >
+                      do začátku
+                    </Text>
+                  </View>
+                </View>
+
+                <View style={styles.subjectContainer}>
+                  <Text
+                    variant="headlineSmall"
+                    style={[styles.subject, { color: theme.colors.secondary }]}
+                  >
+                    {lesson.extraOrdinaryData}
+                  </Text>
+                  <Text
+                    variant="bodyMedium"
+                    style={[
+                      styles.time,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    {lesson.time} • {lesson.period}. hodina
+                  </Text>
+                </View>
+              </View>
+            );
+          }
+          return (
+            <View
+              key={index}
+              style={[styles.lessonContainer, styles.nextLesson]}
+            >
+              <View style={styles.lessonHeader}>
+                <View style={styles.statusContainer}>
+                  <MaterialCommunityIcons
+                    name="clock-outline"
+                    size={24}
+                    color={theme.colors.secondary}
+                  />
+                  <Text
+                    variant="titleMedium"
+                    style={[
+                      styles.statusText,
+                      { color: theme.colors.secondary },
+                    ]}
+                  >
+                    Další hodina
+                  </Text>
+                </View>
+
+                <View style={styles.countdownContainer}>
+                  <Text
+                    variant="titleMedium"
+                    style={[
+                      styles.countdown,
+                      { color: theme.colors.secondary },
+                    ]}
+                  >
+                    {lesson.timeUntilStart}
+                  </Text>
+                  <Text
+                    variant="bodySmall"
+                    style={[
+                      styles.countdownLabel,
+                      { color: theme.colors.onSurfaceVariant },
+                    ]}
+                  >
+                    do začátku
+                  </Text>
+                </View>
               </View>
 
-              <View style={styles.countdownContainer}>
+              <View style={styles.subjectContainer}>
                 <Text
-                  variant="titleMedium"
-                  style={[styles.countdown, { color: theme.colors.secondary }]}
+                  variant="headlineSmall"
+                  style={[styles.subject, { color: theme.colors.secondary }]}
                 >
-                  {lesson.timeUntilStart}
+                  {lesson.subject}
                 </Text>
                 <Text
-                  variant="bodySmall"
+                  variant="bodyMedium"
                   style={[
-                    styles.countdownLabel,
+                    styles.time,
                     { color: theme.colors.onSurfaceVariant },
                   ]}
                 >
-                  do začátku
+                  {lesson.time} • {lesson.period}. hodina
                 </Text>
               </View>
-            </View>
 
-            <View style={styles.subjectContainer}>
-              <Text
-                variant="headlineSmall"
-                style={[styles.subject, { color: theme.colors.secondary }]}
-              >
-                {lesson.subject}
-              </Text>
-              <Text
-                variant="bodyMedium"
-                style={[styles.time, { color: theme.colors.onSurfaceVariant }]}
-              >
-                {lesson.time} • {lesson.period}. hodina
-              </Text>
+              {renderLessonDetails(lesson)}
             </View>
-
-            {renderLessonDetails(lesson)}
-          </View>
-        ))}
+          );
+        })}
       </Card.Content>
     </Card>
   );

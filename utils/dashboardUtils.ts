@@ -1,4 +1,8 @@
-import type { SubjectGrades, Timetable } from '../api/SpseJecnaClient';
+import type {
+  ExtraordinaryTimetable,
+  SubjectGrades,
+  Timetable,
+} from '../api/SpseJecnaClient';
 import { getCurrentDateTime } from './manualDateTime';
 
 export interface GradeStats {
@@ -31,12 +35,23 @@ export interface DashboardStats {
   };
 }
 
-export interface LessonInfo {
+export type LessonInfo =
+  | StaticLesson
+  | ({
+      kind: 'extraordinary';
+      extraOrdinaryData: string;
+    } & BaseLesson);
+
+export type StaticLesson = {
+  kind: 'normal';
   subject: string;
   teacher: string;
   teacherFull: string;
   teacherCode: string;
   room: string;
+} & BaseLesson;
+
+export type BaseLesson = {
   time: string;
   day: string;
   startTime: string;
@@ -46,7 +61,7 @@ export interface LessonInfo {
   isNext: boolean;
   timeUntilStart?: string;
   timeUntilEnd?: string;
-}
+};
 
 export function calculateGradeStats(grades: SubjectGrades[]): GradeStats {
   if (!grades || grades.length === 0) {
@@ -222,10 +237,14 @@ export function calculateTimetableStats(timetable: Timetable): TimetableStats {
   };
 }
 
-export function getCurrentAndNextLesson(timetable: Timetable): {
+export async function getCurrentAndNextLesson(
+  timetable: Timetable,
+  extraOrdinary?: ExtraordinaryTimetable,
+  className?: string
+): Promise<{
   currentLessons: LessonInfo[];
   nextLessons: LessonInfo[];
-} {
+}> {
   const now = getCurrentDateTime();
   const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
   const currentHour = now.getHours();
@@ -233,8 +252,17 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
   const currentTime = currentHour * 60 + currentMinute; // Convert to minutes
 
   // Map day numbers to timetable days (assuming Monday = 1, etc.)
-  const dayMap = ['', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So', 'Ne'];
+  const dayMap = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
   const currentDayName = dayMap[currentDay];
+
+  const extraIndex = extraOrdinary?.props.findIndex(
+    el => el.date === now.toISOString().slice(0, 10)
+  );
+  const isInExtra = extraIndex !== -1 && extraIndex !== undefined;
+  const extra =
+    isInExtra && className
+      ? extraOrdinary?.schedule[extraIndex][className]
+      : undefined;
 
   // Find today's lessons
   const today = timetable.days.find(d => d.day === currentDayName);
@@ -247,6 +275,7 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
   for (let i = 0; i < today.cells.length; i++) {
     const cell = today.cells[i];
     const period = timetable.periods[i];
+    const extraOrdinary = extra?.[i];
 
     if (!cell || cell.length === 0 || !period) continue;
 
@@ -259,14 +288,14 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
 
     // Check if this is the current lesson
     if (currentTime >= startTimeMinutes && currentTime < endTimeMinutes) {
-      // Create lesson info for each lesson in the cell
-      for (const lesson of cell) {
-        const lessonInfo: LessonInfo = {
-          subject: lesson.subject,
-          teacher: lesson.teacher,
-          teacherFull: lesson.teacherFull || lesson.teacher,
-          teacherCode: lesson.teacher,
-          room: lesson.room,
+      const timeUntilEnd = endTimeMinutes - currentTime;
+      const hoursLeft = Math.floor(timeUntilEnd / 60);
+      const minutesLeft = timeUntilEnd % 60;
+
+      if (extraOrdinary) {
+        currentLessons.push({
+          kind: 'extraordinary',
+          extraOrdinaryData: extraOrdinary,
           time: period.time,
           day: today.day,
           startTime,
@@ -274,31 +303,45 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
           period: period.number,
           isCurrent: true,
           isNext: false,
-        };
+          timeUntilEnd:
+            hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`,
+        });
+      } else {
+        for (const lesson of cell) {
+          const lessonInfo: LessonInfo = {
+            kind: 'normal',
+            subject: lesson.subject,
+            teacher: lesson.teacher,
+            teacherFull: lesson.teacherFull || lesson.teacher,
+            teacherCode: lesson.teacher,
+            room: lesson.room,
+            time: period.time,
+            day: today.day,
+            startTime,
+            endTime,
+            period: period.number,
+            isCurrent: true,
+            isNext: false,
+            timeUntilEnd:
+              hoursLeft > 0
+                ? `${hoursLeft}h ${minutesLeft}m`
+                : `${minutesLeft}m`,
+          };
 
-        const timeUntilEnd = endTimeMinutes - currentTime;
-        const hoursLeft = Math.floor(timeUntilEnd / 60);
-        const minutesLeft = timeUntilEnd % 60;
-
-        if (hoursLeft > 0) {
-          lessonInfo.timeUntilEnd = `${hoursLeft}h ${minutesLeft}m`;
-        } else {
-          lessonInfo.timeUntilEnd = `${minutesLeft}m`;
+          currentLessons.push(lessonInfo);
         }
-
-        currentLessons.push(lessonInfo);
       }
     }
     // Check if this is the next lesson
     else if (currentTime < startTimeMinutes && nextLessons.length === 0) {
-      // Create lesson info for each lesson in the cell
-      for (const lesson of cell) {
-        const lessonInfo: LessonInfo = {
-          subject: lesson.subject,
-          teacher: lesson.teacher,
-          teacherFull: lesson.teacherFull || lesson.teacher,
-          teacherCode: lesson.teacher,
-          room: lesson.room,
+      const timeUntilStart = startTimeMinutes - currentTime;
+      const hoursLeft = Math.floor(timeUntilStart / 60);
+      const minutesLeft = timeUntilStart % 60;
+
+      if (extraOrdinary) {
+        nextLessons.push({
+          kind: 'extraordinary',
+          extraOrdinaryData: extraOrdinary,
           time: period.time,
           day: today.day,
           startTime,
@@ -306,45 +349,38 @@ export function getCurrentAndNextLesson(timetable: Timetable): {
           period: period.number,
           isCurrent: false,
           isNext: true,
-        };
+          timeUntilStart:
+            hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`,
+        });
+      } else {
+        for (const lesson of cell) {
+          const lessonInfo: LessonInfo = {
+            kind: 'normal',
+            subject: lesson.subject,
+            teacher: lesson.teacher,
+            teacherFull: lesson.teacherFull || lesson.teacher,
+            teacherCode: lesson.teacher,
+            room: lesson.room,
+            time: period.time,
+            day: today.day,
+            startTime,
+            endTime,
+            period: period.number,
+            isCurrent: false,
+            isNext: true,
+            timeUntilStart:
+              hoursLeft > 0
+                ? `${hoursLeft}h ${minutesLeft}m`
+                : `${minutesLeft}m`,
+          };
 
-        const timeUntilStart = startTimeMinutes - currentTime;
-        const hoursLeft = Math.floor(timeUntilStart / 60);
-        const minutesLeft = timeUntilStart % 60;
-
-        if (hoursLeft > 0) {
-          lessonInfo.timeUntilStart = `${hoursLeft}h ${minutesLeft}m`;
-        } else {
-          lessonInfo.timeUntilStart = `${minutesLeft}m`;
+          nextLessons.push(lessonInfo);
         }
-
-        nextLessons.push(lessonInfo);
       }
     }
   }
 
   return { currentLessons, nextLessons };
-}
-
-export function getNextLesson(timetable: Timetable):
-  | {
-      subject: string;
-      teacher: string;
-      room: string;
-      time: string;
-      day: string;
-    }
-  | undefined {
-  const { nextLessons } = getCurrentAndNextLesson(timetable);
-  if (nextLessons.length === 0) return undefined;
-
-  return {
-    subject: nextLessons[0].subject,
-    teacher: nextLessons[0].teacher,
-    room: nextLessons[0].room,
-    time: nextLessons[0].time,
-    day: nextLessons[0].day,
-  };
 }
 
 export function getGradeChartData(gradeStats: GradeStats) {
