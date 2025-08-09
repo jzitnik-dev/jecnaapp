@@ -15,7 +15,7 @@ export function gt(v1: string, v2: string): boolean {
 }
 
 const URL =
-  'https://api.github.com/repos/jzitnik-dev/jecnamobile/releases/latest';
+  'https://api.github.com/repos/jzitnik-dev/jecnaapp/releases/latest';
 
 export default function useIsUpdateAvailable() {
   const [isUpdate, setIsUpdate] = useState(false);
