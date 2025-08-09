@@ -85,7 +85,6 @@ export default function RootLayout() {
     };
 
     // Run once at mount
-    setIsLoading(true);
     initializeClient();
 
     // Run when app comes to foreground
