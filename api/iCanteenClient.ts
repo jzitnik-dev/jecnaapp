@@ -15,6 +15,7 @@ export type CanteenMenuItem = {
   orderId?: string; // internal order ID for ordering
   orderToken?: string; // token for ordering
   orderType?: string; // type for ordering (make, delete, none, etc.)
+  time: number;
 };
 
 export type CanteenMenuResult = {
@@ -344,7 +345,7 @@ export class iCanteenClient {
     }
 
     // Construct the exact URL as in the original onClick attributes
-    const time = Date.now();
+    const time = menuItem.time;
     const token = menuItem.orderToken;
     const orderId = menuItem.orderId;
     const day = menuItem.date;
@@ -431,7 +432,7 @@ export class iCanteenClient {
     }
 
     // Construct the exact URL as in the original onClick attributes
-    const time = Date.now();
+    const time = menuItem.orderToken;
     const token = menuItem.orderToken;
     const orderId = menuItem.orderId;
     const day = menuItem.date;
