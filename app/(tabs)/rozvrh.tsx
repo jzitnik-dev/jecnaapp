@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
   Platform,
@@ -73,6 +73,28 @@ export default function RozvrhScreen() {
       },
       enabled: !!client && showExtra, // fetch only if client exists and showExtra is true
     });
+
+  const extraText = useMemo(() => {
+    const num = extraordinaryData?.status.currentUpdateSchedule || 0;
+    const isHours = num >= 60;
+    const firstNum = isHours ? Math.floor(num / 60) : num;
+
+    let kazdych = 'každých';
+    let minut = 'minut';
+    let hodin = 'hodin';
+
+    if (firstNum === 1) {
+      kazdych = 'každou';
+      hodin = 'hodinu';
+      minut = 'minutu';
+    } else if (firstNum >= 2 && firstNum <= 4) {
+      kazdych = 'každé';
+      hodin = 'hodiny';
+      minut = 'minuty';
+    }
+
+    return `Mimořádný rozvrh aktualizovaný ${kazdych} ${firstNum} ${isHours ? hodin : minut}`;
+  }, [extraordinaryData]);
 
   useEffect(() => {
     if (showExtra) {
@@ -235,6 +257,13 @@ export default function RozvrhScreen() {
           <ActivityIndicator size={18} style={{ marginLeft: 8 }} />
         )}
       </ScrollView>
+      {extraenabled && (
+        <View style={{ paddingLeft: 12, paddingTop: 10 }}>
+          <Text style={{ color: theme.colors.onSurfaceVariant }}>
+            {extraText}
+          </Text>
+        </View>
+      )}
       <ScrollView
         horizontal
         style={{ flex: 1 }}

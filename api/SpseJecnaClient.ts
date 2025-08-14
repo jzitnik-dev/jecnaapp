@@ -134,6 +134,9 @@ export type ExtraordinaryTimetable = {
     date: string;
     priprava: boolean;
   }[];
+  status: {
+    currentUpdateSchedule: number;
+  };
 };
 
 export type LockerData = {
