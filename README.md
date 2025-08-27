@@ -75,10 +75,6 @@ Chyby hlaste jako Issue. Ideálně přiložte logy aplikace.
 
 ### Známé chyby
 
-- **Objednávání z jídelníčku**  
-  iCanteen blokuje requesty s hláškou „Multiple browser tabs open“ nebo něco podobného.  
-  Pokud víš, jak to obejít, vytvoř Issue nebo PR.
-
 - **Odhlašování**  
   Občas někoho odhlásí bez důvodu. Je to vzácné, ale zatím netuším proč.
 
