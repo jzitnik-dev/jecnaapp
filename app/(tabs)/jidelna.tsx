@@ -31,6 +31,23 @@ const allergenColors: { [key: string]: string } = {
   '14': '#F9E79F', // Měkkýši - světle žlutá
 };
 
+const allergenNames: { [key: string]: string } = {
+  '1': 'Obiloviny',
+  '2': 'Korýši',
+  '3': 'Vejce',
+  '4': 'Ryby',
+  '5': 'Arašídy',
+  '6': 'Sója',
+  '7': 'Mléko',
+  '8': 'Ořechy',
+  '9': 'Celer',
+  '10': 'Hořčice',
+  '11': 'Sezam',
+  '12': 'Oxid siřičitý',
+  '13': 'Vlčí bob',
+  '14': 'Měkkýši',
+};
+
 function getStatusColor(type: 'přeobjednat' | 'objednat' | 'zrušit') {
   if (type === 'přeobjednat' || type === 'objednat') {
     return 'green';
@@ -190,7 +207,7 @@ export default function Jidelna() {
                     </Text>
                     <View style={styles.allergenList}>
                       {el.allergens.map((allergen, index) => (
-                        <View
+                        <TouchableOpacity
                           key={index}
                           style={[
                             styles.allergenBadge,
@@ -199,9 +216,15 @@ export default function Jidelna() {
                                 allergenColors[allergen] || '#999',
                             },
                           ]}
+                          onPress={() =>
+                            Alert.alert(
+                              'Alergen',
+                              allergenNames[allergen] || 'Neznámý'
+                            )
+                          }
                         >
                           <Text style={styles.allergenText}>{allergen}</Text>
-                        </View>
+                        </TouchableOpacity>
                       ))}
                     </View>
                   </View>
