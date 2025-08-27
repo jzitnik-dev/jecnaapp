@@ -1,7 +1,4 @@
-import {
-  type CanteenMenuItem,
-  type CanteenMenuResult,
-} from '@/api/iCanteenClient';
+import { type CanteenMenuResult } from '@/api/iCanteenClient';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
@@ -34,12 +31,47 @@ const allergenColors: { [key: string]: string } = {
   '14': '#F9E79F', // Měkkýši - světle žlutá
 };
 
+const allergenNames: { [key: string]: string } = {
+  '1': 'Obiloviny',
+  '2': 'Korýši',
+  '3': 'Vejce',
+  '4': 'Ryby',
+  '5': 'Arašídy',
+  '6': 'Sója',
+  '7': 'Mléko',
+  '8': 'Ořechy',
+  '9': 'Celer',
+  '10': 'Hořčice',
+  '11': 'Sezam',
+  '12': 'Oxid siřičitý',
+  '13': 'Vlčí bob',
+  '14': 'Měkkýši',
+};
+
+function getStatusColor(type: 'přeobjednat' | 'objednat' | 'zrušit') {
+  if (type === 'přeobjednat' || type === 'objednat') {
+    return 'green';
+  }
+  if (type === 'zrušit') {
+    return 'red';
+  }
+}
+
+function getIcon(type: 'přeobjednat' | 'objednat' | 'zrušit') {
+  if (type === 'zrušit') {
+    return 'close-circle-outline';
+  }
+  if (type === 'objednat' || type === 'přeobjednat') {
+    return 'cart-outline';
+  }
+}
+
 export default function Jidelna() {
   const [menuData, setMenuData] = useState<CanteenMenuResult | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [ordering, setOrdering] = useState<string | null>(null);
   const theme = useTheme();
+  const [ordering, setOrdering] = useState<string | undefined>();
 
   const backgroundColor = theme.colors.background;
   const textColor = theme.colors.onBackground;
@@ -69,48 +101,6 @@ export default function Jidelna() {
     }
   };
 
-  const handleOrder = async (menuItem: CanteenMenuItem) => {
-    if (menuItem.status === 'disabled') {
-      Alert.alert(
-        'Nelze objednat',
-        'Toto jídlo již nelze objednat nebo zrušit'
-      );
-      return;
-    }
-
-    setOrdering(menuItem.date);
-
-    try {
-      if (!spseClient) {
-        throw new Error('SpseJecnaClient not available');
-      }
-
-      const canteenClient = await spseClient.getCanteenClient();
-
-      // Use the actual ordering functionality
-      const success = await canteenClient.toggleMealOrder(menuItem);
-
-      if (success) {
-        // Refresh the menu data to get updated information
-        await fetchMenu();
-
-        Alert.alert(
-          'Úspěch',
-          menuItem.status === 'ordered'
-            ? 'Objednávka byla zrušena'
-            : 'Jídlo bylo objednáno'
-        );
-      } else {
-        Alert.alert('Chyba', 'Nepodařilo se zpracovat objednávku');
-      }
-    } catch (error) {
-      console.error('Error ordering:', error);
-      Alert.alert('Chyba', 'Nepodařilo se zpracovat objednávku');
-    } finally {
-      setOrdering(null);
-    }
-  };
-
   const onRefresh = () => {
     setRefreshing(true);
     fetchMenu();
@@ -119,39 +109,6 @@ export default function Jidelna() {
   useEffect(() => {
     fetchMenu();
   }, []);
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'ordered':
-        return '#4CAF50';
-      case 'disabled':
-        return '#F44336';
-      default:
-        return '#2196F3';
-    }
-  };
-
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case 'ordered':
-        return 'Objednáno';
-      case 'disabled':
-        return 'Nelze zrušit';
-      default:
-        return 'Objednat';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'ordered':
-        return 'checkmark-circle';
-      case 'disabled':
-        return 'close-circle';
-      default:
-        return 'add-circle-outline';
-    }
-  };
 
   if (loading) {
     return (
@@ -204,123 +161,139 @@ export default function Jidelna() {
           {/* Date header */}
           <View style={styles.dateHeader}>
             <Text style={[styles.dateText, { color: textColor }]}>
-              {menuItem.dayName}
+              {menuItem.dayName} {menuItem.date}
             </Text>
-            <View
-              style={[
-                styles.statusBadge,
-                { backgroundColor: getStatusColor(menuItem.status) },
-              ]}
-            >
-              <Ionicons
-                name={getStatusIcon(menuItem.status) as any}
-                size={16}
-                color="white"
-              />
-              <Text style={styles.statusText}>
-                {getStatusText(menuItem.status)}
-              </Text>
-            </View>
           </View>
 
-          {/* Food description */}
-          {menuItem.food && (
-            <View style={styles.foodSection}>
-              <Text style={[styles.foodTitle, { color: textColor }]}>
-                Jídlo
-              </Text>
-              <Text style={[styles.foodDescription, { color: textColor }]}>
-                {menuItem.food}
-              </Text>
-            </View>
-          )}
-
-          {/* Price */}
-          {menuItem.price && (
-            <View style={styles.priceSection}>
-              <Text style={[styles.priceText, { color: textColor }]}>
-                {menuItem.price}
-              </Text>
-            </View>
-          )}
-
-          {/* Allergens */}
-          {menuItem.allergens.length > 0 && (
-            <View style={styles.allergenSection}>
-              <Text style={[styles.allergenTitle, { color: textColor }]}>
-                Alergeny
-              </Text>
-              <View style={styles.allergenList}>
-                {menuItem.allergens.map((allergen, index) => (
-                  <View
-                    key={index}
-                    style={[
-                      styles.allergenBadge,
-                      { backgroundColor: allergenColors[allergen] || '#999' },
-                    ]}
-                  >
-                    <Text style={styles.allergenText}>{allergen}</Text>
-                  </View>
-                ))}
-              </View>
-            </View>
-          )}
-
-          {/* Timing information */}
-          {(menuItem.pickupTime ||
-            menuItem.orderDeadline ||
-            menuItem.cancelDeadline) && (
-            <View style={styles.timingSection}>
-              <Ionicons name="time-outline" size={16} color={textColor} />
-              <View style={styles.timingInfo}>
-                {menuItem.pickupTime && (
-                  <Text style={[styles.timingText, { color: textColor }]}>
-                    Výdej: {menuItem.pickupTime}
-                  </Text>
-                )}
-                {menuItem.orderDeadline && (
-                  <Text style={[styles.timingText, { color: textColor }]}>
-                    Objednat do: {menuItem.orderDeadline}
-                  </Text>
-                )}
-                {menuItem.cancelDeadline && (
-                  <Text style={[styles.timingText, { color: textColor }]}>
-                    Zrušit do: {menuItem.cancelDeadline}
-                  </Text>
-                )}
-              </View>
-            </View>
-          )}
-
-          {/* Order button */}
-          <TouchableOpacity
-            style={[
-              styles.orderButton,
-              {
-                backgroundColor: getStatusColor(menuItem.status),
-                opacity: ordering === menuItem.date ? 0.7 : 1,
-              },
-            ]}
-            onPress={() => handleOrder(menuItem)}
-            disabled={
-              menuItem.status === 'disabled' || ordering === menuItem.date
-            }
+          <View
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 8,
+            }}
           >
-            {ordering === menuItem.date ? (
-              <ActivityIndicator size="small" color="white" />
-            ) : (
-              <>
-                <Ionicons
-                  name={getStatusIcon(menuItem.status) as any}
-                  size={20}
-                  color="white"
-                />
-                <Text style={styles.orderButtonText}>
-                  {getStatusText(menuItem.status)}
-                </Text>
-              </>
-            )}
-          </TouchableOpacity>
+            {menuItem.items.map(el => (
+              <View
+                key={el.name}
+                style={{
+                  backgroundColor: theme.colors.surfaceVariant,
+                  borderRadius: 4,
+                  paddingVertical: 15,
+                  paddingHorizontal: 15,
+                }}
+              >
+                {/* Food description */}
+                <View style={styles.foodSection}>
+                  <Text style={[styles.foodTitle, { color: textColor }]}>
+                    Jídlo
+                  </Text>
+                  <Text style={[styles.foodDescription, { color: textColor }]}>
+                    {el.name}
+                  </Text>
+                </View>
+
+                {/* Price */}
+                <View style={styles.priceSection}>
+                  <Text style={[styles.priceText, { color: textColor }]}>
+                    {el.price}
+                  </Text>
+                </View>
+
+                {/* Allergens */}
+                {el.allergens.length > 0 && (
+                  <View style={styles.allergenSection}>
+                    <Text style={[styles.allergenTitle, { color: textColor }]}>
+                      Alergeny
+                    </Text>
+                    <View style={styles.allergenList}>
+                      {el.allergens.map((allergen, index) => (
+                        <TouchableOpacity
+                          key={index}
+                          style={[
+                            styles.allergenBadge,
+                            {
+                              backgroundColor:
+                                allergenColors[allergen] || '#999',
+                            },
+                          ]}
+                          onPress={() =>
+                            Alert.alert(
+                              'Alergen',
+                              allergenNames[allergen] || 'Neznámý'
+                            )
+                          }
+                        >
+                          <Text style={styles.allergenText}>{allergen}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </View>
+                )}
+
+                {(el.pickupTime || el.orderDeadline || el.cancelDeadline) && (
+                  <View style={styles.timingSection}>
+                    <Ionicons name="time-outline" size={16} color={textColor} />
+                    <View style={styles.timingInfo}>
+                      {el.pickupTime && (
+                        <Text style={[styles.timingText, { color: textColor }]}>
+                          Výdej: {el.pickupTime}
+                        </Text>
+                      )}
+                      {el.orderDeadline && (
+                        <Text style={[styles.timingText, { color: textColor }]}>
+                          Objednat do: {el.orderDeadline}
+                        </Text>
+                      )}
+                      {el.cancelDeadline && (
+                        <Text style={[styles.timingText, { color: textColor }]}>
+                          Zrušit do: {el.cancelDeadline}
+                        </Text>
+                      )}
+                    </View>
+                  </View>
+                )}
+
+                {!el.disabledAction && (
+                  <TouchableOpacity
+                    style={[
+                      styles.orderButton,
+                      {
+                        backgroundColor: getStatusColor(el.buttonPresstype),
+                        justifyContent:
+                          ordering === el.name ? 'center' : 'flex-start',
+                        opacity: ordering === el.name ? 0.7 : 1,
+                      },
+                    ]}
+                    onPress={async () => {
+                      setOrdering(el.name);
+                      const canteenClient =
+                        await spseClient?.getCanteenClient();
+                      await canteenClient?.runAction(el);
+                      await fetchMenu();
+                      setOrdering(undefined);
+                    }}
+                    disabled={ordering !== undefined}
+                  >
+                    {ordering === el.name ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Ionicons
+                          name={getIcon(el.buttonPresstype) as any}
+                          size={20}
+                          color="white"
+                        />
+                        <Text style={styles.orderButtonText}>
+                          {el.buttonPresstype[0].toUpperCase() +
+                            el.buttonPresstype.slice(1)}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+          </View>
         </View>
       ))}
 
@@ -474,15 +447,8 @@ const styles = StyleSheet.create({
   orderButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 12,
-    paddingHorizontal: 24,
+    padding: 12,
     borderRadius: 8,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   orderButtonText: {
     color: 'white',
