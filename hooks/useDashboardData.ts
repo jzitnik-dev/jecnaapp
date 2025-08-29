@@ -124,10 +124,10 @@ export function useDashboardData() {
     accountInfo: accountInfoQuery.data ?? null,
     locker: lockerQuery.data ?? null,
     loading:
-      gradesQuery.isLoading ||
-      timetableQuery.isLoading ||
-      accountInfoQuery.isLoading ||
-      lockerQuery.isLoading,
+      gradesQuery.isFetching ||
+      timetableQuery.isFetching ||
+      accountInfoQuery.isFetching ||
+      lockerQuery.isFetching,
     error:
       gradesQuery.error?.message ??
       timetableQuery.error?.message ??

@@ -4,7 +4,7 @@ import {
   DefaultTheme,
 } from '@react-navigation/native';
 import { AppState, ActivityIndicator, View } from 'react-native';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
@@ -19,15 +19,7 @@ import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      retry: 5, // total 5 retries
-      retryDelay: attemptIndex => Math.min(100 * 2 ** attemptIndex, 10000), // start at 100ms, max 10s
-    },
-  },
-});
+import { queryClient } from './queryClient';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();

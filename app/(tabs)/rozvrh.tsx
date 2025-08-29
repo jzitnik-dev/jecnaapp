@@ -270,7 +270,7 @@ export default function RozvrhScreen() {
         contentContainerStyle={{ minWidth: screenWidth }}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing || isLoading}
+            refreshing={refreshing || isFetching}
             onRefresh={onRefresh}
             colors={['#fff']}
             progressBackgroundColor={'#23272e'}

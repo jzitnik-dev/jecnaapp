@@ -208,9 +208,7 @@ export default function ZnamkyScreen() {
     });
   }, [client]);
 
-  const { data, error, isLoading, refetch, isFetching } = useQuery<
-    SubjectGrades[]
-  >({
+  const { data, error, refetch, isFetching } = useQuery<SubjectGrades[]>({
     queryKey: ['znamky', selectedYear, selectedPeriod],
     queryFn: async () => {
       if (!client) throw new Error('Not logged in');
@@ -358,7 +356,7 @@ export default function ZnamkyScreen() {
         {plannerMode ? 'Plánovač známek: Zapnuto' : 'Plánovač známek: Vypnuto'}
       </Button>
 
-      {(isFetching || isLoading) && (
+      {(isFetching || isFetching) && (
         <ActivityIndicator size={18} style={{ marginLeft: 8 }} />
       )}
     </ScrollView>
@@ -371,14 +369,14 @@ export default function ZnamkyScreen() {
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl
-            refreshing={refreshing || isLoading}
+            refreshing={refreshing || isFetching}
             onRefresh={onRefresh}
             colors={['#fff']}
             progressBackgroundColor={'#23272e'}
           />
         }
       >
-        {isLoading && <ActivityIndicator style={{ marginTop: 24 }} />}
+        {isFetching && <ActivityIndicator style={{ marginTop: 24 }} />}
         {error && (
           <Text style={{ color: 'red', marginTop: 24 }}>{String(error)}</Text>
         )}
