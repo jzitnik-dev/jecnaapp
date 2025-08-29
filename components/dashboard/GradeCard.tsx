@@ -1,6 +1,6 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
-import { Dimensions, StyleSheet, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Card, Text, useTheme } from 'react-native-paper';
 import type { SubjectGrades } from '../../api/SpseJecnaClient';
@@ -74,18 +74,22 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
 
   const renderBarChart = () => {
     try {
+      const chartWidth = Math.max(screenWidth, chartData.labels.length * 60);
+
       return (
-        <BarChart
-          data={chartData}
-          width={screenWidth}
-          height={180}
-          chartConfig={chartConfig}
-          style={styles.chart}
-          showValuesOnTopOfBars
-          fromZero
-          yAxisLabel=""
-          yAxisSuffix=""
-        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <BarChart
+            data={chartData}
+            width={chartWidth}
+            height={180}
+            chartConfig={chartConfig}
+            style={styles.chart}
+            showValuesOnTopOfBars
+            fromZero
+            yAxisLabel=""
+            yAxisSuffix=""
+          />
+        </ScrollView>
       );
     } catch (error) {
       console.warn('Bar chart rendering error:', error);
@@ -125,7 +129,6 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
 
   const renderLineChart = () => {
     try {
-      // Check if we have valid data
       if (
         !trendData ||
         !trendData.labels ||
@@ -162,18 +165,22 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
         );
       }
 
+      const chartWidth = Math.max(screenWidth, trendData.labels.length * 60);
+
       return (
-        <LineChart
-          data={trendData}
-          width={screenWidth}
-          height={180}
-          chartConfig={lineChartConfig}
-          style={styles.chart}
-          bezier
-          fromZero={false}
-          yAxisLabel=""
-          yAxisSuffix=""
-        />
+        <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+          <LineChart
+            data={trendData}
+            width={chartWidth}
+            height={180}
+            chartConfig={lineChartConfig}
+            style={styles.chart}
+            bezier
+            fromZero={false}
+            yAxisLabel=""
+            yAxisSuffix=""
+          />
+        </ScrollView>
       );
     } catch (error) {
       console.warn('Line chart rendering error:', error);
@@ -407,6 +414,7 @@ const styles = StyleSheet.create({
   },
   chart: {
     borderRadius: 16,
+    marginLeft: -20,
   },
   chartFallback: {
     width: screenWidth,

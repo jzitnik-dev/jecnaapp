@@ -9,8 +9,8 @@ export const queryClient = new QueryClient({
       retry: 5,
       retryDelay: attemptIndex => Math.min(100 * 2 ** attemptIndex, 10000),
       staleTime: 10 * 60 * 1000, // 10 min
-      refetchOnMount: 'always', // 👈 always refetch when mounted
-      refetchOnReconnect: 'always', // 👈 always refetch when app regains connection
+      refetchOnMount: 'always',
+      refetchOnReconnect: 'always',
     },
   },
 });
