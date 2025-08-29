@@ -72,8 +72,8 @@ export default function AdvancedSettings() {
                 ]}
               >
                 Pro lidi, kteří se stydí za svoji profilovku na SPŠE Ječná
-                stránce. Nyní se nikde na webu nebude zobrazovat váš profilový
-                obrázek.
+                stránce. Nyní se nikde v aplikaci nebude zobrazovat váš
+                profilový obrázek.
               </Text>
             </View>
 
