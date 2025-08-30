@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { useNavigation } from 'expo-router';
 
 const allergenColors: { [key: string]: string } = {
   '1': '#FF6B6B', // Obiloviny - červená
@@ -76,6 +77,7 @@ export default function Jidelna() {
   const backgroundColor = theme.colors.background;
   const textColor = theme.colors.onBackground;
   const cardBackground = theme.colors.surface;
+  const navigation = useNavigation();
 
   const { client: spseClient } = useSpseJecnaClient();
 
@@ -87,6 +89,29 @@ export default function Jidelna() {
 
       const canteenClient = await spseClient.getCanteenClient();
       const menu = await canteenClient.getMonthlyMenu();
+      navigation.setOptions({
+        headerRight: () => (
+          <View
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              flexDirection: 'row',
+            }}
+          >
+            <Ionicons name="wallet-outline" size={20} color={textColor} />
+            <Text
+              style={{
+                marginRight: 15,
+                fontWeight: 'bold',
+                color: theme.colors.onSurface,
+              }}
+            >
+              {menu.credit}
+            </Text>
+          </View>
+        ),
+      });
       setMenuData(menu);
     } catch (error) {
       console.error('Error fetching menu:', error);
@@ -128,31 +153,6 @@ export default function Jidelna() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
-      {/* Header with credit and location */}
-      <View style={[styles.header, { backgroundColor: cardBackground }]}>
-        <View style={styles.headerRow}>
-          <View style={styles.headerItem}>
-            <Ionicons name="wallet-outline" size={20} color={textColor} />
-            <Text style={[styles.headerLabel, { color: textColor }]}>
-              Kredit
-            </Text>
-            <Text style={[styles.headerValue, { color: textColor }]}>
-              {menuData?.credit || '0,00 Kč'}
-            </Text>
-          </View>
-          <View style={styles.headerItem}>
-            <Ionicons name="location-outline" size={20} color={textColor} />
-            <Text style={[styles.headerLabel, { color: textColor }]}>
-              Výdejna
-            </Text>
-            <Text style={[styles.headerValue, { color: textColor }]}>
-              {menuData?.pickupLocation || 'N/A'}
-            </Text>
-          </View>
-        </View>
-      </View>
-
-      {/* Menu items */}
       {menuData?.menus.map(menuItem => (
         <View
           key={menuItem.date}
