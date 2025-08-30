@@ -30,6 +30,10 @@ export type CanteenMenuResult = {
 
 export class iCanteenClient {
   private readonly baseUrl = 'https://strav.nasejidelna.cz/0341';
+  private auth = {
+    username: '',
+    password: '',
+  };
 
   private async getCsrfToken() {
     const url = `${this.baseUrl}/faces/secured/main.jsp`;
@@ -78,10 +82,13 @@ export class iCanteenClient {
         response.status,
         response.url.substring(0, 200)
       );
+      return;
     }
 
     // If we reach here, login was successful
     console.log('Login successful');
+    this.auth.username = username;
+    this.auth.password = password;
   }
 
   /**
@@ -94,7 +101,6 @@ export class iCanteenClient {
     });
     const html = await response.text();
     const document = parseDocument(html);
-    console.log(html);
 
     // Extract credit
     const creditElement = selectOne('[id="Kredit"]', document.children) as
@@ -112,6 +118,10 @@ export class iCanteenClient {
     const pickupLocation =
       locationElement?.children.find(c => c.type === 'text')?.data?.trim() ||
       '';
+    if (pickupLocation === '') {
+      this.setup(this.auth.username, this.auth.password);
+      return this.getMonthlyMenu();
+    }
 
     // Extract menus
     const menuItems: CanteenMenuDay[] = [];

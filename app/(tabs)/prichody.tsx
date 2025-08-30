@@ -1,5 +1,5 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
@@ -9,50 +9,49 @@ import {
   Text,
   useTheme,
 } from 'react-native-paper';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function PrichodyScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<any>(null);
+  const queryClient = useQueryClient();
+
   const [yearMenuVisible, setYearMenuVisible] = useState(false);
   const [monthMenuVisible, setMonthMenuVisible] = useState(false);
 
-  useEffect(() => {
-    if (!client) return;
-    setLoading(true);
-    setError(null);
-    client
-      .getPrichody()
-      .then(d => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Chyba při načítání příchodů.');
-        setLoading(false);
-      });
-  }, [client]);
+  // selected filters (controlled locally, but invalidate queries when they change)
+  const [selectedYearId, setSelectedYearId] = useState<string | undefined>();
+  const [selectedMonthId, setSelectedMonthId] = useState<string | undefined>();
 
-  const reload = (yearId?: string, monthId?: string) => {
-    if (!client) return;
-    setLoading(true);
-    setError(null);
-    client
-      .getPrichody(yearId, monthId)
-      .then(d => {
-        setData(d);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Chyba při načítání příchodů.');
-        setLoading(false);
-      });
+  const { data, error, isLoading, isFetching, refetch } = useQuery({
+    queryKey: ['prichody', selectedYearId, selectedMonthId],
+    queryFn: async () => {
+      if (!client) return null;
+      return await client.getPrichody(selectedYearId, selectedMonthId);
+    },
+    enabled: !!client,
+    staleTime: 1000 * 60 * 5,
+    retry: 2,
+  });
+
+  const handleSelectYear = (yearId: string) => {
+    setYearMenuVisible(false);
+    setSelectedYearId(yearId);
+    // proactively warm up cache for all months of this year
+    queryClient.prefetchQuery({
+      queryKey: ['prichody', yearId, selectedMonthId],
+      queryFn: () => client?.getPrichody(yearId, selectedMonthId),
+    });
+  };
+
+  const handleSelectMonth = (monthId: string) => {
+    setMonthMenuVisible(false);
+    setSelectedMonthId(monthId);
   };
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      {/* Filters */}
       <View
         style={{
           flexDirection: 'row',
@@ -78,14 +77,12 @@ export default function PrichodyScreen() {
           {data?.years?.map((y: any) => (
             <Menu.Item
               key={y.id}
-              onPress={() => {
-                setYearMenuVisible(false);
-                reload(y.id, data.selectedMonthId);
-              }}
+              onPress={() => handleSelectYear(y.id)}
               title={y.label}
             />
           ))}
         </Menu>
+
         <Menu
           visible={monthMenuVisible}
           onDismiss={() => setMonthMenuVisible(false)}
@@ -103,29 +100,29 @@ export default function PrichodyScreen() {
           {data?.months?.map((m: any) => (
             <Menu.Item
               key={m.id}
-              onPress={() => {
-                setMonthMenuVisible(false);
-                reload(data.selectedYearId, m.id);
-              }}
+              onPress={() => handleSelectMonth(m.id)}
               title={m.label}
             />
           ))}
         </Menu>
       </View>
-      {loading ? (
+
+      {isFetching && !isLoading && (
+        <View style={{ padding: 8, alignItems: 'center' }}>
+          <ActivityIndicator size="small" color={theme.colors.primary} />
+        </View>
+      )}
+
+      {/* Content */}
+      {isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={theme.colors.primary} />
-          <Text
-            style={{
-              marginTop: 16,
-            }}
-          >
-            Načítám příchody…
-          </Text>
+          <Text style={{ marginTop: 16 }}>Načítám příchody…</Text>
         </View>
       ) : error ? (
         <View style={styles.centered}>
-          <Text style={{ color: 'red' }}>{error}</Text>
+          <Text style={{ color: 'red' }}>Chyba při načítání příchodů.</Text>
+          <Button onPress={() => refetch()}>Zkusit znovu</Button>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8 }}>
@@ -140,7 +137,7 @@ export default function PrichodyScreen() {
               Žádné záznamy.
             </Text>
           ) : (
-            data.days.map((day: any, i: number) => (
+            data?.days.map((day: any, i: number) => (
               <Surface
                 key={i}
                 style={[

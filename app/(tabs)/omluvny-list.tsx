@@ -1,7 +1,7 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { Picker } from '@react-native-picker/picker';
 import { useTheme } from '@react-navigation/native';
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   FlatList,
@@ -13,49 +13,37 @@ import type {
   OmluvnyListResult,
 } from '../../api/SpseJecnaClient';
 import { Text } from 'react-native-paper';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 export default function OmluvnyListScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
-  const [data, setData] = useState<OmluvnyListResult | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const queryClient = useQueryClient();
+
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
     undefined
   );
-  const [error, setError] = useState<string | null>(null);
 
-  const fetchData = useCallback(
-    async (yearId?: string) => {
-      if (!client) return;
-      setLoading(true);
-      setError(null);
-      try {
-        const result = await client.getOmluvnyList(yearId);
-        setData(result);
-        setSelectedYear(result.selectedYearId);
-      } catch {
-        setError('Nepodařilo se načíst omluvný list.');
-      } finally {
-        setLoading(false);
-        setRefreshing(false);
-      }
-    },
-    [client]
-  );
+  const { data, error, isLoading, isFetching, refetch } =
+    useQuery<OmluvnyListResult | null>({
+      queryKey: ['omluvnyList', selectedYear],
+      queryFn: async () => {
+        if (!client) return null;
+        return await client.getOmluvnyList(selectedYear);
+      },
+      enabled: !!client,
+    });
 
-  useEffect(() => {
-    if (client) fetchData();
-  }, [fetchData, client]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fetchData(selectedYear);
-  }, [fetchData, selectedYear]);
+  const onRefresh = () => {
+    refetch();
+  };
 
   const onYearChange = (yearId: string) => {
     setSelectedYear(yearId);
-    fetchData(yearId);
+    queryClient.prefetchQuery({
+      queryKey: ['omluvnyList', yearId],
+      queryFn: () => client?.getOmluvnyList(yearId),
+    });
   };
 
   const renderAbsence = ({ item }: { item: OmluvnyListAbsence }) => (
@@ -146,7 +134,7 @@ export default function OmluvnyListScreen() {
           }}
         >
           <Picker
-            selectedValue={selectedYear}
+            selectedValue={selectedYear ?? data.selectedYearId}
             onValueChange={onYearChange}
             style={{
               color: theme.colors.text,
@@ -159,14 +147,17 @@ export default function OmluvnyListScreen() {
           </Picker>
         </View>
       )}
-      {loading ? (
+
+      {isLoading ? (
         <ActivityIndicator
           size="large"
           color={theme.colors.primary || theme.colors.text}
           style={{ marginTop: 32 }}
         />
       ) : error ? (
-        <Text style={{ color: 'red', margin: 16 }}>{error}</Text>
+        <Text style={{ color: 'red', margin: 16 }}>
+          Nepodařilo se načíst omluvný list.
+        </Text>
       ) : !data || data.absences.length === 0 ? (
         <Text style={{ margin: 16, color: theme.colors.text }}>
           Žádné absence v tomto školním roce.
@@ -178,7 +169,7 @@ export default function OmluvnyListScreen() {
           renderItem={renderAbsence}
           refreshControl={
             <RefreshControl
-              refreshing={refreshing}
+              refreshing={isFetching}
               onRefresh={onRefresh}
               colors={[theme.colors.primary || theme.colors.text]}
               progressBackgroundColor={theme.colors.background}

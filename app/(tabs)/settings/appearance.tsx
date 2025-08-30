@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
 import {
   Button,
   Card,
@@ -263,6 +263,14 @@ export default function AppearanceScreen() {
             Vyberte barvu pro: {editingKey}
           </Text>
 
+          <TextInput
+            value={pickerColor}
+            onChangeText={text => {
+              const formatted = text.startsWith('#') ? text : `#${text}`;
+              setPickerColor(formatted);
+            }}
+            style={{ marginTop: 16, color: theme.colors.onSurface }}
+          />
           <ColorPicker
             style={{ width: '100%', height: 320 }}
             value={pickerColor}
@@ -272,11 +280,14 @@ export default function AppearanceScreen() {
             }}
           >
             <Preview />
+
             <Panel1 style={{ flex: 1, marginVertical: 20 }} />
             <HueSlider style={{ height: 30, marginVertical: 10 }} />
             <OpacitySlider style={{ height: 30, marginVertical: 10 }} />
             <Swatches />
           </ColorPicker>
+
+          {/* Manual HEX Input */}
 
           <Button
             mode="contained"
