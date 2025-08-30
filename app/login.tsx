@@ -40,7 +40,7 @@ export default function LoginScreen() {
         setError(null);
         router.replace('/(tabs)');
       } else {
-        setError('Login failed. Check your credentials.');
+        setError('Uživatelské jméno nebo heslo není správné.');
         if (!silent) {
           await SecureStore.deleteItemAsync('username');
           await SecureStore.deleteItemAsync('password');
@@ -94,7 +94,7 @@ export default function LoginScreen() {
   if (success) {
     return (
       <View style={styles.centered}>
-        <Text variant="titleLarge">Login successful! Redirecting...</Text>
+        <Text variant="titleLarge">Přihlášení úspěšné, přesměrovávám...</Text>
       </View>
     );
   }
@@ -103,10 +103,10 @@ export default function LoginScreen() {
     <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Surface style={styles.surface} elevation={4}>
         <Text variant="headlineMedium" style={styles.title}>
-          Login
+          Přihlášení
         </Text>
         <TextInput
-          label="Username"
+          label="Uživatelské jméno"
           value={username}
           onChangeText={setUsername}
           autoCapitalize="none"
@@ -116,7 +116,7 @@ export default function LoginScreen() {
           returnKeyType="next"
         />
         <TextInput
-          label="Password"
+          label="Heslo"
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -137,7 +137,7 @@ export default function LoginScreen() {
           disabled={loading}
           style={styles.button}
         >
-          Login
+          Přihlásit se
         </Button>
       </Surface>
     </View>
