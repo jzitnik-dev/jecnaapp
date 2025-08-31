@@ -128,8 +128,20 @@ export type AccountInfo = {
   photoUrl?: string;
 };
 
+export type Absence = {
+  teacher: string | null;
+  teacherCode: string | null;
+  type: 'wholeDay' | 'range' | 'single' | 'invalid' | null;
+  hours: { from: number; to: number } | number | null;
+  original: string | null;
+};
+
+export type ScheduleRecord = {
+  ABSENCE?: Absence[];
+} & Record<string, (string | null)[]>;
+
 export type ExtraordinaryTimetable = {
-  schedule: Record<string, (string | null)[]>[];
+  schedule: ScheduleRecord[];
   props: {
     date: string;
     priprava: boolean;
@@ -176,13 +188,27 @@ export class SpseJecnaClient {
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
     const ifModifiedSince = toHttpDate(oneDayAgo);
 
-    // TODO: This will need more testing on iOS
+    function generateUserAgent() {
+      const userAgents = [
+        // Chrome
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.140 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_5_2) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.6 Safari/605.1.15',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.188 Safari/537.36',
+        // Firefox
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:119.0) Gecko/20100101 Firefox/119.0',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 13.5; rv:119.0) Gecko/20100101 Firefox/119.0',
+        // Edge
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/116.0.5845.188 Safari/537.36 Edg/116.0.1938.81',
+      ];
+      return userAgents[Math.floor(Math.random() * userAgents.length)];
+    }
+
     return {
       ...(this.cookies ? { Cookie: this.cookies } : {}),
-      'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
+      'User-Agent': generateUserAgent(),
       'Accept-Encoding': 'gzip',
       Cookie: 'WTDGUID=10',
-      'If-Modified-Since': 'Fri, 20 Jun 2025 07:45:34 GMT',
+      'If-Modified-Since': ifModifiedSince,
       ...extraHeaders,
     };
   }
@@ -235,7 +261,9 @@ export class SpseJecnaClient {
       headers: this.buildHeaders(),
       credentials: 'include',
     });
+    console.log(response);
     const html = await response.text();
+    console.log(html);
     return (
       !response.url.includes('/user/need-login') &&
       !html.includes('Pro další postup je vyžadováno přihlášení uživatele.')
@@ -692,7 +720,7 @@ export class SpseJecnaClient {
 
   public async getExtraordinaryTimetable(): Promise<ExtraordinaryTimetable> {
     const res = await fetch(extraordURL);
-    const json = await res.json();
+    const json = (await res.json()) as ExtraordinaryTimetable;
 
     return json;
   }

@@ -1,6 +1,6 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
@@ -9,35 +9,29 @@ import {
   Text,
   useTheme,
 } from 'react-native-paper';
+import { useQuery } from '@tanstack/react-query';
+
+interface Teacher {
+  name: string;
+  shortcut: string;
+}
 
 export default function TeachersListScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [teachers, setTeachers] = useState<
-    { name: string; shortcut: string }[]
-  >([]);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    if (!client) return;
-    setLoading(true);
-    setError(null);
-    client
-      .getTeachersList()
-      .then(list => {
-        setTeachers(list);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Chyba při načítání učitelů.');
-        setLoading(false);
-      });
-  }, [client]);
+  const teachersQuery = useQuery<Teacher[], Error>({
+    queryKey: ['teachers'],
+    queryFn: async () => {
+      if (!client) throw new Error('Client not available');
+      return client.getTeachersList();
+    },
+    enabled: !!client,
+  });
 
-  const filtered = teachers.filter(
+  const filtered = teachersQuery.data?.filter(
     t =>
       t.name.toLowerCase().includes(search.toLowerCase()) ||
       t.shortcut.toLowerCase().includes(search.toLowerCase())
@@ -52,18 +46,20 @@ export default function TeachersListScreen() {
         style={{ margin: 16, marginBottom: 8, borderRadius: 16 }}
         inputStyle={{ fontSize: 18 }}
       />
-      {loading ? (
+      {teachersQuery.isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />
           <Text>Načítám učitele…</Text>
         </View>
-      ) : error ? (
+      ) : teachersQuery.error ? (
         <View style={styles.centered}>
-          <Text style={{ color: 'red' }}>{error}</Text>
+          <Text style={{ color: 'red' }}>
+            {teachersQuery.error.message || 'Chyba při načítání učitelů.'}
+          </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
-          {filtered.length === 0 ? (
+          {filtered && filtered.length === 0 ? (
             <Text
               style={{
                 color: theme.colors.onSurfaceVariant,
@@ -74,7 +70,7 @@ export default function TeachersListScreen() {
               Žádný učitel nenalezen.
             </Text>
           ) : (
-            filtered.map((t, i) => (
+            filtered?.map(t => (
               <Surface
                 key={t.shortcut}
                 style={[

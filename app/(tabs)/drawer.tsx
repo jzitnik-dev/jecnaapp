@@ -25,6 +25,7 @@ import MoodleIcon from '@/components/icons/Moodle';
 import * as SecureStore from 'expo-secure-store';
 import NovinkyScreen from './novinky';
 import useIsUpdateAvailable from '@/utils/updates';
+import TeacherAbsencesScreen from './teacher-absences';
 
 const Drawer = createDrawerNavigator();
 
@@ -34,6 +35,16 @@ export default function DrawerLayout() {
   const { accountInfo } = useAccountInfo();
   const router = useRouter();
   const [showProfilePicture, setShowProfilePicture] = useState(false);
+
+  const [extraEnabled, setExtraEnabled] = useState(false);
+  useEffect(() => {
+    (async () => {
+      const enabled =
+        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
+        'true';
+      setExtraEnabled(enabled);
+    })();
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -339,6 +350,22 @@ export default function DrawerLayout() {
           ),
         }}
       />
+      {extraEnabled && (
+        <Drawer.Screen
+          name="teachers-absences"
+          component={TeacherAbsencesScreen}
+          options={{
+            title: 'Absence učitelů',
+            drawerIcon: ({ color, size }) => (
+              <MaterialCommunityIcons
+                name="account-multiple"
+                color={color}
+                size={size}
+              />
+            ),
+          }}
+        />
+      )}
       <Drawer.Screen
         name="rooms-list"
         component={RoomsListScreen}
