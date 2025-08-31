@@ -128,13 +128,42 @@ export type AccountInfo = {
   photoUrl?: string;
 };
 
-export type Absence = {
-  teacher: string | null;
-  teacherCode: string | null;
-  type: 'wholeDay' | 'range' | 'single' | 'invalid' | null;
-  hours: { from: number; to: number } | number | null;
-  original: string | null;
-};
+export type Absence =
+  | {
+      original: string;
+      teacher: null;
+      teacherCode: null;
+      type: null;
+      hours: null;
+    }
+  | {
+      original: null;
+      teacher: string;
+      teacherCode: string;
+      type: 'wholeDay';
+      hours: null;
+    }
+  | {
+      original: null;
+      teacher: string;
+      teacherCode: string;
+      type: 'invalid';
+      hours: null;
+    }
+  | {
+      original: null;
+      teacher: string;
+      teacherCode: string;
+      type: 'range';
+      hours: { from: number; to: number };
+    }
+  | {
+      original: null;
+      teacher: string;
+      teacherCode: string;
+      type: 'single';
+      hours: number;
+    };
 
 export type ScheduleRecord = {
   ABSENCE?: Absence[];
