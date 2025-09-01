@@ -119,6 +119,7 @@ export default function RozvrhScreen() {
   const onRefresh = async () => {
     setRefreshing(true);
     await refetch();
+    await extraRefetch();
     setRefreshing(false);
   };
 
