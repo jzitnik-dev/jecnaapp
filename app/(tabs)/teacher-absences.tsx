@@ -83,7 +83,10 @@ export default function TeachersListScreen() {
             >
               {teachersQuery.data?.props?.map((prop, i) => {
                 const date = new Date(prop.date);
-                const formattedDate = `${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()}`;
+                let formattedDate = `${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()}`;
+                if (prop.priprava) {
+                  formattedDate += ' (příprava)';
+                }
                 return <Picker.Item key={i} label={formattedDate} value={i} />;
               })}
             </Picker>
