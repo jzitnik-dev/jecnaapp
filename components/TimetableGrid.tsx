@@ -254,121 +254,127 @@ export function TimetableGrid({
                     ]}
                   >
                     {cell && cell.length > 0
-                      ? cell.map((lesson, i) => (
-                          <Pressable
-                            key={i}
-                            onPress={() => handleLessonPress(lesson)}
-                            style={[
-                              styles.lessonSquare,
-                              {
-                                backgroundColor: cellBg,
-                                borderColor: borderColor,
-                                borderBottomWidth: isSplit && i === 0 ? 1 : 0,
-                                borderRightWidth: 0,
-                                borderLeftWidth: 0,
-                                borderTopWidth: 0,
-                                height: isSplit ? cellHeight / 2 : cellHeight,
-                                width: '100%',
-                                flex: 1,
-                                margin: 0,
-                                padding: 6,
-                                borderRadius: 0,
-                                justifyContent: 'flex-start',
-                                alignItems: 'stretch',
-                              },
-                            ]}
-                          >
-                            <View
-                              style={{
-                                position: 'absolute',
-                                top: 6,
-                                left: 6,
-                                right: 6,
-                                flexDirection: 'row',
-                                justifyContent: 'space-between',
-                                alignItems: 'flex-start',
-                              }}
+                      ? cell
+                          .sort(
+                            (a, b) =>
+                              parseInt(a.group?.split('/')?.[0] || '0') -
+                              parseInt(b.group?.split('/')?.[0] || '0')
+                          )
+                          .map((lesson, i) => (
+                            <Pressable
+                              key={i}
+                              onPress={() => handleLessonPress(lesson)}
+                              style={[
+                                styles.lessonSquare,
+                                {
+                                  backgroundColor: cellBg,
+                                  borderColor: borderColor,
+                                  borderBottomWidth: isSplit && i === 0 ? 1 : 0,
+                                  borderRightWidth: 0,
+                                  borderLeftWidth: 0,
+                                  borderTopWidth: 0,
+                                  height: isSplit ? cellHeight / 2 : cellHeight,
+                                  width: '100%',
+                                  flex: 1,
+                                  margin: 0,
+                                  padding: 6,
+                                  borderRadius: 0,
+                                  justifyContent: 'flex-start',
+                                  alignItems: 'stretch',
+                                },
+                              ]}
                             >
-                              <Text
-                                style={[
-                                  styles.teacherSquare,
-                                  {
-                                    color: accentColor,
-                                    fontSize: 12,
-                                    flex: 1,
-                                    marginRight: 4,
-                                  },
-                                ]}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
+                              <View
+                                style={{
+                                  position: 'absolute',
+                                  top: 6,
+                                  left: 6,
+                                  right: 6,
+                                  flexDirection: 'row',
+                                  justifyContent: 'space-between',
+                                  alignItems: 'flex-start',
+                                }}
                               >
-                                {lesson.teacher}
-                              </Text>
-                              {lesson.room ? (
-                                <View
-                                  style={{
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                  }}
-                                >
-                                  <Text
-                                    style={[
-                                      styles.roomSquare,
-                                      {
-                                        color: accentColor,
-                                        fontSize: 11,
-                                        fontWeight: '500',
-                                      },
-                                    ]}
-                                    numberOfLines={1}
-                                  >
-                                    {lesson.room}
-                                  </Text>
-                                </View>
-                              ) : null}
-                            </View>
-                            <View
-                              style={{
-                                flex: 1,
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                              }}
-                            >
-                              <Text
-                                style={[
-                                  styles.subjectSquare,
-                                  {
-                                    color: textColor,
-                                    fontSize: 15,
-                                    fontWeight: '600',
-                                    textAlign: 'center',
-                                  },
-                                ]}
-                                numberOfLines={1}
-                                ellipsizeMode="tail"
-                              >
-                                {lesson.subject}
-                              </Text>
-                              {lesson.group ? (
                                 <Text
                                   style={[
-                                    styles.groupSquare,
+                                    styles.teacherSquare,
                                     {
-                                      color: secondaryTextColor,
-                                      fontSize: 11,
-                                      marginTop: 2,
+                                      color: accentColor,
+                                      fontSize: 12,
+                                      flex: 1,
+                                      marginRight: 4,
+                                    },
+                                  ]}
+                                  numberOfLines={1}
+                                  ellipsizeMode="tail"
+                                >
+                                  {lesson.teacher}
+                                </Text>
+                                {lesson.room ? (
+                                  <View
+                                    style={{
+                                      justifyContent: 'center',
+                                      alignItems: 'center',
+                                    }}
+                                  >
+                                    <Text
+                                      style={[
+                                        styles.roomSquare,
+                                        {
+                                          color: accentColor,
+                                          fontSize: 11,
+                                          fontWeight: '500',
+                                        },
+                                      ]}
+                                      numberOfLines={1}
+                                    >
+                                      {lesson.room}
+                                    </Text>
+                                  </View>
+                                ) : null}
+                              </View>
+                              <View
+                                style={{
+                                  flex: 1,
+                                  justifyContent: 'center',
+                                  alignItems: 'center',
+                                }}
+                              >
+                                <Text
+                                  style={[
+                                    styles.subjectSquare,
+                                    {
+                                      color: textColor,
+                                      fontSize: 15,
+                                      fontWeight: '600',
                                       textAlign: 'center',
                                     },
                                   ]}
                                   numberOfLines={1}
                                   ellipsizeMode="tail"
                                 >
-                                  {lesson.group}
+                                  {lesson.subject}
                                 </Text>
-                              ) : null}
-                            </View>
-                          </Pressable>
-                        ))
+                                {lesson.group ? (
+                                  <Text
+                                    style={[
+                                      styles.groupSquare,
+                                      {
+                                        color: secondaryTextColor,
+                                        fontSize: 11,
+                                        marginTop: 2,
+                                        textAlign: 'center',
+                                      },
+                                    ]}
+                                    numberOfLines={1}
+                                    ellipsizeMode="tail"
+                                  >
+                                    {lesson.group}
+                                  </Text>
+                                ) : null}
+                              </View>
+                            </Pressable>
+                          ))
                       : null}
                   </View>
                 );
