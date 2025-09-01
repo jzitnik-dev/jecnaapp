@@ -103,13 +103,6 @@ export function useDashboardData() {
     staleTime: 30 * 60 * 1000,
   });
 
-  // Clear cache on logout
-  useEffect(() => {
-    if (!client) {
-      queryClient.removeQueries();
-    }
-  }, [client, queryClient]);
-
   // Refresh all dashboard data
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['grades'] });

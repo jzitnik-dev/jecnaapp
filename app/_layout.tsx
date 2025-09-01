@@ -49,6 +49,31 @@ export default function RootLayout() {
       const activeClient = client ?? new SpseJecnaClient();
       if (!client) setClient(activeClient);
 
+      const tryLoginWithRetry = async (
+        username: string,
+        password: string,
+        maxRetries = 5
+      ) => {
+        let attempt = 0;
+        while (attempt < maxRetries) {
+          try {
+            await activeClient.login(username, password);
+            console.log(username, password);
+            return true; // success
+          } catch (error) {
+            attempt++;
+            console.log(`Auto-login failed (attempt ${attempt}):`, error);
+
+            if (attempt >= maxRetries) return false;
+
+            // Exponential backoff: 500ms, 1s, 2s, 4s, ...
+            const delay = 500 * Math.pow(2, attempt - 1);
+            await new Promise(res => setTimeout(res, delay));
+          }
+        }
+        return false;
+      };
+
       try {
         const isLoggedIn = await activeClient.isLoggedIn();
         if (!isLoggedIn) {
@@ -56,11 +81,15 @@ export default function RootLayout() {
           const savedPassword = await SecureStore.getItemAsync('password');
 
           if (savedUsername && savedPassword) {
-            try {
-              await activeClient.login(savedUsername, savedPassword);
-              console.log('Auto-login successful');
-            } catch (error) {
-              console.log('Auto-login failed:', error);
+            const success = await tryLoginWithRetry(
+              savedUsername,
+              savedPassword
+            );
+
+            if (!success) {
+              console.log(
+                'Auto-login ultimately failed, redirecting to login.'
+              );
               await SecureStore.deleteItemAsync('username');
               await SecureStore.deleteItemAsync('password');
               router.replace('/login');
@@ -87,7 +116,7 @@ export default function RootLayout() {
     });
 
     return () => subscription.remove();
-  }, [client, setClient, router]);
+  }, []);
 
   if (fontError) {
     console.error('Font loading error:', fontError);

@@ -278,7 +278,6 @@ export class SpseJecnaClient {
     });
     const html = await response.text();
     this.updateCookies(response);
-    console.log(html);
     const token = this.extractToken3(html);
     if (!token) throw new Error('Login token not found');
     return token;
@@ -290,9 +289,7 @@ export class SpseJecnaClient {
       headers: this.buildHeaders(),
       credentials: 'include',
     });
-    console.log(response);
     const html = await response.text();
-    console.log(html);
     return (
       !response.url.includes('/user/need-login') &&
       !html.includes('Pro další postup je vyžadováno přihlášení uživatele.')
@@ -594,14 +591,12 @@ export class SpseJecnaClient {
   }
 
   public async logout(): Promise<void> {
-    await fetch(`${this.baseUrl}/user/logout`, {
+    const res = await fetch(`${this.baseUrl}/user/logout`, {
       method: 'GET',
-      headers: {
-        ...(this.cookies ? { Cookie: this.cookies } : {}),
-        'User-Agent': 'Mozilla/5.0 (compatible; SpseJecnaBot/1.0)',
-      },
+      headers: this.buildHeaders(),
       credentials: 'include',
     });
+    console.log(res);
     this.cookies = '';
   }
 
