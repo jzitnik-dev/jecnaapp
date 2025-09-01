@@ -9,6 +9,7 @@ import type {
 import { useSpseJecnaClient } from './useSpseJecnaClient';
 import { getTimetableSelections } from '@/utils/timetableStorage';
 import { getZnamkySelections } from '@/utils/znamkyStorage';
+import { CanteenMenuResult } from '@/api/iCanteenClient';
 
 export function useDashboardData() {
   const { client } = useSpseJecnaClient();
@@ -103,6 +104,22 @@ export function useDashboardData() {
     staleTime: 30 * 60 * 1000,
   });
 
+  const canteenMenuQuery = useQuery<CanteenMenuResult, Error>({
+    queryKey: ['canteenMenu'],
+    queryFn: async () => {
+      if (!(await isLoggedIn())) throw new Error('Not logged in');
+      if (!client) throw new Error('Client not available');
+      const canteenClient = await client.getCanteenClient();
+      return canteenClient.getMonthlyMenu();
+    },
+    enabled: !!client,
+    staleTime: 10 * 60 * 60 * 1000, // 10 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 0,
+  });
+
   // Refresh all dashboard data
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['grades'] });
@@ -116,16 +133,19 @@ export function useDashboardData() {
     timetable: timetableQuery.data ?? null,
     accountInfo: accountInfoQuery.data ?? null,
     locker: lockerQuery.data ?? null,
+    canteen: canteenMenuQuery.data ?? null,
     loading:
       gradesQuery.isFetching ||
       timetableQuery.isFetching ||
       accountInfoQuery.isFetching ||
-      lockerQuery.isFetching,
+      lockerQuery.isFetching ||
+      canteenMenuQuery.isFetching,
     error:
       gradesQuery.error?.message ??
       timetableQuery.error?.message ??
       accountInfoQuery.error?.message ??
       lockerQuery.error?.message ??
+      canteenMenuQuery.error?.message ??
       null,
     refresh,
   };

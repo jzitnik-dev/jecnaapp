@@ -16,11 +16,20 @@ import { useDashboardData } from '../../hooks/useDashboardData';
 import { calculateGradeStats } from '../../utils/dashboardUtils';
 import * as SecureStore from 'expo-secure-store';
 import { LockerCard } from '@/components/dashboard/LockerCard';
+import { CanteenCard } from '@/components/dashboard/CanteenCard';
 
 export default function HomeScreen() {
   const theme = useTheme();
-  const { grades, timetable, accountInfo, loading, error, locker, refresh } =
-    useDashboardData();
+  const {
+    grades,
+    timetable,
+    accountInfo,
+    locker,
+    canteen,
+    loading,
+    refresh,
+    error,
+  } = useDashboardData();
   const [showProfilePicture, setShowProfilePicture] = useState(false);
 
   useEffect(() => {
@@ -191,6 +200,8 @@ export default function HomeScreen() {
 
       {/* Next Lesson Card */}
       <NextLessonCard timetable={timetable} />
+
+      {canteen && <CanteenCard canteen={canteen} />}
 
       {/* Grade Statistics Card */}
       <GradeCard gradeStats={gradeStats} grades={grades} />

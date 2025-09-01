@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Card, Text, useTheme } from 'react-native-paper';
@@ -20,8 +20,8 @@ const screenWidth = Dimensions.get('window').width - 32; // Full width minus mar
 export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const theme = useTheme();
 
-  const chartData = getGradeChartData(gradeStats);
-  const trendData = getGradeTrendChartData(grades);
+  const chartData = useMemo(() => getGradeChartData(gradeStats), [gradeStats]);
+  const trendData = useMemo(() => getGradeTrendChartData(grades), [grades]);
 
   function hexToRgba(hex: string, opacity = 1) {
     let r = 0,

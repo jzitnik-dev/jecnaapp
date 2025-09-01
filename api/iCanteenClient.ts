@@ -179,11 +179,7 @@ export class iCanteenClient {
           .find(c => c.type === 'text')
           ?.data?.trim() as 'objednat' | 'zrušit' | 'přeobjednat';
 
-        const ordered =
-          selectAll(
-            '.btn button-link.button-link-main.maxbutton.ordered',
-            day.children
-          ).length !== 0;
+        const ordered = action === 'zrušit';
 
         const priceEl = selectOne(
           '.important.warning.button-link-align',

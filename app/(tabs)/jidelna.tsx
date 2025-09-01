@@ -2,7 +2,7 @@ import { type CanteenMenuResult } from '@/api/iCanteenClient';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useTheme } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -14,6 +14,7 @@ import {
   View,
 } from 'react-native';
 import { useNavigation } from 'expo-router';
+import { useQuery } from '@tanstack/react-query';
 
 const allergenColors: { [key: string]: string } = {
   '1': '#FF6B6B', // Obiloviny - červená
@@ -68,27 +69,26 @@ function getIcon(type: 'přeobjednat' | 'objednat' | 'zrušit') {
 }
 
 export default function Jidelna() {
-  const [menuData, setMenuData] = useState<CanteenMenuResult | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
   const theme = useTheme();
+  const navigation = useNavigation();
+  const { client: spseClient } = useSpseJecnaClient();
   const [ordering, setOrdering] = useState<string | undefined>();
 
   const backgroundColor = theme.colors.background;
   const textColor = theme.colors.onBackground;
   const cardBackground = theme.colors.surface;
-  const navigation = useNavigation();
 
-  const { client: spseClient } = useSpseJecnaClient();
-
-  const fetchMenu = async () => {
-    try {
+  // --- TanStack Query for fetching menu
+  const menuQuery = useQuery<CanteenMenuResult, Error>({
+    queryKey: ['canteenMenu'],
+    queryFn: async () => {
       if (!spseClient) {
         throw new Error('SpseJecnaClient not available. Please login first.');
       }
-
       const canteenClient = await spseClient.getCanteenClient();
       const menu = await canteenClient.getMonthlyMenu();
+
+      // update header with credit
       navigation.setOptions({
         headerRight: () => (
           <View
@@ -112,30 +112,16 @@ export default function Jidelna() {
           </View>
         ),
       });
-      setMenuData(menu);
-    } catch (error) {
-      console.error('Error fetching menu:', error);
-      const errorMessage =
-        error instanceof Error
-          ? error.message
-          : 'Nepodařilo se načíst jídelníček';
-      Alert.alert('Chyba', errorMessage);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchMenu();
-  };
+      return menu;
+    },
+    enabled: !!spseClient,
+    staleTime: 10 * 60 * 60 * 1000,
+    retry: 1,
+  });
 
-  useEffect(() => {
-    fetchMenu();
-  }, []);
-
-  if (loading) {
+  // --- Loading state
+  if (menuQuery.isLoading) {
     return (
       <View style={[styles.container, { backgroundColor }]}>
         <ActivityIndicator size="large" color={textColor} />
@@ -146,11 +132,16 @@ export default function Jidelna() {
     );
   }
 
+  const menuData = menuQuery.data;
+
   return (
     <ScrollView
       style={[styles.container, { backgroundColor }]}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl
+          refreshing={menuQuery.isFetching}
+          onRefresh={() => menuQuery.refetch()}
+        />
       }
     >
       {menuData?.menus.map(menuItem => (
@@ -165,13 +156,7 @@ export default function Jidelna() {
             </Text>
           </View>
 
-          <View
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-            }}
-          >
+          <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {menuItem.items.map(el => (
               <View
                 key={el.name}
@@ -230,6 +215,7 @@ export default function Jidelna() {
                   </View>
                 )}
 
+                {/* Timings */}
                 {(el.pickupTime || el.orderDeadline || el.cancelDeadline) && (
                   <View style={styles.timingSection}>
                     <Ionicons name="time-outline" size={16} color={textColor} />
@@ -253,6 +239,7 @@ export default function Jidelna() {
                   </View>
                 )}
 
+                {/* Order button */}
                 {!el.disabledAction && (
                   <TouchableOpacity
                     style={[
@@ -269,7 +256,7 @@ export default function Jidelna() {
                       const canteenClient =
                         await spseClient?.getCanteenClient();
                       await canteenClient?.runAction(el);
-                      await fetchMenu();
+                      await menuQuery.refetch();
                       setOrdering(undefined);
                     }}
                     disabled={ordering !== undefined}
