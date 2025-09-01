@@ -248,7 +248,10 @@ export default function Jidelna() {
                         backgroundColor: getStatusColor(el.buttonPresstype),
                         justifyContent:
                           ordering === el.name ? 'center' : 'flex-start',
-                        opacity: ordering === el.name ? 0.7 : 1,
+                        opacity:
+                          ordering === el.name || menuQuery.isFetching
+                            ? 0.7
+                            : 1,
                       },
                     ]}
                     onPress={async () => {
@@ -259,7 +262,7 @@ export default function Jidelna() {
                       await menuQuery.refetch();
                       setOrdering(undefined);
                     }}
-                    disabled={ordering !== undefined}
+                    disabled={ordering !== undefined || menuQuery.isFetching}
                   >
                     {ordering === el.name ? (
                       <ActivityIndicator size="small" color="white" />
