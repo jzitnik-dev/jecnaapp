@@ -58,7 +58,6 @@ export default function RootLayout() {
         while (attempt < maxRetries) {
           try {
             await activeClient.login(username, password);
-            console.log(username, password);
             return true; // success
           } catch (error) {
             attempt++;
