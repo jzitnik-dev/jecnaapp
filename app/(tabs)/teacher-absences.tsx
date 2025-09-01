@@ -34,7 +34,7 @@ export default function TeachersListScreen() {
     }
 
     if (absence.type === 'range') {
-      return `Od ${absence?.hours?.from} hodiny do ${absence?.hours?.to} hodiny.`;
+      return `Od ${absence?.hours?.from}. hodiny do ${absence?.hours?.to}. hodiny.`;
     }
 
     if (absence.type === 'single') {
