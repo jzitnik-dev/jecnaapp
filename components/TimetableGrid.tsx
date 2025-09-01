@@ -57,6 +57,8 @@ export function TimetableGrid({
   // Use theme colors instead of hardcoded dark/light colors
   const tableBg = theme.colors.surface;
   const cellBg = theme.colors.surfaceVariant;
+  const extraCellBg = theme.colors.primary;
+  const extraCellBgOn = theme.colors.onPrimary;
   const headerBg = theme.colors.surface;
   const textColor = theme.colors.onSurface;
   const borderColor = theme.colors.outline;
@@ -207,7 +209,7 @@ export function TimetableGrid({
                         {
                           width: cellWidth,
                           height: cellHeight,
-                          backgroundColor: cellBg,
+                          backgroundColor: extraCellBg,
                           borderBottomRightRadius:
                             dayIdx === days.length - 1 &&
                             periodIdx === day.cells.length - 1
@@ -222,7 +224,7 @@ export function TimetableGrid({
                     >
                       <Text
                         ellipsizeMode="tail"
-                        style={{ textAlign: 'center' }}
+                        style={{ textAlign: 'center', color: extraCellBgOn }}
                       >
                         {extra[periodIdx]}
                       </Text>
