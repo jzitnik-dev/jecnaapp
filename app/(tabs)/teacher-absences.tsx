@@ -7,7 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Absence, ExtraordinaryTimetable } from '@/api/SpseJecnaClient';
 import { Picker } from '@react-native-picker/picker';
 
-export default function TeachersListScreen() {
+export default function TeacherAbsencesScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
