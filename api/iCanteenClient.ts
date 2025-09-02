@@ -179,7 +179,7 @@ export class iCanteenClient {
           .find(c => c.type === 'text')
           ?.data?.trim() as 'objednat' | 'zrušit' | 'přeobjednat';
 
-        const ordered = action === 'zrušit';
+        const ordered = selectAll('.fa.fa-check', food.children).length !== 0;
 
         const priceEl = selectOne(
           '.important.warning.button-link-align',
