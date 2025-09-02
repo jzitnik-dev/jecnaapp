@@ -281,6 +281,48 @@ export default function Jidelna() {
                     )}
                   </TouchableOpacity>
                 )}
+
+                {el.burzable && (
+                  <TouchableOpacity
+                    style={[
+                      styles.orderButton,
+                      {
+                        backgroundColor:
+                          el.burzaType === 'z burzy' ? 'green' : 'red',
+                        justifyContent:
+                          ordering === el.name ? 'center' : 'flex-start',
+                        opacity:
+                          ordering === el.name || menuQuery.isFetching
+                            ? 0.7
+                            : 1,
+                      },
+                    ]}
+                    onPress={async () => {
+                      setOrdering(el.name);
+                      const canteenClient =
+                        await spseClient?.getCanteenClient();
+                      await canteenClient?.runBurza(el);
+                      await menuQuery.refetch();
+                      setOrdering(undefined);
+                    }}
+                    disabled={ordering !== undefined || menuQuery.isFetching}
+                  >
+                    {ordering === el.name ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Ionicons
+                          name={getIcon(el.buttonPresstype) as any}
+                          size={20}
+                          color="white"
+                        />
+                        <Text style={styles.orderButtonText}>
+                          {el.burzaType === 'z burzy' ? 'Z burzy' : 'Do burzy'}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
               </View>
             ))}
           </View>

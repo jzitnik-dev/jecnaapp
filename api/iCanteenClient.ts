@@ -13,6 +13,9 @@ export type CanteenMenuItem = {
   cancelDeadline?: string;
   disabledAction: boolean;
   params: URLSearchParams;
+  burzable: boolean;
+  burzaType?: 'do burzy' | 'z burzy';
+  burzaParams?: URLSearchParams;
 };
 
 export type CanteenMenuDay = {
@@ -74,9 +77,6 @@ export class iCanteenClient {
 
     // Check if login was successful by examining the final URL
     if (response.url.includes('error=')) {
-      const returnUrl = response.url;
-      const parts = returnUrl.split('=');
-      const errorCode = parseInt(parts[parts.length - 1]);
       console.log(
         'Unexpected login response:',
         response.status,
@@ -207,6 +207,41 @@ export class iCanteenClient {
             '.btn.button-link.button-link-main.maxbutton.disabled',
             food.children
           ).length !== 0;
+        let burzaParams;
+        let burzable = false;
+        let burzaType: 'z burzy' | 'do burzy' | undefined;
+        if (disabledAction) {
+          // Do burzy
+          const el = selectOne(
+            '.jidWrapRight [id^="burza-amount"][id$="submit"]',
+            food.children
+          ) as Element | null;
+
+          if (el) {
+            burzable = true;
+            burzaType = 'do burzy';
+            const ajaxStr = el.attribs.onclick.trim();
+            const urlMatch = ajaxStr.match(/'([^']+\.jsp\?[^']+)'/);
+            const url = urlMatch ? urlMatch[1] : '';
+            const queryString = url.split('?')[1];
+            burzaParams = new URLSearchParams(queryString);
+            burzaParams.set('amount', '1');
+          } else {
+            const el = selectOne(
+              '.jidWrapRight .btn.button-llink',
+              food.children
+            ) as Element | null;
+            if (el) {
+              burzable = true;
+              burzaType = 'z burzy';
+              const ajaxStr = el.attribs.onclick.trim();
+              const urlMatch = ajaxStr.match(/'([^']+\.jsp\?[^']+)'/);
+              const url = urlMatch ? urlMatch[1] : '';
+              const queryString = url.split('?')[1];
+              burzaParams = new URLSearchParams(queryString);
+            }
+          }
+        }
 
         const btn = selectOne('.btn.button-link', food.children) as Element;
 
@@ -228,6 +263,9 @@ export class iCanteenClient {
           cancelDeadline: zrusitDo,
           disabledAction,
           params,
+          burzable,
+          burzaParams,
+          burzaType,
         });
       }
 
@@ -255,6 +293,14 @@ export class iCanteenClient {
 
   public async runAction(menuItem: CanteenMenuItem) {
     const queryString = menuItem.params.toString();
+    const url = `${this.baseUrl}/faces/secured/db/dbProcessOrder.jsp?${queryString}`;
+    await fetch(url, {
+      credentials: 'include',
+    });
+  }
+
+  public async runBurza(menuItem: CanteenMenuItem) {
+    const queryString = menuItem.burzaParams?.toString();
     const url = `${this.baseUrl}/faces/secured/db/dbProcessOrder.jsp?${queryString}`;
     await fetch(url, {
       credentials: 'include',
