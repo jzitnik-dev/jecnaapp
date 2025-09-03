@@ -9,6 +9,8 @@
   Vše v moderním, jednoduchém a přehledném rozhraní.
 </p>
 
+<p align="center"><b>Tato aplikace je neoficiální. Nemá nic společného s SPŠE Ječná a není schválena vedením školy.</b></p>
+
 ---
 
 ## Screenshoty
