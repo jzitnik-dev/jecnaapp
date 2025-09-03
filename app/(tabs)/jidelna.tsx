@@ -157,6 +157,14 @@ export default function Jidelna() {
           </View>
 
           <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <View style={{ marginBottom: 16 }}>
+              <Text style={[styles.foodTitle, { color: textColor }]}>
+                Polévka
+              </Text>
+              <Text style={[styles.foodDescription, { color: textColor }]}>
+                {menuItem.polevka}
+              </Text>
+            </View>
             {menuItem.items.map(el => (
               <View
                 key={el.name}
