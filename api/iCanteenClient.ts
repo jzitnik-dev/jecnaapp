@@ -228,7 +228,7 @@ export class iCanteenClient {
             burzaParams.set('amount', '1');
           } else {
             const el = selectOne(
-              '.jidWrapRight .btn.button-llink',
+              '.jidWrapRight .btn.button-link',
               food.children
             ) as Element | null;
             if (el) {

@@ -288,7 +288,7 @@ export default function Jidelna() {
                       styles.orderButton,
                       {
                         backgroundColor:
-                          el.burzaType === 'z burzy' ? 'green' : 'red',
+                          el.burzaType === 'do burzy' ? 'green' : 'red',
                         justifyContent:
                           ordering === el.name ? 'center' : 'flex-start',
                         opacity:
