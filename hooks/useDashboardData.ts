@@ -125,7 +125,7 @@ export function useDashboardData() {
     queryFn: async () => {
       if (!(await isLoggedIn())) throw new Error('Not logged in');
       if (!client) throw new Error('Client not available');
-      const canteenClient = await client.getCanteenClient();
+      const canteenClient = await withTimeout(client.getCanteenClient(), 25000);
       return withTimeout(canteenClient.getMonthlyMenu(), 25000);
     },
     enabled: !!client,

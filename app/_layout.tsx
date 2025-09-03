@@ -19,7 +19,7 @@ import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
-import { queryClient } from './queryClient';
+import { queryClient } from '@/utils/queryClient';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
