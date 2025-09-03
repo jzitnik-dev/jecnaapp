@@ -311,11 +311,6 @@ export default function Jidelna() {
                       <ActivityIndicator size="small" color="white" />
                     ) : (
                       <>
-                        <Ionicons
-                          name={getIcon(el.buttonPresstype) as any}
-                          size={20}
-                          color="white"
-                        />
                         <Text style={styles.orderButtonText}>
                           {el.burzaType === 'z burzy' ? 'Z burzy' : 'Do burzy'}
                         </Text>
