@@ -11,6 +11,22 @@ import { getTimetableSelections } from '@/utils/timetableStorage';
 import { getZnamkySelections } from '@/utils/znamkyStorage';
 import { CanteenMenuResult } from '@/api/iCanteenClient';
 
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise<T>((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('Request timed out')), ms);
+
+    promise
+      .then(value => {
+        clearTimeout(timer);
+        resolve(value);
+      })
+      .catch(err => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
+}
+
 export function useDashboardData() {
   const { client } = useSpseJecnaClient();
   const queryClient = useQueryClient();
@@ -110,7 +126,7 @@ export function useDashboardData() {
       if (!(await isLoggedIn())) throw new Error('Not logged in');
       if (!client) throw new Error('Client not available');
       const canteenClient = await client.getCanteenClient();
-      return canteenClient.getMonthlyMenu();
+      return withTimeout(canteenClient.getMonthlyMenu(), 25000);
     },
     enabled: !!client,
     staleTime: 10 * 60 * 60 * 1000, // 10 hours
