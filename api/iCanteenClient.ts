@@ -18,6 +18,20 @@ export type CanteenMenuItem = {
   burzaParams?: URLSearchParams;
 };
 
+export type CanteenBurzaResponse = {
+  data: CanteenBurzaItem[];
+  credit: string;
+  pickupLocation: string; // pickup location name
+};
+
+export type CanteenBurzaItem = {
+  description: string;
+  variant: string;
+  date: string;
+  amount: string;
+  params?: URLSearchParams;
+};
+
 export type CanteenMenuDay = {
   date: string;
   dayName: string;
@@ -288,6 +302,77 @@ export class iCanteenClient {
       credit,
       pickupLocation,
       menus: menuItems,
+    };
+  }
+
+  public async getBurza(): Promise<CanteenBurzaResponse> {
+    const url = `${this.baseUrl}/faces/secured/burza.jsp`;
+    const response = await fetch(url, {
+      credentials: 'include',
+    });
+    const html = await response.text();
+    const document = parseDocument(html);
+
+    const items = selectAll(
+      '.tableDataShow .mouseOutRow',
+      document.children
+    ) as Element[];
+
+    const final = [];
+
+    for (const item of items) {
+      const tds = selectAll('td', item.children) as Element[];
+      const variant =
+        tds[0].children.find(c => c.type === 'text')?.data?.trim() || '';
+      const date =
+        tds[1].children.find(c => c.type === 'text')?.data?.trim() || '';
+      const description =
+        tds[2].children.find(c => c.type === 'text')?.data?.trim() || '';
+      const amount =
+        tds[4].children.find(c => c.type === 'text')?.data?.trim() || '';
+
+      const orderEl = tds[5];
+      const buttonOnclickContent = (
+        selectOne('input.button-link', orderEl.children) as Element
+      ).attribs.onclick;
+      const match = buttonOnclickContent.match(/'([^']+)'/);
+      const url = match?.[1].replace(/&amp;/g, '&');
+      const queryString = url?.split('?')[1];
+      const params = new URLSearchParams(queryString);
+
+      final.push({
+        variant,
+        date,
+        description,
+        amount,
+        params,
+      });
+    }
+
+    const creditElement = selectOne('[id="Kredit"]', document.children) as
+      | Element
+      | undefined;
+    const credit =
+      creditElement?.children.find(c => c.type === 'text')?.data?.trim() ||
+      '0,00 Kč';
+
+    // Extract pickup location
+    const locationElement = selectOne(
+      '[id="top:status:vydejnaName"]',
+      document.children
+    ) as Element | undefined;
+    const pickupLocation =
+      locationElement?.children.find(c => c.type === 'text')?.data?.trim() ||
+      '';
+    if (pickupLocation === '') {
+      this.setup(this.auth.username, this.auth.password);
+      return this.getBurza();
+    }
+
+    return {
+      credit,
+      pickupLocation,
+      data: final,
     };
   }
 

@@ -1,7 +1,7 @@
 import { type CanteenMenuResult } from '@/api/iCanteenClient';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useTheme } from 'react-native-paper';
-import { Ionicons } from '@expo/vector-icons';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -13,7 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { useNavigation } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 
 const allergenColors: { [key: string]: string } = {
@@ -70,6 +70,7 @@ function getIcon(type: 'přeobjednat' | 'objednat' | 'zrušit') {
 
 export default function Jidelna() {
   const theme = useTheme();
+  const router = useRouter();
   const navigation = useNavigation();
   const { client: spseClient } = useSpseJecnaClient();
   const [ordering, setOrdering] = useState<string | undefined>();
@@ -144,6 +145,37 @@ export default function Jidelna() {
         />
       }
     >
+      {!(!menuData?.menus || menuData.menus.length === 0) && (
+        <TouchableOpacity
+          style={[
+            styles.orderButton,
+            {
+              backgroundColor: theme.colors.surface,
+              marginBottom: 16,
+              justifyContent: 'space-between',
+            },
+          ]}
+          onPress={() => {
+            router.push('/jidelna/burza');
+          }}
+        >
+          <Text
+            style={{
+              color: theme.colors.onSurface,
+              fontWeight: 'bold',
+              fontSize: 16,
+            }}
+          >
+            Burza
+          </Text>
+
+          <MaterialCommunityIcons
+            name="chevron-right"
+            size={16}
+            color={theme.colors.onSurfaceVariant}
+          />
+        </TouchableOpacity>
+      )}
       {menuData?.menus.map(menuItem => (
         <View
           key={menuItem.date}
