@@ -3,14 +3,22 @@ import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from 'expo-router';
-import { useEffect } from 'react';
-import { RefreshControl, ScrollView, View, StyleSheet } from 'react-native';
+import { useEffect, useState } from 'react';
+import {
+  RefreshControl,
+  ScrollView,
+  View,
+  StyleSheet,
+  TouchableOpacity,
+  ActivityIndicator,
+} from 'react-native';
 import { Text, useTheme } from 'react-native-paper';
 
 export default function BurzaScreen() {
   const navigation = useNavigation();
   const { client: spseClient } = useSpseJecnaClient();
   const theme = useTheme();
+  const [ordering, setOrdering] = useState<string | undefined>();
 
   const menuQuery = useQuery<CanteenBurzaItem[], Error>({
     queryKey: ['canteenMenuBurza'],
@@ -88,6 +96,78 @@ export default function BurzaScreen() {
           </Text>
         </View>
       )}
+
+      {menuData?.map(menuItem => (
+        <View
+          key={menuItem.date}
+          style={[styles.menuCard, { backgroundColor: theme.colors.surface }]}
+        >
+          {/* Date header */}
+          <View style={styles.dateHeader}>
+            <Text style={[styles.dateText, { color: theme.colors.onSurface }]}>
+              {menuItem.date}
+            </Text>
+          </View>
+
+          <View style={styles.foodSection}>
+            <Text style={[styles.foodTitle, { color: theme.colors.onSurface }]}>
+              Polévka
+            </Text>
+            <Text
+              style={[
+                styles.foodDescription,
+                { color: theme.colors.onSurface },
+              ]}
+            >
+              {menuItem.polevka}
+            </Text>
+          </View>
+          <View style={styles.foodSection}>
+            <Text style={[styles.foodTitle, { color: theme.colors.onSurface }]}>
+              Jídlo
+            </Text>
+            <Text
+              style={[
+                styles.foodDescription,
+                { color: theme.colors.onSurface },
+              ]}
+            >
+              {menuItem.description}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={[
+              styles.orderButton,
+              {
+                backgroundColor: 'green',
+                justifyContent:
+                  ordering === menuItem.description ? 'center' : 'flex-start',
+                opacity:
+                  ordering === menuItem.description || menuQuery.isFetching
+                    ? 0.7
+                    : 1,
+              },
+            ]}
+            onPress={async () => {
+              setOrdering(menuItem.description);
+              const canteenClient = await spseClient?.getCanteenClient();
+              await canteenClient?.runAction(menuItem);
+              await menuQuery.refetch();
+              setOrdering(undefined);
+            }}
+            disabled={ordering !== undefined || menuQuery.isFetching}
+          >
+            {ordering === menuItem.description ? (
+              <ActivityIndicator size="small" color="white" />
+            ) : (
+              <>
+                <Ionicons name="card-outline" size={20} color="white" />
+                <Text style={styles.orderButtonText}>Objednat z burzy</Text>
+              </>
+            )}
+          </TouchableOpacity>
+        </View>
+      ))}
     </ScrollView>
   );
 }

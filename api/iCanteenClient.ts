@@ -25,6 +25,7 @@ export type CanteenBurzaResponse = {
 };
 
 export type CanteenBurzaItem = {
+  polevka: string;
   description: string;
   variant: string;
   date: string;
@@ -326,7 +327,7 @@ export class iCanteenClient {
         tds[0].children.find(c => c.type === 'text')?.data?.trim() || '';
       const date =
         tds[1].children.find(c => c.type === 'text')?.data?.trim() || '';
-      const description =
+      const desc =
         tds[2].children.find(c => c.type === 'text')?.data?.trim() || '';
       const amount =
         tds[4].children.find(c => c.type === 'text')?.data?.trim() || '';
@@ -340,9 +341,12 @@ export class iCanteenClient {
       const queryString = url?.split('?')[1];
       const params = new URLSearchParams(queryString);
 
+      const [polevka, description] = desc?.split(/,\s*;/) || [];
+
       final.push({
         variant,
         date,
+        polevka,
         description,
         amount,
         params,
@@ -376,8 +380,8 @@ export class iCanteenClient {
     };
   }
 
-  public async runAction(menuItem: CanteenMenuItem) {
-    const queryString = menuItem.params.toString();
+  public async runAction(menuItem: CanteenMenuItem | CanteenBurzaItem) {
+    const queryString = menuItem.params?.toString();
     const url = `${this.baseUrl}/faces/secured/db/dbProcessOrder.jsp?${queryString}`;
     await fetch(url, {
       credentials: 'include',
