@@ -95,6 +95,35 @@ export function TimetableGrid({
   const dayNumberMondayStart =
     date.getDay() === 0 ? -1 : date.getDay() === 6 ? -2 : date.getDay() - 1;
 
+  function isCurrentPeriod(periodTime: string, dayName: string) {
+    const dayMap: Record<string, number> = {
+      Po: 1,
+      Út: 2,
+      St: 3,
+      Čt: 4,
+      Pa: 5,
+      So: 6,
+      Ne: 0,
+    };
+
+    const now = new Date();
+
+    // Check if today matches the given day
+    if (now.getDay() !== dayMap[dayName]) return false;
+
+    const [startStr, endStr] = periodTime.split(' - ');
+    const [startHour, startMin] = startStr.split(':').map(Number);
+    const [endHour, endMin] = endStr.split(':').map(Number);
+
+    const start = new Date();
+    start.setHours(startHour, startMin, 0, 0);
+
+    const end = new Date();
+    end.setHours(endHour, endMin, 0, 0);
+
+    return now >= start && now <= end;
+  }
+
   return (
     <>
       <Surface
@@ -232,6 +261,22 @@ export function TimetableGrid({
                   );
                 }
                 const isSplit = cell && cell.length > 1;
+                const isCurrent =
+                  cell &&
+                  cell.length > 0 &&
+                  isCurrentPeriod(periods[periodIdx].time, day.day);
+                function lightenHexColor(hex, percent) {
+                  hex = hex.replace(/^#/, '');
+                  const num = parseInt(hex, 16);
+                  let r = (num >> 16) + Math.round(255 * percent);
+                  let g = ((num >> 8) & 0x00ff) + Math.round(255 * percent);
+                  let b = (num & 0x0000ff) + Math.round(255 * percent);
+                  r = r > 255 ? 255 : r;
+                  g = g > 255 ? 255 : g;
+                  b = b > 255 ? 255 : b;
+
+                  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+                }
                 return (
                   <View
                     key={periodIdx}
@@ -267,7 +312,9 @@ export function TimetableGrid({
                               style={[
                                 styles.lessonSquare,
                                 {
-                                  backgroundColor: cellBg,
+                                  backgroundColor: isCurrent
+                                    ? lightenHexColor(cellBg, 0.15)
+                                    : cellBg,
                                   borderColor: borderColor,
                                   borderBottomWidth: isSplit && i === 0 ? 1 : 0,
                                   borderRightWidth: 0,
