@@ -30,6 +30,15 @@ export default function SettingsScreen() {
             />
           </Link>
           <Divider />
+          <Link href="/(tabs)/settings/dashboard" asChild>
+            <List.Item
+              title="Nastavení widgetů"
+              description="Upravení widgetů na dashboardu"
+              left={props => <List.Icon {...props} icon="tune" />}
+              right={props => <List.Icon {...props} icon="chevron-right" />}
+            />
+          </Link>
+          <Divider />
           <Link href="/(tabs)/settings/notifications" asChild>
             <List.Item
               title="Notifikace"
