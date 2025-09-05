@@ -71,8 +71,8 @@ export default function AboutScreen() {
           >
             • Rozvrh hodin{'\n'}• Známky a průměry{'\n'}• Seznam učitelů{'\n'}•
             Seznam učeben{'\n'}• Příchody a odchody{'\n'}• Omluvný list{'\n'}•
-            Jídelníček{'\n'}• Burza{'\n'}• Notifikace nových známek• Upravitelný
-            vzhled{'\n'}• A další
+            Jídelníček{'\n'}• Burza{'\n'}• Notifikace nových známek{'\n'}•
+            Upravitelný vzhled{'\n'}• A další
           </Text>
         </Card.Content>
       </Card>
