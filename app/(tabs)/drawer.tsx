@@ -152,7 +152,7 @@ export default function DrawerLayout() {
                   borderless={false}
                   rippleColor={`${navigationTheme.colors.onBackground}50`}
                   style={{
-                    paddingVertical: 15, // match drawer item height (around 48px total)
+                    paddingVertical: 15,
                     paddingHorizontal: 16,
                     flexDirection: 'row',
                     alignItems: 'center',

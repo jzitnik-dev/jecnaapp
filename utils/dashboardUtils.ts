@@ -264,7 +264,7 @@ export async function getCurrentAndNextLesson(
   const currentTime = currentHour * 60 + currentMinute; // Convert to minutes
 
   // Map day numbers to timetable days (assuming Monday = 1, etc.)
-  const dayMap = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+  const dayMap = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pa', 'So'];
   const currentDayName = dayMap[currentDay];
 
   const extraIndex = extraOrdinary?.props.findIndex(
