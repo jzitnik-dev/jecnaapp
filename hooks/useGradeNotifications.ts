@@ -2,14 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 import { gradeNotificationService } from '../services/GradeNotificationService';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
-
-// Conditional import for background task
-let BackgroundTask: any = null;
-try {
-  BackgroundTask = require('expo-background-task');
-} catch (error) {
-  console.warn('expo-background-task not available in hook:', error);
-}
+import * as BackgroundTask from 'expo-background-task';
 
 export interface NotificationSettings {
   permissions: {
@@ -41,9 +34,8 @@ export function useGradeNotifications() {
           canAskAgain: notificationSettings.permissions.canAskAgain,
         },
         backgroundTaskStatus:
-          BackgroundTask &&
           notificationSettings.backgroundFetchStatus ===
-            BackgroundTask.BackgroundTaskStatus.Available
+          BackgroundTask.BackgroundTaskStatus.Available
             ? 'available'
             : BackgroundTask &&
                 notificationSettings.backgroundFetchStatus ===

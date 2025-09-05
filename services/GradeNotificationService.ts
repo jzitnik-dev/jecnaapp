@@ -1,6 +1,7 @@
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
 import * as TaskManager from 'expo-task-manager';
+import * as BackgroundTask from 'expo-background-task';
 import { Grade, SpseJecnaClient, SubjectGrades } from '../api/SpseJecnaClient';
 
 const BACKGROUND_FETCH_TASK = 'background-grade-fetch';
@@ -9,7 +10,6 @@ const PREVIOUS_GRADES_KEY = 'previous_grades';
 // Configure notifications
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
-    shouldShowAlert: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
     shouldShowBanner: true,
@@ -26,13 +26,6 @@ export interface GradeNotification {
 }
 
 // Conditional import for background task
-let BackgroundTask: any = null;
-try {
-  BackgroundTask = require('expo-background-task');
-} catch (error) {
-  console.warn('expo-background-task not available:', error);
-}
-
 export class GradeNotificationService {
   private client: SpseJecnaClient | null = null;
   private backgroundTaskAvailable: boolean = false;
