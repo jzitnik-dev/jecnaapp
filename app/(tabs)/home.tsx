@@ -166,7 +166,15 @@ export default function HomeScreen() {
     error,
   } = useDashboardData();
 
-  const [showProfilePicture] = useState(true);
+  const [showProfilePicture, setShowProfilePicture] = useState(true);
+
+  useEffect(() => {
+    (async () => {
+      setShowProfilePicture(
+        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
+      );
+    })();
+  }, []);
   const [widgets, setWidgets] = useState<Widget[]>(DEFAULT_WIDGETS);
 
   const gradeStats = useMemo(() => calculateGradeStats(grades), [grades]);
