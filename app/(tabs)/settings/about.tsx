@@ -1,7 +1,7 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import React from 'react';
-import { Linking, ScrollView, StyleSheet } from 'react-native';
+import { Linking, ScrollView, StyleSheet, Image, View } from 'react-native';
 import { Button, Card, Text, useTheme } from 'react-native-paper';
 
 export default function AboutScreen() {
@@ -21,6 +21,14 @@ export default function AboutScreen() {
     >
       <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
         <Card.Content>
+          <View
+            style={{ display: 'flex', alignItems: 'center', marginBottom: 4 }}
+          >
+            <Image
+              source={require('@/assets/images/icon.png')}
+              style={{ width: 80, height: 80, borderRadius: 40 }}
+            />
+          </View>
           <Text
             variant="headlineMedium"
             style={[styles.appName, { color: theme.colors.onSurface }]}
@@ -63,7 +71,8 @@ export default function AboutScreen() {
           >
             • Rozvrh hodin{'\n'}• Známky a průměry{'\n'}• Seznam učitelů{'\n'}•
             Seznam učeben{'\n'}• Příchody a odchody{'\n'}• Omluvný list{'\n'}•
-            Jídelníček{'\n'}• Notifikace nových známek
+            Jídelníček{'\n'}• Burza{'\n'}• Notifikace nových známek• Upravitelný
+            vzhled{'\n'}• A další
           </Text>
         </Card.Content>
       </Card>
