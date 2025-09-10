@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Pressable } from 'react-native-gesture-handler';
-import ImageView from 'react-native-image-viewing';
 import { Avatar } from 'react-native-paper';
+import { Galeria } from '@nandorojo/galeria';
 
 interface ImageViewerProps {
   imageUrl?: string;
@@ -16,35 +16,19 @@ export function ImageViewer({
   fallbackSource = require('../assets/images/icon.png'),
   style,
 }: ImageViewerProps) {
-  const [isImageViewVisible, setIsImageViewVisible] = useState(false);
+  const [isVisible, setIsVisible] = useState(false);
 
-  const handleImagePress = () => {
-    if (imageUrl) {
-      setIsImageViewVisible(true);
-    }
-  };
+  if (!imageUrl) {
+    return <Avatar.Image size={size} source={fallbackSource} style={style} />;
+  }
 
   return (
-    <>
-      <Pressable onPress={handleImagePress}>
-        <Avatar.Image
-          size={size}
-          source={imageUrl ? { uri: imageUrl } : fallbackSource}
-          style={style}
-        />
-      </Pressable>
-
-      {imageUrl && (
-        <ImageView
-          images={[{ uri: imageUrl }]}
-          imageIndex={0}
-          visible={isImageViewVisible}
-          onRequestClose={() => setIsImageViewVisible(false)}
-          swipeToCloseEnabled={true}
-          doubleTapToZoomEnabled={true}
-          backgroundColor="rgba(0, 0, 0, 0.95)"
-        />
-      )}
-    </>
+    <Galeria urls={[imageUrl]}>
+      <Galeria.Image index={0}>
+        <Pressable onPress={() => setIsVisible(true)}>
+          <Avatar.Image size={size} source={{ uri: imageUrl }} style={style} />
+        </Pressable>
+      </Galeria.Image>
+    </Galeria>
   );
 }
