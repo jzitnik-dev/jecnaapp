@@ -1,6 +1,6 @@
 import { type CanteenMenuResult } from '@/api/iCanteenClient';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
-import { useTheme } from 'react-native-paper';
+import { Badge, useTheme } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useState } from 'react';
 import {
@@ -207,6 +207,20 @@ export default function Jidelna() {
                   paddingHorizontal: 15,
                 }}
               >
+                {el.ordered && (
+                  <Badge
+                    style={{
+                      backgroundColor: 'green',
+                      color: 'white',
+                      position: 'absolute',
+                      right: 10,
+                      top: 10,
+                    }}
+                    size={25}
+                  >
+                    Objednáno
+                  </Badge>
+                )}
                 {/* Food description */}
                 <View style={styles.foodSection}>
                   <Text style={[styles.foodTitle, { color: textColor }]}>
