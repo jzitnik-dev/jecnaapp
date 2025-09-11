@@ -22,12 +22,12 @@ import type {
 } from '../../api/SpseJecnaClient';
 import { TimetableGrid } from '../../components/TimetableGrid';
 import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
-import * as SecureStore from 'expo-secure-store';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
 import {
   getTimetableSelections,
   saveTimetableSelections,
 } from '../../utils/timetableStorage';
+import { getItem } from '@/utils/secureStore';
 
 export default function RozvrhScreen() {
   const { client } = useSpseJecnaClient();
@@ -56,8 +56,7 @@ export default function RozvrhScreen() {
   useEffect(() => {
     (async () => {
       const enabled =
-        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
-        'true';
+        (await getItem('extraordinary_schedule_enabled')) === 'true';
       if (enabled) {
         setExtraEnabled(true);
         setShowExtra(true);

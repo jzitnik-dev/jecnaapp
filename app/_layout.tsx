@@ -7,7 +7,6 @@ import { AppState, ActivityIndicator, View } from 'react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
@@ -20,6 +19,7 @@ import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 import { queryClient } from '@/utils/queryClient';
+import { getItem, removeItem } from '@/utils/secureStore';
 
 export default function RootLayout() {
   const colorScheme = useColorScheme();
@@ -76,8 +76,8 @@ export default function RootLayout() {
       try {
         const isLoggedIn = await activeClient.isLoggedIn();
         if (!isLoggedIn) {
-          const savedUsername = await SecureStore.getItemAsync('username');
-          const savedPassword = await SecureStore.getItemAsync('password');
+          const savedUsername = await getItem('username');
+          const savedPassword = await getItem('password');
 
           if (savedUsername && savedPassword) {
             const success = await tryLoginWithRetry(
@@ -89,8 +89,8 @@ export default function RootLayout() {
               console.log(
                 'Auto-login ultimately failed, redirecting to login.'
               );
-              await SecureStore.deleteItemAsync('username');
-              await SecureStore.deleteItemAsync('password');
+              await removeItem('username');
+              await removeItem('password');
               router.replace('/login');
             }
           } else {

@@ -1,9 +1,9 @@
 import { selectAll, selectOne } from 'css-select';
 import type { Element } from 'domhandler';
-import * as SecureStore from 'expo-secure-store';
 import { parseDocument } from 'htmlparser2';
 import { iCanteenClient } from './iCanteenClient';
 import { default as serialize } from 'dom-serializer';
+import { getItem } from '@/utils/secureStore';
 
 const extraordURL = 'https://jecnarozvrh.jzitnik.dev';
 
@@ -200,7 +200,7 @@ export type Event = {
 };
 
 export class SpseJecnaClient {
-  private readonly baseUrl = 'https://www.spsejecna.cz';
+  private readonly baseUrl = 'http://localhost:3000';
   private cookies: string = '';
   private canteenClient: iCanteenClient | null = null;
   private username: string = '';
@@ -561,8 +561,8 @@ export class SpseJecnaClient {
       // If we don't have credentials stored, try to get them from SecureStore
       if (!this.username || !this.password) {
         try {
-          this.username = (await SecureStore.getItemAsync('username')) || '';
-          this.password = (await SecureStore.getItemAsync('password')) || '';
+          this.username = (await getItem('username')) || '';
+          this.password = (await getItem('password')) || '';
         } catch (error) {
           console.error(
             'Error retrieving credentials from SecureStore:',

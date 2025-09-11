@@ -20,7 +20,7 @@ import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
-import * as SecureStore from 'expo-secure-store';
+import { getItem } from '@/utils/secureStore';
 
 export default function AccountScreen() {
   const theme = useTheme();
@@ -32,7 +32,7 @@ export default function AccountScreen() {
   useEffect(() => {
     (async () => {
       setShowProfilePicture(
-        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
+        !((await getItem('hide-profilepicture')) === 'true')
       );
     })();
   }, []);

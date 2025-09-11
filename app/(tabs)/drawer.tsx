@@ -22,10 +22,10 @@ import SettingsScreen from './settings';
 import TeachersListScreen from './teachers-list';
 import ZnamkyScreen from './znamky';
 import MoodleIcon from '@/components/icons/Moodle';
-import * as SecureStore from 'expo-secure-store';
 import NovinkyScreen from './novinky';
 import useIsUpdateAvailable from '@/utils/updates';
 import TeacherAbsencesScreen from './teacher-absences';
+import { getItem } from '@/utils/secureStore';
 
 const Drawer = createDrawerNavigator();
 
@@ -40,8 +40,7 @@ export default function DrawerLayout() {
   useEffect(() => {
     (async () => {
       const enabled =
-        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
-        'true';
+        (await getItem('extraordinary_schedule_enabled')) === 'true';
       setExtraEnabled(enabled);
     })();
   }, []);
@@ -49,7 +48,7 @@ export default function DrawerLayout() {
   useEffect(() => {
     (async () => {
       setShowProfilePicture(
-        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
+        !((await getItem('hide-profilepicture')) === 'true')
       );
     })();
   }, []);

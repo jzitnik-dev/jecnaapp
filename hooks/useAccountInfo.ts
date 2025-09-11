@@ -1,8 +1,8 @@
-import * as SecureStore from 'expo-secure-store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
 import type { AccountInfo } from '../api/SpseJecnaClient';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
+import { getItem, removeItem, setItem } from '@/utils/secureStore';
 
 const ACCOUNT_INFO_KEY = 'account_info';
 const ACCOUNT_INFO_TIMESTAMP_KEY = 'account_info_timestamp';
@@ -10,10 +10,8 @@ const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
 async function loadFromCache(): Promise<AccountInfo | null> {
   try {
-    const cachedData = await SecureStore.getItemAsync(ACCOUNT_INFO_KEY);
-    const timestampStr = await SecureStore.getItemAsync(
-      ACCOUNT_INFO_TIMESTAMP_KEY
-    );
+    const cachedData = await getItem(ACCOUNT_INFO_KEY);
+    const timestampStr = await getItem(ACCOUNT_INFO_TIMESTAMP_KEY);
 
     if (cachedData && timestampStr) {
       const age = Date.now() - parseInt(timestampStr, 10);
@@ -29,11 +27,8 @@ async function loadFromCache(): Promise<AccountInfo | null> {
 
 async function saveToCache(data: AccountInfo) {
   try {
-    await SecureStore.setItemAsync(ACCOUNT_INFO_KEY, JSON.stringify(data));
-    await SecureStore.setItemAsync(
-      ACCOUNT_INFO_TIMESTAMP_KEY,
-      Date.now().toString()
-    );
+    await setItem(ACCOUNT_INFO_KEY, JSON.stringify(data));
+    await setItem(ACCOUNT_INFO_TIMESTAMP_KEY, Date.now().toString());
   } catch (err) {
     console.warn('Failed to save account info to cache:', err);
   }
@@ -41,8 +36,8 @@ async function saveToCache(data: AccountInfo) {
 
 async function clearCache() {
   try {
-    await SecureStore.deleteItemAsync(ACCOUNT_INFO_KEY);
-    await SecureStore.deleteItemAsync(ACCOUNT_INFO_TIMESTAMP_KEY);
+    await removeItem(ACCOUNT_INFO_KEY);
+    await removeItem(ACCOUNT_INFO_TIMESTAMP_KEY);
   } catch (err) {
     console.warn('Failed to clear account info cache:', err);
   }

@@ -11,8 +11,8 @@ import type { LessonInfo, StaticLesson } from '../../utils/dashboardUtils';
 import { getCurrentAndNextLesson } from '../../utils/dashboardUtils';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useQuery } from '@tanstack/react-query';
-import * as SecureStore from 'expo-secure-store';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
+import { getItem } from '@/utils/secureStore';
 
 interface NextLessonCardProps {
   timetable?: Timetable | null;
@@ -31,8 +31,7 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
   useEffect(() => {
     (async () => {
       const enabled =
-        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
-        'true';
+        (await getItem('extraordinary_schedule_enabled')) === 'true';
       if (enabled) {
         setExtraenabled(true);
       }

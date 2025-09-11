@@ -8,7 +8,6 @@ import {
   Pressable,
 } from 'react-native';
 import { Text, ActivityIndicator, useTheme, Card } from 'react-native-paper';
-import * as SecureStore from 'expo-secure-store';
 
 import { ImageViewer } from '@/components/ImageViewer';
 import { AbsenceCard } from '@/components/dashboard/AbsenceCard';
@@ -18,6 +17,7 @@ import { LockerCard } from '@/components/dashboard/LockerCard';
 import { CanteenCard } from '@/components/dashboard/CanteenCard';
 import { useDashboardData } from '@/hooks/useDashboardData';
 import { calculateGradeStats } from '@/utils/dashboardUtils';
+import { getItem } from '@/utils/secureStore';
 
 interface Widget {
   id: string;
@@ -171,7 +171,7 @@ export default function HomeScreen() {
   useEffect(() => {
     (async () => {
       setShowProfilePicture(
-        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
+        !((await getItem('hide-profilepicture')) === 'true')
       );
     })();
   }, []);
@@ -182,7 +182,7 @@ export default function HomeScreen() {
   useEffect(() => {
     const loadWidgets = async () => {
       try {
-        const saved = await SecureStore.getItemAsync('widgetSettings');
+        const saved = await getItem('widgetSettings');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) setWidgets(parsed);

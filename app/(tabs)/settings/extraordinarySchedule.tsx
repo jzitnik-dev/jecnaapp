@@ -8,8 +8,8 @@ import {
   ActivityIndicator,
   Button,
 } from 'react-native-paper';
-import * as SecureStore from 'expo-secure-store';
 import * as Updates from 'expo-updates';
+import { getItem, setItem } from '@/utils/secureStore';
 
 const STORAGE_KEY = 'extraordinary_schedule_enabled';
 const STATUS_URL = 'https://jecnarozvrh.jzitnik.dev/status';
@@ -27,7 +27,7 @@ export default function ExtraordinarySchedule() {
   useEffect(() => {
     (async () => {
       try {
-        const savedValue = await SecureStore.getItemAsync(STORAGE_KEY);
+        const savedValue = await getItem(STORAGE_KEY);
         const parsed = savedValue === 'true';
         setEnabled(parsed);
       } catch {
@@ -75,10 +75,7 @@ export default function ExtraordinarySchedule() {
   const handleRestart = async () => {
     if (pendingEnabled !== null) {
       try {
-        await SecureStore.setItemAsync(
-          STORAGE_KEY,
-          pendingEnabled ? 'true' : 'false'
-        );
+        await setItem(STORAGE_KEY, pendingEnabled ? 'true' : 'false');
         await Updates.reloadAsync(); // Restartuje aplikaci
       } catch {
         Alert.alert('Chyba', 'Nepodařilo se restartovat aplikaci.');

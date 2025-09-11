@@ -1,5 +1,4 @@
 import { useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -11,6 +10,7 @@ import {
 } from 'react-native-paper';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
+import { removeItem, setItem } from '@/utils/secureStore';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -31,8 +31,8 @@ export default function LoginScreen() {
       const ok = await client.login(u ?? username, p ?? password);
       if (ok) {
         setSuccess(true);
-        await SecureStore.setItemAsync('username', u ?? username);
-        await SecureStore.setItemAsync('password', p ?? password);
+        await setItem('username', u ?? username);
+        await setItem('password', p ?? password);
         setClient(client);
         setCookies(client.getCookies());
         setError(null);
@@ -40,20 +40,20 @@ export default function LoginScreen() {
       } else {
         setError('Uživatelské jméno nebo heslo není správné.');
         if (!silent) {
-          await SecureStore.deleteItemAsync('username');
-          await SecureStore.deleteItemAsync('password');
+          await removeItem('username');
+          await removeItem('password');
         }
       }
     } catch (e: any) {
       if (e.message === 'Login token not found') {
         await client.logout();
-        await SecureStore.deleteItemAsync('username');
-        await SecureStore.deleteItemAsync('password');
+        await removeItem('username');
+        await removeItem('password');
       }
       setError(e.message || 'Unknown error');
       if (!silent) {
-        await SecureStore.deleteItemAsync('username');
-        await SecureStore.deleteItemAsync('password');
+        await removeItem('username');
+        await removeItem('password');
       }
     } finally {
       setLoading(false);

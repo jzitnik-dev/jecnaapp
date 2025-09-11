@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { getItem, setItem } from '@/utils/secureStore';
 import { MD3DarkTheme } from 'react-native-paper';
 import { create } from 'zustand';
 
@@ -249,7 +249,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
 
   setSelectedTheme: async (themeName: string) => {
     try {
-      await SecureStore.setItemAsync('selectedTheme', themeName);
+      await setItem('selectedTheme', themeName);
       set({ selectedTheme: themeName });
       get().updateCurrentTheme();
     } catch (error) {
@@ -259,7 +259,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
 
   setCustomColors: async (colors: ThemeColors) => {
     try {
-      await SecureStore.setItemAsync('customColors', JSON.stringify(colors));
+      await setItem('customColors', JSON.stringify(colors));
       set({ customColors: colors });
       get().updateCurrentTheme();
     } catch (error) {
@@ -269,7 +269,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
 
   setUseCustomColors: async (enabled: boolean) => {
     try {
-      await SecureStore.setItemAsync('useCustomColors', enabled.toString());
+      await setItem('useCustomColors', enabled.toString());
       set({ useCustomColors: enabled });
       get().updateCurrentTheme();
     } catch (error) {
@@ -279,10 +279,9 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
 
   loadThemeSettings: async () => {
     try {
-      const savedTheme = await SecureStore.getItemAsync('selectedTheme');
-      const savedCustomColors = await SecureStore.getItemAsync('customColors');
-      const savedUseCustomColors =
-        await SecureStore.getItemAsync('useCustomColors');
+      const savedTheme = await getItem('selectedTheme');
+      const savedCustomColors = await getItem('customColors');
+      const savedUseCustomColors = await getItem('useCustomColors');
 
       set({
         selectedTheme: savedTheme || 'Default',

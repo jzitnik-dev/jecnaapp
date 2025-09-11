@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet, View, Alert } from 'react-native';
 import { Card, Switch, Text, useTheme, Button } from 'react-native-paper';
-import * as SecureStore from 'expo-secure-store';
 import * as Updates from 'expo-updates';
+import { getItem, setItem } from '@/utils/secureStore';
 
 const STORAGE_KEY = 'hide-profilepicture';
 
@@ -14,7 +14,7 @@ export default function AdvancedSettings() {
   useEffect(() => {
     (async () => {
       try {
-        const savedValue = await SecureStore.getItemAsync(STORAGE_KEY);
+        const savedValue = await getItem(STORAGE_KEY);
         if (savedValue !== null) {
           setEnabled(savedValue === 'true');
         }
@@ -36,10 +36,7 @@ export default function AdvancedSettings() {
   const handleRestart = async () => {
     if (pendingEnabled !== null) {
       try {
-        await SecureStore.setItemAsync(
-          STORAGE_KEY,
-          pendingEnabled ? 'true' : 'false'
-        );
+        await setItem(STORAGE_KEY, pendingEnabled ? 'true' : 'false');
         await Updates.reloadAsync(); // Restart the app to apply changes
       } catch {
         Alert.alert('Chyba', 'Nepodařilo se restartovat aplikaci.');

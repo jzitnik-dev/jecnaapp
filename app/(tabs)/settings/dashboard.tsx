@@ -5,8 +5,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import DraggableFlatList, {
   type RenderItemParams,
 } from 'react-native-draggable-flatlist';
-import * as SecureStore from 'expo-secure-store';
 import * as Updates from 'expo-updates';
+import { getItem, setItem } from '@/utils/secureStore';
 
 interface DashboardCard {
   id: string;
@@ -71,7 +71,7 @@ export default function WidgetSettingsScreen() {
   useEffect(() => {
     const loadWidgets = async () => {
       try {
-        const saved = await SecureStore.getItemAsync('widgetSettings');
+        const saved = await getItem('widgetSettings');
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed)) setWidgets(parsed);
@@ -86,10 +86,7 @@ export default function WidgetSettingsScreen() {
   const saveWidgets = async (updatedWidgets: DashboardCard[]) => {
     try {
       setWidgets(updatedWidgets);
-      await SecureStore.setItemAsync(
-        'widgetSettings',
-        JSON.stringify(updatedWidgets)
-      );
+      await setItem('widgetSettings', JSON.stringify(updatedWidgets));
     } catch (e) {
       console.error('Error saving widgets', e);
     }

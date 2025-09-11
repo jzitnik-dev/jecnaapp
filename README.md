@@ -1,3 +1,10 @@
+# Ječná APP v browseru
+
+Bohužel Ječná APP v browseru nepůjde z důvodu CORS na stránce spsejecna.cz.
+
+Pokud se někomu podaří udělat proxy na spsejecna.cz, klidně mi dejte PR.
+
+
 <p align="center">
   <img src="./assets/images/icon.svg" alt="App Icon" width="100"/>
 </p>
