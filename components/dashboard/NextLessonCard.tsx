@@ -208,6 +208,22 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
             color={theme.colors.onSurfaceVariant}
           />
         </TouchableOpacity>
+
+        {lesson.group && (
+          <View style={styles.detailRow}>
+            <MaterialCommunityIcons
+              name="account-multiple"
+              size={20}
+              color={theme.colors.onSurfaceVariant}
+            />
+            <Text
+              variant="bodyMedium"
+              style={[styles.detailText, { color: theme.colors.secondary }]}
+            >
+              {lesson.group}
+            </Text>
+          </View>
+        )}
       </View>
     );
   };

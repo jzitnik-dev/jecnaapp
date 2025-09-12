@@ -2,9 +2,9 @@
 export const useCustomDate = false;
 
 // Manuální hodnoty pro čas a den
-export const customDay = 1; // den v týdnu (1-7, kde 1 = pondělí)
-export const customHour = 7; // hodina (0-23)
-export const customMinute = 35; // minuta (0-59)
+export const customDay = 5; // den v týdnu (1-7, kde 1 = pondělí)
+export const customHour = 10; // hodina (0-23)
+export const customMinute = 0; // minuta (0-59)
 
 // Funkce pro získání aktuálního nebo custom času
 export const getCurrentDateTime = () => {

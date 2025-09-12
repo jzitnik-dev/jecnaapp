@@ -2,6 +2,7 @@ import type {
   ExtraordinaryTimetable,
   SubjectGrades,
   Timetable,
+  TimetableLesson,
 } from '../api/SpseJecnaClient';
 import { getCurrentDateTime } from './manualDateTime';
 
@@ -49,6 +50,7 @@ export type StaticLesson = {
   teacherFull: string;
   teacherCode: string;
   room: string;
+  group: string | undefined;
 } & BaseLesson;
 
 export type BaseLesson = {
@@ -319,9 +321,18 @@ export async function getCurrentAndNextLesson(
             hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`,
         });
       } else {
-        for (const lesson of cell) {
+        for (const lesson of cell.sort((a, b) => {
+          const getFirstNum = (obj: TimetableLesson) => {
+            if (!obj.group) return Infinity; // push undefined groups to the end
+            const [first] = obj.group.split('/').map(Number);
+            return isNaN(first) ? Infinity : first;
+          };
+
+          return getFirstNum(a) - getFirstNum(b);
+        })) {
           const lessonInfo: LessonInfo = {
             kind: 'normal',
+            group: lesson.group,
             subject: lesson.subject,
             teacher: lesson.teacher,
             teacherFull: lesson.teacherFull || lesson.teacher,
@@ -365,9 +376,18 @@ export async function getCurrentAndNextLesson(
             hoursLeft > 0 ? `${hoursLeft}h ${minutesLeft}m` : `${minutesLeft}m`,
         });
       } else {
-        for (const lesson of cell) {
+        for (const lesson of cell.sort((a, b) => {
+          const getFirstNum = (obj: TimetableLesson) => {
+            if (!obj.group) return Infinity; // push undefined groups to the end
+            const [first] = obj.group.split('/').map(Number);
+            return isNaN(first) ? Infinity : first;
+          };
+
+          return getFirstNum(a) - getFirstNum(b);
+        })) {
           const lessonInfo: LessonInfo = {
             kind: 'normal',
+            group: lesson.group,
             subject: lesson.subject,
             teacher: lesson.teacher,
             teacherFull: lesson.teacherFull || lesson.teacher,
