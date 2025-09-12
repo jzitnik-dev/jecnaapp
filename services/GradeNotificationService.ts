@@ -6,6 +6,7 @@ import { Grade, SpseJecnaClient, SubjectGrades } from '../api/SpseJecnaClient';
 
 const BACKGROUND_FETCH_TASK = 'background-grade-fetch';
 export const PREVIOUS_GRADES_KEY = 'previous_grades';
+export const LAST_RAN_KEY = 'background-grade-fetch-last-ran';
 
 // Configure notifications
 Notifications.setNotificationHandler({
@@ -108,7 +109,7 @@ export class GradeNotificationService {
 
     try {
       await BackgroundTask.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-        minimumInterval: 60 * 60 * 1000, // 1 hour in milliseconds
+        minimumInterval: 15,
       });
       console.log('Background task registered');
     } catch (error) {
@@ -226,6 +227,8 @@ export class GradeNotificationService {
       console.log('No client available for grade checking');
       return;
     }
+
+    SecureStore.setItemAsync(LAST_RAN_KEY, new Date().getTime().toString());
 
     try {
       // Check if user is logged in

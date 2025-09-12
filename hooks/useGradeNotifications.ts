@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
 import {
   gradeNotificationService,
+  LAST_RAN_KEY,
   PREVIOUS_GRADES_KEY,
 } from '../services/GradeNotificationService';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
@@ -21,6 +22,7 @@ export function useGradeNotifications() {
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [taskRegistered, setTaskRegistered] = useState(false);
+  const [lastRan, setLastRan] = useState<Date | undefined>();
 
   useEffect(() => {
     if (client) {
@@ -31,6 +33,9 @@ export function useGradeNotifications() {
   useEffect(() => {
     (async () => {
       setTaskRegistered(await gradeNotificationService.isTaskRegistered());
+      setLastRan(
+        new Date(parseInt((await SecureStore.getItemAsync(LAST_RAN_KEY)) || ''))
+      );
     })();
   }, []);
 
@@ -153,5 +158,6 @@ export function useGradeNotifications() {
     loadSettings,
     clearPreviousGrades,
     taskRegistered,
+    lastRan,
   };
 }

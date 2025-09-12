@@ -16,6 +16,7 @@ export default function NotificationSettingsScreen() {
     checkForNewGrades,
     clearPreviousGrades,
     taskRegistered,
+    lastRan,
   } = useGradeNotifications();
 
   const handleToggleNotifications = async () => {
@@ -163,6 +164,23 @@ export default function NotificationSettingsScreen() {
               style={{ color: theme.colors.onSurface }}
             >
               {taskRegistered ? 'Ano' : 'Ne'}
+            </Text>
+          </View>
+
+          <View style={styles.statusRow}>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              Poslední kontrola:
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurface }}
+            >
+              {lastRan && lastRan.toLocaleString() !== 'Invalid Date'
+                ? lastRan.toLocaleString()
+                : 'Nikdy'}
             </Text>
           </View>
         </Card.Content>
