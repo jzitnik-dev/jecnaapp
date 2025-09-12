@@ -14,6 +14,8 @@ export default function NotificationSettingsScreen() {
     stopNotifications,
     testNotification,
     checkForNewGrades,
+    clearPreviousGrades,
+    taskRegistered,
   } = useGradeNotifications();
 
   const handleToggleNotifications = async () => {
@@ -148,6 +150,21 @@ export default function NotificationSettingsScreen() {
               {getBackgroundFetchStatusText()}
             </Text>
           </View>
+
+          <View style={styles.statusRow}>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurfaceVariant }}
+            >
+              Task registrovaný:
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={{ color: theme.colors.onSurface }}
+            >
+              {taskRegistered ? 'Ano' : 'Ne'}
+            </Text>
+          </View>
         </Card.Content>
       </Card>
 
@@ -176,6 +193,15 @@ export default function NotificationSettingsScreen() {
             style={styles.button}
           >
             Zkontrolovat nové známky
+          </Button>
+
+          <Button
+            mode="outlined"
+            onPress={clearPreviousGrades}
+            disabled={isLoading}
+            style={styles.button}
+          >
+            Vymazat předchozí známky
           </Button>
         </Card.Content>
       </Card>

@@ -2,6 +2,7 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
+import { PREVIOUS_GRADES_KEY } from '@/services/GradeNotificationService';
 
 interface SpseJecnaClientState {
   client: SpseJecnaClient | null;
@@ -24,6 +25,7 @@ export const useSpseJecnaClient = create<SpseJecnaClientState>((set, get) => ({
       await SecureStore.deleteItemAsync('account_info_timestamp');
       await SecureStore.deleteItemAsync('username');
       await SecureStore.deleteItemAsync('password');
+      await SecureStore.deleteItemAsync(PREVIOUS_GRADES_KEY);
       await AsyncStorage.clear();
     } catch (err) {
       console.warn('Failed to clear account info cache:', err);

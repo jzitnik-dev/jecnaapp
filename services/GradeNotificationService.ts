@@ -5,7 +5,7 @@ import * as BackgroundTask from 'expo-background-task';
 import { Grade, SpseJecnaClient, SubjectGrades } from '../api/SpseJecnaClient';
 
 const BACKGROUND_FETCH_TASK = 'background-grade-fetch';
-const PREVIOUS_GRADES_KEY = 'previous_grades';
+export const PREVIOUS_GRADES_KEY = 'previous_grades';
 
 // Configure notifications
 Notifications.setNotificationHandler({
@@ -23,9 +23,9 @@ export interface GradeNotification {
   weight: number;
   date?: string;
   teacher?: string;
+  note: string | undefined;
 }
 
-// Conditional import for background task
 export class GradeNotificationService {
   private client: SpseJecnaClient | null = null;
   private backgroundTaskAvailable: boolean = false;
@@ -116,6 +116,10 @@ export class GradeNotificationService {
     }
   }
 
+  isTaskRegistered(): Promise<boolean> {
+    return TaskManager.isTaskRegisteredAsync(BACKGROUND_FETCH_TASK);
+  }
+
   async stopBackgroundFetch(): Promise<void> {
     if (!this.backgroundTaskAvailable || !BackgroundTask) {
       console.log('Background task not available, skipping unregistration');
@@ -187,6 +191,7 @@ export class GradeNotificationService {
               weight: grade.weight,
               date: grade.date,
               teacher: grade.teacher,
+              note: grade.note,
             });
           }
         }
@@ -203,7 +208,7 @@ export class GradeNotificationService {
     let body = `Známka: ${gradeNotification.grade} (váha: ${gradeNotification.weight})`;
 
     if (gradeNotification.teacher) {
-      body += ` - ${gradeNotification.teacher}`;
+      body += ` - ${gradeNotification.teacher}${gradeNotification.note ? '\n\n' + gradeNotification.note : ''}`;
     }
 
     await Notifications.scheduleNotificationAsync({
@@ -267,6 +272,7 @@ export class GradeNotificationService {
       grade: '1',
       weight: 1,
       teacher: 'Test Teacher',
+      note: 'Testovací známka',
     });
   }
 

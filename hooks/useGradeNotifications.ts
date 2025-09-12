@@ -1,6 +1,9 @@
 import * as SecureStore from 'expo-secure-store';
 import { useCallback, useEffect, useState } from 'react';
-import { gradeNotificationService } from '../services/GradeNotificationService';
+import {
+  gradeNotificationService,
+  PREVIOUS_GRADES_KEY,
+} from '../services/GradeNotificationService';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
 import * as BackgroundTask from 'expo-background-task';
 
@@ -17,12 +20,19 @@ export function useGradeNotifications() {
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [taskRegistered, setTaskRegistered] = useState(false);
 
   useEffect(() => {
     if (client) {
       gradeNotificationService.setClient(client);
     }
   }, [client]);
+
+  useEffect(() => {
+    (async () => {
+      setTaskRegistered(await gradeNotificationService.isTaskRegistered());
+    })();
+  }, []);
 
   const loadSettings = useCallback(async () => {
     try {
@@ -84,6 +94,7 @@ export function useGradeNotifications() {
       setIsEnabled(true);
       await SecureStore.setItemAsync('notificationsEnabled', 'true');
       await loadSettings();
+      setTaskRegistered(await gradeNotificationService.isTaskRegistered());
     } catch (error) {
       console.error('Error starting notifications:', error);
     } finally {
@@ -98,6 +109,7 @@ export function useGradeNotifications() {
       setIsEnabled(false);
       await SecureStore.setItemAsync('notificationsEnabled', 'false');
       await loadSettings();
+      setTaskRegistered(await gradeNotificationService.isTaskRegistered());
     } catch (error) {
       console.error('Error stopping notifications:', error);
     } finally {
@@ -121,6 +133,10 @@ export function useGradeNotifications() {
     }
   }, []);
 
+  const clearPreviousGrades = useCallback(async () => {
+    SecureStore.deleteItemAsync(PREVIOUS_GRADES_KEY);
+  }, []);
+
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
@@ -135,5 +151,7 @@ export function useGradeNotifications() {
     testNotification,
     checkForNewGrades,
     loadSettings,
+    clearPreviousGrades,
+    taskRegistered,
   };
 }
