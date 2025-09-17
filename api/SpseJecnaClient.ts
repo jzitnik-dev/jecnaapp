@@ -1,9 +1,9 @@
 import { selectAll, selectOne } from 'css-select';
+import { default as serialize } from 'dom-serializer';
 import type { Element } from 'domhandler';
 import * as SecureStore from 'expo-secure-store';
 import { parseDocument } from 'htmlparser2';
 import { iCanteenClient } from './iCanteenClient';
-import { default as serialize } from 'dom-serializer';
 
 const extraordURL = 'https://jecnarozvrh.jzitnik.dev';
 
@@ -268,7 +268,13 @@ export class SpseJecnaClient {
   }
 
   private async getLoginToken(): Promise<string> {
-    await fetch(`${this.baseUrl}/user/role?role=student`);
+    const res = await fetch(`${this.baseUrl}/user/role?role=student`, {
+      headers: this.buildHeaders({
+        'Accept-Encoding': 'gzip',
+      }),
+      credentials: 'include',
+    });
+    console.log(res);
     const response = await fetch(`${this.baseUrl}/`, {
       method: 'GET',
       headers: this.buildHeaders({

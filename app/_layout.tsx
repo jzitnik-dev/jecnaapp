@@ -10,7 +10,7 @@ import { Stack, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import React, { useEffect, useState } from 'react';
-import { Provider as PaperProvider } from 'react-native-paper';
+import { Button, Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -127,6 +127,17 @@ export default function RootLayout() {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#6200ee" />
+        <Button
+          style={{ backgroundColor: 'red', marginTop: 20, zIndex: 1000 }}
+          textColor="white"
+          onPress={async () => {
+            alert('Resetting themes!!! U sure?');
+            await SecureStore.deleteItemAsync('customColors');
+            alert('DONE! Restart app');
+          }}
+        >
+          Emergency menu
+        </Button>
       </View>
     );
   }

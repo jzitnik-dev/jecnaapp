@@ -266,7 +266,9 @@ export default function AppearanceScreen() {
           <TextInput
             value={pickerColor}
             onChangeText={text => {
-              const formatted = text.startsWith('#') ? text : `#${text}`;
+              const formatted = text.startsWith('#')
+                ? text.slice(0, 6)
+                : `#${text.slice(0, 6)}`;
               setPickerColor(formatted);
             }}
             style={{ marginTop: 16, color: theme.colors.onSurface }}

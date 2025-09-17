@@ -382,18 +382,6 @@ export default function ZnamkyScreen() {
         )}
         {data &&
           Array.isArray(data) &&
-          data.every(
-            subject =>
-              Array.isArray(subject.splits) &&
-              subject.splits.every(split => split.grades.length === 0)
-          ) && <Text style={{ marginTop: 24 }}>Žádné známky nenalezeny.</Text>}
-        {data &&
-          Array.isArray(data) &&
-          data.some(
-            subject =>
-              Array.isArray(subject.splits) &&
-              subject.splits.some(split => split.grades.length > 0)
-          ) &&
           data.map((subject, idx) => {
             const plannedAvg = getPlannedAverage(subject.subject);
             const allGrades = subject.splits.flatMap(split => split.grades);
