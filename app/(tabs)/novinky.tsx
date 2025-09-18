@@ -20,6 +20,7 @@ import {
 import { Event } from '@/api/SpseJecnaClient';
 import RenderHtml from 'react-native-render-html';
 import ImageViewing from 'react-native-image-viewing';
+import { buildHeaders, normalizeHeaders } from '@/components/ImageViewer';
 
 export default function NovinkyScreen() {
   const { client } = useSpseJecnaClient();
@@ -86,14 +87,20 @@ export default function NovinkyScreen() {
                       key={index}
                       onPress={() => {
                         setLightboxImages(
-                          event.images?.map(img => ({ uri: img })) || []
+                          event.images?.map(img => ({
+                            uri: img,
+                            headers: normalizeHeaders(buildHeaders()),
+                          })) || []
                         );
                         setCurrentIndex(index);
                         setLightboxVisible(true);
                       }}
                     >
                       <Image
-                        source={{ uri: url }}
+                        source={{
+                          uri: url,
+                          headers: normalizeHeaders(buildHeaders()),
+                        }}
                         style={styles.thumbnail}
                         resizeMode="cover"
                       />
