@@ -15,10 +15,8 @@ import ColorPicker, {
   Preview,
   Panel1,
   HueSlider,
-  OpacitySlider,
   Swatches,
 } from 'reanimated-color-picker';
-import { runOnJS } from 'react-native-reanimated';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 
 export default function AppearanceScreen() {
@@ -266,9 +264,7 @@ export default function AppearanceScreen() {
           <TextInput
             value={pickerColor}
             onChangeText={text => {
-              const formatted = text.startsWith('#')
-                ? text.slice(0, 6)
-                : `#${text.slice(0, 6)}`;
+              const formatted = text.startsWith('#') ? text : `#${text}`;
               setPickerColor(formatted);
             }}
             style={{ marginTop: 16, color: theme.colors.onSurface }}
@@ -277,15 +273,13 @@ export default function AppearanceScreen() {
             style={{ width: '100%', height: 320 }}
             value={pickerColor}
             onComplete={color => {
-              'worklet';
-              runOnJS(setPickerColor)(color.hex);
+              setPickerColor(color.hex.slice(0, 7));
             }}
           >
             <Preview />
 
             <Panel1 style={{ flex: 1, marginVertical: 20 }} />
             <HueSlider style={{ height: 30, marginVertical: 10 }} />
-            <OpacitySlider style={{ height: 30, marginVertical: 10 }} />
             <Swatches />
           </ColorPicker>
 
