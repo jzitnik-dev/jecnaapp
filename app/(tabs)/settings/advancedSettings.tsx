@@ -178,6 +178,13 @@ const SETTINGS: SettingItem[] = [
     ],
     defaultValue: 'off',
   },
+  {
+    type: 'switch',
+    key: 'show-current-hour',
+    title: 'Zobrazit aktuální hodinu',
+    description: 'Aktuálně probíhající hodina změni bakground v rozvrhu hodin.',
+    defaultValue: true,
+  },
 ];
 
 // --- MAIN COMPONENT ---

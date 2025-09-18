@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import {
@@ -16,6 +16,7 @@ import type {
   TimetableLesson,
   TimetablePeriod,
 } from '../api/SpseJecnaClient';
+import * as SecureStore from 'expo-secure-store';
 
 type BaseProps = {
   periods: TimetablePeriod[];
@@ -53,6 +54,14 @@ export function TimetableGrid({
     120,
     Math.floor((screenWidth - 24) / (periodCount + 1))
   );
+  const [showCurrent, setShowCurrent] = useState(false);
+  useEffect(() => {
+    (async () => {
+      setShowCurrent(
+        (await SecureStore.getItemAsync('show-current-hour')) == 'true'
+      );
+    })();
+  }, []);
 
   // Use theme colors instead of hardcoded dark/light colors
   const tableBg = theme.colors.surface;
@@ -265,7 +274,7 @@ export function TimetableGrid({
                   cell &&
                   cell.length > 0 &&
                   isCurrentPeriod(periods[periodIdx].time, day.day);
-                function lightenHexColor(hex, percent) {
+                function lightenHexColor(hex: string, percent: number) {
                   hex = hex.replace(/^#/, '');
                   const num = parseInt(hex, 16);
                   let r = (num >> 16) + Math.round(255 * percent);
@@ -312,9 +321,10 @@ export function TimetableGrid({
                               style={[
                                 styles.lessonSquare,
                                 {
-                                  backgroundColor: isCurrent
-                                    ? lightenHexColor(cellBg, 0.15)
-                                    : cellBg,
+                                  backgroundColor:
+                                    isCurrent && showCurrent
+                                      ? lightenHexColor(cellBg, 0.15)
+                                      : cellBg,
                                   borderColor: borderColor,
                                   borderBottomWidth: isSplit && i === 0 ? 1 : 0,
                                   borderRightWidth: 0,
