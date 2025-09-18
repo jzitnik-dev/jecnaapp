@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import ImageView from 'react-native-image-viewing';
+import { buildHeaders, normalizeHeaders } from './ImageViewer';
 
 interface TeacherImageViewerProps {
   imageUrl?: string;
@@ -32,13 +33,18 @@ export function TeacherImageViewer({
     <>
       <Pressable onPress={handleImagePress}>
         <Image
-          source={{ uri: imageUrl }}
+          source={{
+            uri: imageUrl,
+            headers: normalizeHeaders(buildHeaders({})),
+          }}
           style={[styles.photo, { width, height }, style]}
         />
       </Pressable>
 
       <ImageView
-        images={[{ uri: imageUrl }]}
+        images={[
+          { uri: imageUrl, headers: normalizeHeaders(buildHeaders({})) },
+        ]}
         imageIndex={0}
         visible={isImageViewVisible}
         onRequestClose={() => setIsImageViewVisible(false)}
