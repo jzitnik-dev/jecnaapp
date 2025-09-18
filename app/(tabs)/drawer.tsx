@@ -76,6 +76,17 @@ export default function DrawerLayout() {
       icon: <MoodleIcon color={navigationTheme.colors.text} />,
     },
     {
+      name: 'Jídelna',
+      url: 'https://strav.nasejidelna.cz/0341/',
+      icon: (
+        <Ionicons
+          name="restaurant-outline"
+          size={24}
+          color={navigationTheme.colors.text}
+        />
+      ),
+    },
+    {
       name: 'Originální stránky',
       url: 'https://spsejecna.cz',
       icon: (
