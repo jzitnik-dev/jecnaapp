@@ -268,13 +268,12 @@ export class SpseJecnaClient {
   }
 
   private async getLoginToken(): Promise<string> {
-    const res = await fetch(`${this.baseUrl}/user/role?role=student`, {
+    await fetch(`${this.baseUrl}/user/role?role=student`, {
       headers: this.buildHeaders({
         'Accept-Encoding': 'gzip',
       }),
       credentials: 'include',
     });
-    console.log(res);
     const response = await fetch(`${this.baseUrl}/`, {
       method: 'GET',
       headers: this.buildHeaders({

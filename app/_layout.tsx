@@ -142,7 +142,12 @@ export default function RootLayout() {
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <ActivityIndicator size="large" color="#6200ee" />
         <Button
-          style={{ backgroundColor: 'red', marginTop: 20, zIndex: 1000 }}
+          style={{
+            backgroundColor: 'red',
+            marginTop: 20,
+            zIndex: 1000,
+            display: 'none',
+          }}
           textColor="white"
           onPress={async () => {
             alert('Resetting themes!!! U sure?');
