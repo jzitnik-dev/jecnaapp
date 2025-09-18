@@ -26,6 +26,17 @@ export default function RootLayout() {
   const { client, setClient } = useSpseJecnaClient();
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
+  const [fastLoad, setFastLoad] = useState(false);
+  const [superFastLoad, setSuperFastLoad] = useState(false);
+
+  useEffect(() => {
+    (async () => {
+      setFastLoad((await SecureStore.getItemAsync('fast-load')) === 'normal');
+      setSuperFastLoad(
+        (await SecureStore.getItemAsync('fast-load')) === 'super'
+      );
+    })();
+  }, []);
 
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
@@ -122,7 +133,10 @@ export default function RootLayout() {
   }
 
   const shouldWaitForFonts = __DEV__;
-  if ((shouldWaitForFonts && !fontsLoaded) || isLoading) {
+  if (
+    ((shouldWaitForFonts && !fontsLoaded) || (isLoading && !fastLoad)) &&
+    !superFastLoad
+  ) {
     // 👇 Full-screen spinner
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
