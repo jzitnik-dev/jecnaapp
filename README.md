@@ -77,8 +77,13 @@ Chyby hlaste jako Issue. Ideálně přiložte logy aplikace.
 
 ### Známé chyby
 
+- **Notifikace nechodí**  
+  Notifikace často neběží na pozadí, nevím proč. Nemám tolik času na to notifikace testovat. Kdyby někdo byl schopen je opravit budu rád :)
+  Logika na získávání notifikací je správná a background task se spustí po spuštění aplikace, ale z nějakého důvodu ne na pozadí. Aspoň mi.
+
 - **Odhlašování**  
-  Občas někoho odhlásí bez důvodu. Je to vzácné, ale zatím netuším proč.
+  Občas někoho odhlásí bez důvodu. Je to vzácné.
+  _(toto je z velké části omezeno, už by se stávat nemělo se stabilním připojením k internetu)_
 
 ---
 
