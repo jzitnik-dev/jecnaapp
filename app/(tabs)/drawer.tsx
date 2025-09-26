@@ -26,6 +26,7 @@ import * as SecureStore from 'expo-secure-store';
 import NovinkyScreen from './novinky';
 import useIsUpdateAvailable from '@/utils/updates';
 import TeacherAbsencesScreen from './teacher-absences';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 const Drawer = createDrawerNavigator();
 
@@ -35,6 +36,7 @@ export default function DrawerLayout() {
   const { accountInfo } = useAccountInfo();
   const router = useRouter();
   const [showProfilePicture, setShowProfilePicture] = useState(false);
+  const insets = useSafeAreaInsets();
 
   const [extraEnabled, setExtraEnabled] = useState(false);
   useEffect(() => {
@@ -267,6 +269,7 @@ export default function DrawerLayout() {
               padding: 16,
               borderTopWidth: 1,
               borderTopColor: navigationTheme.colors.border,
+              paddingBottom: insets.bottom + 8,
             }}
           >
             <TouchableRipple onPress={handleAccountPress}>
