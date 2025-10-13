@@ -170,7 +170,7 @@ export class iCanteenClient {
         if (name?.length === 0) {
           continue;
         }
-        const [thisPolivka, finalName] = name?.split(/,\s*;/) || [];
+        const [thisPolivka, finalName] = name?.split(/(?:, ;| ;)/) || [];
         polevka = thisPolivka;
 
         const allergensEl = selectAll(
@@ -341,7 +341,7 @@ export class iCanteenClient {
       const queryString = url?.split('?')[1];
       const params = new URLSearchParams(queryString);
 
-      const [polevka, description] = desc?.split(/,\s*;/) || [];
+      const [polevka, description] = desc?.split(/(?:, ;| ;)/) || [];
 
       final.push({
         variant,

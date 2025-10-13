@@ -167,7 +167,11 @@ export class GradeNotificationService {
   }
 
   private createGradeKey(grade: Grade): string {
-    return `${grade.value}-${grade.weight}-${grade.date || ''}-${grade.teacher || ''}`;
+    const value = String(grade.value);
+    const weight = String(grade.weight);
+    const date = grade.date ? new Date(grade.date).toISOString() : '';
+    const teacher = grade.teacher?.trim() || '';
+    return `${value}-${weight}-${date}-${teacher}`;
   }
 
   private findNewGrades(

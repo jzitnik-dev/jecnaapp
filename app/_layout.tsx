@@ -63,7 +63,7 @@ export default function RootLayout() {
       const tryLoginWithRetry = async (
         username: string,
         password: string,
-        maxRetries = 5
+        maxRetries = 20
       ) => {
         let attempt = 0;
         while (attempt < maxRetries) {
@@ -77,7 +77,7 @@ export default function RootLayout() {
             if (attempt >= maxRetries) return false;
 
             // Exponential backoff: 500ms, 1s, 2s, 4s, ...
-            const delay = 500 * Math.pow(2, attempt - 1);
+            const delay = 500 * Math.pow(2, Math.max(attempt - 1, 5));
             await new Promise(res => setTimeout(res, delay));
           }
         }
@@ -100,8 +100,6 @@ export default function RootLayout() {
               console.log(
                 'Auto-login ultimately failed, redirecting to login.'
               );
-              await SecureStore.deleteItemAsync('username');
-              await SecureStore.deleteItemAsync('password');
               router.replace('/login');
             }
           } else {
