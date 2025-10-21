@@ -177,6 +177,7 @@ export type ExtraordinaryTimetable = {
   }[];
   status: {
     currentUpdateSchedule: number;
+    lastUpdated: string;
   };
 };
 

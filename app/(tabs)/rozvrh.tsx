@@ -259,9 +259,9 @@ export default function RozvrhScreen() {
         )}
       </ScrollView>
       {extraenabled && (
-        <View style={{ paddingLeft: 12, paddingTop: 10 }}>
+        <View style={{ paddingHorizontal: 12, paddingTop: 10 }}>
           <Text style={{ color: theme.colors.onSurfaceVariant }}>
-            {extraText}
+            {extraText} z {extraordinaryData?.status.lastUpdated}.
           </Text>
         </View>
       )}
