@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
+import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
   Dimensions,
@@ -7,13 +7,17 @@ import {
   RefreshControl,
   ScrollView,
   StyleSheet,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import {
   ActivityIndicator,
   Button,
   Menu,
+  Modal,
+  Portal,
   Text,
+  TextInput,
   useTheme,
 } from 'react-native-paper';
 import type {
@@ -28,10 +32,13 @@ import {
   getTimetableSelections,
   saveTimetableSelections,
 } from '../../utils/timetableStorage';
+import { Ionicons } from '@expo/vector-icons';
+import ExtraReport from '@/components/ExtraReport';
 
 export default function RozvrhScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
+  const navigation = useNavigation();
   const { accountInfo } = useAccountInfo();
   const [yearMenuVisible, setYearMenuVisible] = useState(false);
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
@@ -41,6 +48,7 @@ export default function RozvrhScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<string | undefined>(
     undefined
   );
+  const [modalVisible, setModalVisible] = useState(false);
   const { data, error, isLoading, refetch, isFetching } = useQuery<Timetable>({
     queryKey: ['timetable', selectedYear, selectedPeriod],
     queryFn: async () => {
@@ -61,6 +69,37 @@ export default function RozvrhScreen() {
       if (enabled) {
         setExtraEnabled(true);
         setShowExtra(true);
+
+        navigation.setOptions({
+          headerRight: () => (
+            <View
+              style={{
+                display: 'flex',
+                gap: 8,
+                alignItems: 'center',
+                flexDirection: 'row',
+              }}
+            >
+              <TouchableOpacity
+                style={{
+                  borderRadius: 4,
+                  paddingVertical: 15,
+                  paddingHorizontal: 15,
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+                onPress={() => setModalVisible(true)}
+              >
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={25}
+                  color={theme.colors.onSurface}
+                />
+              </TouchableOpacity>
+            </View>
+          ),
+        });
       }
     })();
   }, []);
@@ -181,6 +220,12 @@ export default function RozvrhScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ExtraReport
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        reportLocation="TIMETABLE"
+      />
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

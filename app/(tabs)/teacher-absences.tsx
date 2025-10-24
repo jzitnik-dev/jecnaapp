@@ -1,17 +1,21 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
-import { useRouter } from 'expo-router';
-import React, { useMemo, useState } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { useNavigation, useRouter } from 'expo-router';
+import React, { useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
 import { ActivityIndicator, Surface, Text, useTheme } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { Absence, ExtraordinaryTimetable } from '@/api/SpseJecnaClient';
 import { Picker } from '@react-native-picker/picker';
+import { Ionicons } from '@expo/vector-icons';
+import ExtraReport from '@/components/ExtraReport';
 
 export default function TeacherAbsencesScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
   const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const navigation = useNavigation();
+  const [modalVisible, setModalVisible] = useState(false);
 
   const teachersQuery = useQuery<ExtraordinaryTimetable, Error>({
     queryKey: ['extraordinarytimetable'],
@@ -44,8 +48,47 @@ export default function TeacherAbsencesScreen() {
     return absence.original;
   }
 
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View
+          style={{
+            display: 'flex',
+            gap: 8,
+            alignItems: 'center',
+            flexDirection: 'row',
+          }}
+        >
+          <TouchableOpacity
+            style={{
+              borderRadius: 4,
+              paddingVertical: 15,
+              paddingHorizontal: 15,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+            onPress={() => setModalVisible(true)}
+          >
+            <Ionicons
+              name="alert-circle-outline"
+              size={25}
+              color={theme.colors.onSurface}
+            />
+          </TouchableOpacity>
+        </View>
+      ),
+    });
+  }, []);
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+      <ExtraReport
+        modalVisible={modalVisible}
+        setModalVisible={setModalVisible}
+        reportLocation="ABSENCES"
+      />
+
       {teachersQuery.isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" />
