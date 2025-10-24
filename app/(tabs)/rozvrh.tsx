@@ -306,7 +306,10 @@ export default function RozvrhScreen() {
       {extraenabled && (
         <View style={{ paddingHorizontal: 12, paddingTop: 10 }}>
           <Text style={{ color: theme.colors.onSurfaceVariant }}>
-            {extraText} z {extraordinaryData?.status.lastUpdated}.
+            {extraText}.
+          </Text>
+          <Text style={{ color: theme.colors.onSurfaceVariant }}>
+            Poslední aktualizace: {extraordinaryData?.status.lastUpdated}
           </Text>
         </View>
       )}
