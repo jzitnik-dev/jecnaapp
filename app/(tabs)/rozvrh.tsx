@@ -14,10 +14,7 @@ import {
   ActivityIndicator,
   Button,
   Menu,
-  Modal,
-  Portal,
   Text,
-  TextInput,
   useTheme,
 } from 'react-native-paper';
 import type {
@@ -314,9 +311,7 @@ export default function RozvrhScreen() {
         </View>
       )}
       <ScrollView
-        horizontal
         style={{ flex: 1 }}
-        contentContainerStyle={{ minWidth: screenWidth }}
         refreshControl={
           <RefreshControl
             refreshing={refreshing || isFetching}
@@ -326,10 +321,7 @@ export default function RozvrhScreen() {
           />
         }
       >
-        <ScrollView
-          style={{ flex: 1 }}
-          contentContainerStyle={styles.scrollContent}
-        >
+        <ScrollView horizontal contentContainerStyle={styles.scrollContent}>
           <TimetableGrid
             periods={data.periods}
             days={data.days}
