@@ -24,6 +24,7 @@ type BaseProps = {
   style?: any;
   onTeacherPress?: (teacherCode: string, teacherFull?: string) => void;
   onRoomPress?: (roomCode: string) => void;
+  showClass?: boolean;
 };
 
 type WithExtraordinary = BaseProps & {
@@ -45,6 +46,7 @@ export function TimetableGrid({
   onTeacherPress,
   onRoomPress,
   extraordinary,
+  showClass = true,
   class: className,
 }: TimetableGridProps) {
   const theme = useTheme();
@@ -390,6 +392,28 @@ export function TimetableGrid({
                                   </View>
                                 ) : null}
                               </View>
+
+                              {showClass && (
+                                <Text
+                                  style={[
+                                    styles.groupSquare,
+                                    {
+                                      color: accentColor,
+                                      fontSize: 11,
+                                      fontWeight: '500',
+                                      bottom: 6,
+                                      left: 6,
+                                      textAlign: 'left',
+                                      position: 'absolute',
+                                    },
+                                  ]}
+                                  numberOfLines={1}
+                                  ellipsizeMode="tail"
+                                >
+                                  {lesson.className}
+                                </Text>
+                              )}
+
                               <View
                                 style={{
                                   flex: 1,

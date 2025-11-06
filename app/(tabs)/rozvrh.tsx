@@ -333,6 +333,7 @@ export default function RozvrhScreen() {
             onRoomPress={room => router.push(`/ucebna/${room}`)}
             extraordinary={showExtra ? extraordinaryData : null}
             class={accountInfo?.class || 'sakjdlkajsdlkjasd'}
+            showClass={false}
           />
         </ScrollView>
       </ScrollView>
