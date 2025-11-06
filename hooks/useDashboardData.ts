@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import type {
   AccountInfo,
   LockerData,
+  OmluvnyListResult,
   SubjectGrades,
   Timetable,
 } from '../api/SpseJecnaClient';
@@ -75,7 +76,11 @@ export function useDashboardData() {
       return client.getZnamky();
     },
     enabled: !!client,
-    staleTime: 30 * 60 * 1000, // 30 minutes
+    staleTime: 3 * 60 * 60 * 1000, // 3 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 3,
   });
 
   // Timetable query
@@ -94,7 +99,7 @@ export function useDashboardData() {
       return client.getTimetable();
     },
     enabled: !!client && savedSelections !== null, // wait for saved selections to load
-    staleTime: 30 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // 3 mins
   });
 
   // Account info query
@@ -106,7 +111,11 @@ export function useDashboardData() {
       return client.getAccountInfo();
     },
     enabled: !!client,
-    staleTime: 30 * 60 * 1000,
+    staleTime: 3 * 60 * 60 * 1000, // 3 hours
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 3,
   });
 
   const lockerQuery = useQuery<LockerData | null, Error>({
@@ -117,7 +126,11 @@ export function useDashboardData() {
       return client.getLocker();
     },
     enabled: !!client,
-    staleTime: 30 * 60 * 1000,
+    staleTime: 3 * 24 * 60 * 60 * 1000, // 3 days
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 3,
   });
 
   const canteenMenuQuery = useQuery<CanteenMenuResult, Error>({
@@ -136,12 +149,39 @@ export function useDashboardData() {
     retry: 0,
   });
 
+  const absenceQuery = useQuery<OmluvnyListResult | null, Error>({
+    queryKey: ['absences'],
+    queryFn: async () => {
+      if (!(await isLoggedIn())) throw new Error('Not logged in');
+      if (!client) throw new Error('Client not available');
+      console.warn('OMLUVNY LIST');
+      return client.getOmluvnyList();
+    },
+    enabled: !!client,
+    staleTime: 5 * 60 * 60 * 1000,
+    refetchOnWindowFocus: false,
+    refetchOnMount: false,
+    refetchOnReconnect: false,
+    retry: 3,
+  });
+
   // Refresh all dashboard data
   const refresh = async () => {
-    await queryClient.invalidateQueries({ queryKey: ['grades'] });
-    await queryClient.invalidateQueries({ queryKey: ['timetable'] });
-    await queryClient.invalidateQueries({ queryKey: ['accountInfo'] });
-    await queryClient.invalidateQueries({ queryKey: ['lockerQuery'] });
+    await queryClient.invalidateQueries({
+      queryKey: ['grades'],
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ['timetable'],
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ['accountInfo'],
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ['locker'],
+    });
+    await queryClient.invalidateQueries({
+      queryKey: ['absences'],
+    });
   };
 
   return {
@@ -150,18 +190,21 @@ export function useDashboardData() {
     accountInfo: accountInfoQuery.data ?? null,
     locker: lockerQuery.data ?? null,
     canteen: canteenMenuQuery.data ?? null,
+    absences: absenceQuery.data ?? null,
     loading:
       gradesQuery.isFetching ||
       timetableQuery.isFetching ||
       accountInfoQuery.isFetching ||
       lockerQuery.isFetching ||
-      canteenMenuQuery.isFetching,
+      canteenMenuQuery.isFetching ||
+      absenceQuery.isFetching,
     error:
       gradesQuery.error?.message ??
       timetableQuery.error?.message ??
       accountInfoQuery.error?.message ??
       lockerQuery.error?.message ??
       canteenMenuQuery.error?.message ??
+      absenceQuery.error?.message ??
       null,
     refresh,
   };

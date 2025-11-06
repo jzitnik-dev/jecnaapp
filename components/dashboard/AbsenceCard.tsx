@@ -2,79 +2,35 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
-import { useAbsenceStats } from '../../hooks/useAbsenceStats';
+import { OmluvnyListResult } from '@/api/SpseJecnaClient';
 
-export function AbsenceCard() {
+function parse(data: OmluvnyListResult | null) {
+  let totalExcused = 0;
+  let totalUnexcused = 0;
+  let totalAbsences = 0;
+
+  if (data && data.absences) {
+    for (const absence of data.absences) {
+      totalAbsences += absence.count;
+      if (absence.countUnexcused) {
+        totalUnexcused += absence.countUnexcused;
+        totalExcused += absence.count - absence.countUnexcused;
+      } else {
+        totalExcused += absence.count;
+      }
+    }
+  }
+
+  return {
+    totalExcused,
+    totalUnexcused,
+    totalAbsences,
+  };
+}
+
+export function AbsenceCard({ data }: { data: OmluvnyListResult | null }) {
   const theme = useTheme();
-  const { totalExcused, totalUnexcused, totalAbsences, loading, error } =
-    useAbsenceStats();
-
-  if (loading) {
-    return (
-      <Card
-        style={[styles.card, { backgroundColor: theme.colors.surface }]}
-        elevation={2}
-      >
-        <Card.Content>
-          <View style={styles.titleContainer}>
-            <MaterialCommunityIcons
-              name="clipboard-text"
-              size={24}
-              color={theme.colors.onSurface}
-              style={{ marginRight: 8 }}
-            />
-            <Text
-              variant="titleLarge"
-              style={[styles.title, { color: theme.colors.onSurface }]}
-            >
-              Omluvené hodiny
-            </Text>
-          </View>
-          <Text
-            variant="bodyMedium"
-            style={[
-              styles.loadingText,
-              { color: theme.colors.onSurfaceVariant },
-            ]}
-          >
-            Načítání...
-          </Text>
-        </Card.Content>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card
-        style={[styles.card, { backgroundColor: theme.colors.surface }]}
-        elevation={2}
-      >
-        <Card.Content>
-          <View style={styles.titleContainer}>
-            <MaterialCommunityIcons
-              name="clipboard-text"
-              size={24}
-              color={theme.colors.onSurface}
-              style={{ marginRight: 8 }}
-            />
-            <Text
-              variant="titleLarge"
-              style={[styles.title, { color: theme.colors.onSurface }]}
-            >
-              Omluvené hodiny
-            </Text>
-          </View>
-          <Text
-            variant="bodyMedium"
-            style={[styles.errorText, { color: theme.colors.error }]}
-          >
-            {error}
-          </Text>
-        </Card.Content>
-      </Card>
-    );
-  }
+  const { totalExcused, totalUnexcused, totalAbsences } = parse(data);
 
   return (
     <Card

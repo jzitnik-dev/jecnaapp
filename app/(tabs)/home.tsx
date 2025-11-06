@@ -161,6 +161,7 @@ export default function HomeScreen() {
     accountInfo,
     locker,
     canteen,
+    absences,
     loading,
     refresh,
     error,
@@ -227,7 +228,7 @@ export default function HomeScreen() {
             />
           );
         case 'AbsenceCard':
-          return <AbsenceCard key={widget.id} />;
+          return <AbsenceCard key={widget.id} data={absences} />;
         case 'LockerCard':
           return <LockerCard key={widget.id} lockerData={locker} />;
         default:
@@ -243,6 +244,7 @@ export default function HomeScreen() {
       canteen,
       grades,
       locker,
+      absences,
     ]
   );
 
