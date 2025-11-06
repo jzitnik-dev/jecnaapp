@@ -80,6 +80,7 @@ export type OmluvnyListAbsence = {
   date: string; // e.g. '11.6. (středa)'
   count: number; // total hours
   countUnexcused?: number; // unexcused hours, if present
+  countLate?: number;
   href?: string; // link to detail, if present
 };
 
@@ -1745,8 +1746,10 @@ export class SpseJecnaClient {
     const params = new URLSearchParams();
     if (yearId) params.append('schoolYearId', yearId);
     if ([...params].length > 0) url += '?' + params.toString();
+
     const html = await this.fetchHtml(url);
     const document = parseDocument(html);
+
     // Year select
     const yearSelect = selectAll(
       'select#schoolYearId',
@@ -1760,36 +1763,42 @@ export class SpseJecnaClient {
         const id = opt.attribs.value;
         const label =
           opt.children.find(c => c.type === 'text')?.data?.trim() || '';
-        const selected = !!opt.attribs.selected;
-        if (selected) selectedYearId = id;
+        if (opt.attribs.selected) selectedYearId = id;
         years.push({ id, label });
       }
     }
+
     // Table rows
     const rows = selectAll(
       'table.absence-list tr',
       document.children
     ) as Element[];
     const absences: OmluvnyListAbsence[] = [];
+
     for (const row of rows) {
       const tds = selectAll('td', [row]);
       if (tds.length < 2) continue;
+
       const dateTd = tds[0] as Element;
       const countTd = tds[1] as Element;
+
       // Date and href
       let date = '';
-      let href = undefined;
+      let href: string | undefined = undefined;
       const a = selectAll('a', [dateTd])[0] as Element | undefined;
       if (a && a.children.find(c => c.type === 'text')) {
         date = a.children.find(c => c.type === 'text')?.data?.trim() || '';
-        if (a.attribs && a.attribs.href) href = a.attribs.href;
+        if (a.attribs?.href) href = a.attribs.href;
       } else {
         date = dateTd.children.find(c => c.type === 'text')?.data?.trim() || '';
       }
-      // Count and unexcused
+
+      // Count, unexcused, late
       let count = 0;
       let countUnexcused: number | undefined = undefined;
-      // e.g. '<strong>1 hodina</strong> z toho <strong style="color:red">1 neomluvena</strong>'
+      let countLate: number | undefined = undefined;
+
+      // Parse <strong> for total hours and unexcused
       const strongs = selectAll('strong', [countTd]) as Element[];
       if (strongs.length > 0) {
         // First strong: total hours
@@ -1797,17 +1806,31 @@ export class SpseJecnaClient {
           strongs[0].children.find(c => c.type === 'text')?.data?.trim() || '';
         const m = countText.match(/(\d+)/);
         if (m) count = parseInt(m[1], 10);
-        // Second strong: unexcused
+
+        // Second strong: unexcused (still inside <strong>)
         if (strongs.length > 1) {
           const unexcusedText =
             strongs[1].children.find(c => c.type === 'text')?.data?.trim() ||
             '';
           const m2 = unexcusedText.match(/(\d+)/);
-          if (m2) countUnexcused = parseInt(m2[1], 10);
+          if (m2 && unexcusedText.includes('neomluven')) {
+            countUnexcused = parseInt(m2[1], 10);
+          }
         }
       }
-      absences.push({ date, count, countUnexcused, href });
+
+      // Look for "pozdní příchod" outside <strong>
+      const tdText = countTd.children
+        .filter(c => c.type === 'text')
+        .map(c => c.data?.trim())
+        .filter(Boolean)
+        .join(' ');
+      const lateMatch = tdText.match(/(\d+)\s*pozdní příchod/);
+      if (lateMatch) countLate = parseInt(lateMatch[1], 10);
+
+      absences.push({ date, count, countUnexcused, countLate, href });
     }
+
     return { years, selectedYearId, absences };
   }
 

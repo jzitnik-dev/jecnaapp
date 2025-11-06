@@ -76,6 +76,16 @@ export default function OmluvnyListScreen() {
               ? 'y'
               : ''}
         </Text>
+        {typeof item.countLate === 'number' && (
+          <Text style={{ fontSize: 16, marginLeft: 6 }}>
+            a {item.countLate}{' '}
+            {item.countLate === 1
+              ? 'pozdní příhod'
+              : item.countLate >= 2 && item.countLate <= 4
+                ? 'pozdní příchody'
+                : 'pozdních příchodů'}
+          </Text>
+        )}
         {typeof item.countUnexcused === 'number' && (
           <Text style={{ fontSize: 16, color: 'red', marginLeft: 12 }}>
             z toho {item.countUnexcused} neomluven
