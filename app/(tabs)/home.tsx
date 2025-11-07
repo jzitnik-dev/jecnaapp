@@ -216,6 +216,10 @@ export default function HomeScreen() {
         case 'NextLessonCard':
           return <NextLessonCard key={widget.id} timetable={timetable} />;
         case 'CanteenCard':
+          if (SecureStore.getItem('show-jidelna-no-login') === 'true') {
+            return null;
+          }
+
           return canteen ? (
             <CanteenCard key={widget.id} canteen={canteen} />
           ) : null;

@@ -355,10 +355,6 @@ export default function ZnamkyScreen() {
       >
         {plannerMode ? 'Plánovač známek: Zapnuto' : 'Plánovač známek: Vypnuto'}
       </Button>
-
-      {(isFetching || isFetching) && (
-        <ActivityIndicator size={18} style={{ marginLeft: 8 }} />
-      )}
     </ScrollView>
   );
 

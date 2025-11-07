@@ -1,4 +1,7 @@
-import { type CanteenMenuResult } from '@/api/iCanteenClient';
+import {
+  CanteenMenuDayAnonym,
+  type CanteenMenuResult,
+} from '@/api/iCanteenClient';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { Badge, useTheme } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
@@ -15,6 +18,7 @@ import {
 } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
+import * as SecureStore from 'expo-secure-store';
 
 const allergenColors: { [key: string]: string } = {
   '1': '#FF6B6B', // Obiloviny - červená
@@ -80,13 +84,24 @@ export default function Jidelna() {
   const cardBackground = theme.colors.surface;
 
   // --- TanStack Query for fetching menu
-  const menuQuery = useQuery<CanteenMenuResult, Error>({
+  const menuQuery = useQuery<
+    CanteenMenuResult | { menus: CanteenMenuDayAnonym[]; anonym: true },
+    Error
+  >({
     queryKey: ['canteenMenu'],
     queryFn: async () => {
       if (!spseClient) {
         throw new Error('SpseJecnaClient not available. Please login first.');
       }
-      const canteenClient = await spseClient.getCanteenClient();
+      const useAnonym = SecureStore.getItem('show-jidelna-no-login') === 'true';
+
+      const canteenClient = await spseClient.getCanteenClient(useAnonym);
+      if (useAnonym) {
+        const menu = await canteenClient.getAnonymMenu();
+
+        return menu;
+      }
+
       const menu = await canteenClient.getMonthlyMenu();
 
       // update header with credit
@@ -145,37 +160,38 @@ export default function Jidelna() {
         />
       }
     >
-      {!(!menuData?.menus || menuData.menus.length === 0) && (
-        <TouchableOpacity
-          style={[
-            styles.orderButton,
-            {
-              backgroundColor: theme.colors.surface,
-              marginBottom: 16,
-              justifyContent: 'space-between',
-            },
-          ]}
-          onPress={() => {
-            router.push('/jidelna/burza');
-          }}
-        >
-          <Text
-            style={{
-              color: theme.colors.onSurface,
-              fontWeight: 'bold',
-              fontSize: 16,
+      {(menuData && 'anonym' in menuData) ||
+        (!(!menuData?.menus || menuData.menus.length === 0) && (
+          <TouchableOpacity
+            style={[
+              styles.orderButton,
+              {
+                backgroundColor: theme.colors.surface,
+                marginBottom: 16,
+                justifyContent: 'space-between',
+              },
+            ]}
+            onPress={() => {
+              router.push('/jidelna/burza');
             }}
           >
-            Burza
-          </Text>
+            <Text
+              style={{
+                color: theme.colors.onSurface,
+                fontWeight: 'bold',
+                fontSize: 16,
+              }}
+            >
+              Burza
+            </Text>
 
-          <MaterialCommunityIcons
-            name="chevron-right"
-            size={16}
-            color={theme.colors.onSurfaceVariant}
-          />
-        </TouchableOpacity>
-      )}
+            <MaterialCommunityIcons
+              name="chevron-right"
+              size={16}
+              color={theme.colors.onSurfaceVariant}
+            />
+          </TouchableOpacity>
+        ))}
       {menuData?.menus.map(menuItem => (
         <View
           key={menuItem.date}
@@ -207,7 +223,7 @@ export default function Jidelna() {
                   paddingHorizontal: 15,
                 }}
               >
-                {el.ordered && (
+                {'ordered' in el && el.ordered && (
                   <Badge
                     style={{
                       backgroundColor: 'green',
@@ -232,11 +248,13 @@ export default function Jidelna() {
                 </View>
 
                 {/* Price */}
-                <View style={styles.priceSection}>
-                  <Text style={[styles.priceText, { color: textColor }]}>
-                    {el.price}
-                  </Text>
-                </View>
+                {'price' in el && (
+                  <View style={styles.priceSection}>
+                    <Text style={[styles.priceText, { color: textColor }]}>
+                      {el.price}
+                    </Text>
+                  </View>
+                )}
 
                 {/* Allergens */}
                 {el.allergens.length > 0 && (
@@ -270,31 +288,42 @@ export default function Jidelna() {
                 )}
 
                 {/* Timings */}
-                {(el.pickupTime || el.orderDeadline || el.cancelDeadline) && (
-                  <View style={styles.timingSection}>
-                    <Ionicons name="time-outline" size={16} color={textColor} />
-                    <View style={styles.timingInfo}>
-                      {el.pickupTime && (
-                        <Text style={[styles.timingText, { color: textColor }]}>
-                          Výdej: {el.pickupTime}
-                        </Text>
-                      )}
-                      {el.orderDeadline && (
-                        <Text style={[styles.timingText, { color: textColor }]}>
-                          Objednat do: {el.orderDeadline}
-                        </Text>
-                      )}
-                      {el.cancelDeadline && (
-                        <Text style={[styles.timingText, { color: textColor }]}>
-                          Zrušit do: {el.cancelDeadline}
-                        </Text>
-                      )}
+                {'pickupTime' in el &&
+                  (el.pickupTime || el.orderDeadline || el.cancelDeadline) && (
+                    <View style={styles.timingSection}>
+                      <Ionicons
+                        name="time-outline"
+                        size={16}
+                        color={textColor}
+                      />
+                      <View style={styles.timingInfo}>
+                        {el.pickupTime && (
+                          <Text
+                            style={[styles.timingText, { color: textColor }]}
+                          >
+                            Výdej: {el.pickupTime}
+                          </Text>
+                        )}
+                        {el.orderDeadline && (
+                          <Text
+                            style={[styles.timingText, { color: textColor }]}
+                          >
+                            Objednat do: {el.orderDeadline}
+                          </Text>
+                        )}
+                        {el.cancelDeadline && (
+                          <Text
+                            style={[styles.timingText, { color: textColor }]}
+                          >
+                            Zrušit do: {el.cancelDeadline}
+                          </Text>
+                        )}
+                      </View>
                     </View>
-                  </View>
-                )}
+                  )}
 
                 {/* Order button */}
-                {!el.disabledAction && (
+                {'disabledAction' in el && !el.disabledAction && (
                   <TouchableOpacity
                     style={[
                       styles.orderButton,
@@ -311,7 +340,7 @@ export default function Jidelna() {
                     onPress={async () => {
                       setOrdering(el.name);
                       const canteenClient =
-                        await spseClient?.getCanteenClient();
+                        await spseClient?.getCanteenClient(false);
                       await canteenClient?.runAction(el);
                       await menuQuery.refetch();
                       setOrdering(undefined);
@@ -336,7 +365,7 @@ export default function Jidelna() {
                   </TouchableOpacity>
                 )}
 
-                {el.burzable && (
+                {'burzable' in el && el.burzable && (
                   <TouchableOpacity
                     style={[
                       styles.orderButton,
@@ -354,7 +383,7 @@ export default function Jidelna() {
                     onPress={async () => {
                       setOrdering(el.name);
                       const canteenClient =
-                        await spseClient?.getCanteenClient();
+                        await spseClient?.getCanteenClient(false);
                       await canteenClient?.runBurza(el);
                       await menuQuery.refetch();
                       setOrdering(undefined);

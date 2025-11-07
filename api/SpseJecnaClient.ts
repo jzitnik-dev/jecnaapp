@@ -563,7 +563,7 @@ export class SpseJecnaClient {
     this.cookies = cookies;
   }
 
-  public async getCanteenClient(): Promise<iCanteenClient> {
+  public async getCanteenClient(anonym: boolean): Promise<iCanteenClient> {
     if (!this.canteenClient) {
       // If we don't have credentials stored, try to get them from SecureStore
       if (!this.username || !this.password) {
@@ -592,7 +592,7 @@ export class SpseJecnaClient {
 
       // Create and set up the iCanteenClient if it doesn't exist
       this.canteenClient = new iCanteenClient();
-      await this.canteenClient.setup(this.username, this.password);
+      anonym || (await this.canteenClient.setup(this.username, this.password));
     }
     return this.canteenClient;
   }

@@ -61,6 +61,20 @@ const ALL_AVAILABLE_WIDGETS: DashboardCard[] = [
   },
 ];
 
+interface WidgetLogic {
+  function: () => boolean;
+  setValue: boolean;
+  customText: string;
+}
+
+const CUSTOM_LOGIC: Record<string, WidgetLogic> = {
+  canteen: {
+    function: () => SecureStore.getItem('show-jidelna-no-login') === 'true',
+    setValue: false,
+    customText: 'Nelze zobrazit při jídelně v anonymním módu',
+  },
+};
+
 export default function WidgetSettingsScreen() {
   const theme = useTheme();
   const [widgets, setWidgets] = useState<DashboardCard[]>(
@@ -106,63 +120,74 @@ export default function WidgetSettingsScreen() {
     saveWidgets(data);
   };
 
-  const renderItem = ({ item, drag }: RenderItemParams<DashboardCard>) => (
-    <Card
-      style={[styles.widgetCard, { backgroundColor: theme.colors.surface }]}
-    >
-      <Card.Content>
-        <View style={styles.widgetRow}>
-          <View style={styles.widgetInfo}>
-            <MaterialCommunityIcons
-              name={item.icon as any}
-              size={24}
-              color={
-                item.enabled
-                  ? theme.colors.primary
-                  : theme.colors.onSurfaceVariant
-              }
-            />
-            <View style={styles.widgetText}>
-              <Text
-                variant="titleMedium"
-                style={{
-                  color: item.enabled
-                    ? theme.colors.onSurface
-                    : theme.colors.onSurfaceVariant,
-                }}
+  const renderItem = ({ item, drag }: RenderItemParams<DashboardCard>) => {
+    const editing =
+      item.id in CUSTOM_LOGIC ? !CUSTOM_LOGIC[item.id].function() : true;
+
+    const enabled = editing ? item.enabled : CUSTOM_LOGIC[item.id].setValue;
+    const text = editing
+      ? item.enabled
+        ? 'Zobrazeno na hlavní stránce'
+        : 'Skryto'
+      : CUSTOM_LOGIC[item.id].customText;
+
+    return (
+      <Card
+        style={[styles.widgetCard, { backgroundColor: theme.colors.surface }]}
+      >
+        <Card.Content>
+          <View style={styles.widgetRow}>
+            <View style={styles.widgetInfo}>
+              <MaterialCommunityIcons
+                name={item.icon as any}
+                size={24}
+                color={
+                  enabled ? theme.colors.primary : theme.colors.onSurfaceVariant
+                }
+              />
+              <View style={styles.widgetText}>
+                <Text
+                  variant="titleMedium"
+                  style={{
+                    color: enabled
+                      ? theme.colors.onSurface
+                      : theme.colors.onSurfaceVariant,
+                  }}
+                >
+                  {item.name}
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  {text}
+                </Text>
+              </View>
+            </View>
+
+            <View style={styles.widgetControls}>
+              <Switch
+                value={enabled}
+                disabled={!editing}
+                onValueChange={() => handleToggleWidget(item.id)}
+              />
+              <Pressable
+                onPressIn={drag}
+                style={styles.dragHandle}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
-                {item.name}
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                {item.enabled ? 'Zobrazeno na hlavní stránce' : 'Skryto'}
-              </Text>
+                <MaterialCommunityIcons
+                  name="drag-horizontal"
+                  size={24}
+                  color={theme.colors.onSurfaceVariant}
+                />
+              </Pressable>
             </View>
           </View>
-
-          <View style={styles.widgetControls}>
-            <Switch
-              value={item.enabled}
-              onValueChange={() => handleToggleWidget(item.id)}
-            />
-            <Pressable
-              onPressIn={drag}
-              style={styles.dragHandle}
-              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-            >
-              <MaterialCommunityIcons
-                name="drag-horizontal"
-                size={24}
-                color={theme.colors.onSurfaceVariant}
-              />
-            </Pressable>
-          </View>
-        </View>
-      </Card.Content>
-    </Card>
-  );
+        </Card.Content>
+      </Card>
+    );
+  };
 
   const renderHeader = () => (
     <Card

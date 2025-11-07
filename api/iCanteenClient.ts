@@ -18,6 +18,11 @@ export type CanteenMenuItem = {
   burzaParams?: URLSearchParams;
 };
 
+export type CanteenMenuItemAnonym = {
+  name: string;
+  allergens: number[];
+};
+
 export type CanteenBurzaResponse = {
   data: CanteenBurzaItem[];
   credit: string;
@@ -40,6 +45,13 @@ export type CanteenMenuDay = {
   items: CanteenMenuItem[];
 };
 
+export type CanteenMenuDayAnonym = {
+  date: string;
+  dayName: string;
+  polevka: string;
+  items: CanteenMenuItemAnonym[];
+};
+
 export type CanteenMenuResult = {
   credit: string; // current credit
   pickupLocation: string; // pickup location name
@@ -48,6 +60,7 @@ export type CanteenMenuResult = {
 
 export class iCanteenClient {
   private readonly baseUrl = 'https://strav.nasejidelna.cz/0341';
+  private readonly VYDEJNA = 'Ječná';
   private auth = {
     username: '',
     password: '',
@@ -104,6 +117,107 @@ export class iCanteenClient {
     console.log('Login successful');
     this.auth.username = username;
     this.auth.password = password;
+  }
+
+  public async getAnonymMenu(): Promise<{
+    menus: CanteenMenuDayAnonym[];
+    anonym: true;
+  }> {
+    const url = `${this.baseUrl}/login`;
+    const response = await fetch(url, {
+      credentials: 'omit',
+    });
+    const html = await response.text();
+    const document = parseDocument(html);
+
+    const menuItems: CanteenMenuDayAnonym[] = [];
+    const dayElements = selectAll(
+      '.jidelnicek.jidelnicekWeb .jidelnicekDen',
+      document.children
+    ) as Element[];
+
+    for (const day of dayElements) {
+      const dayTextEl = selectOne(
+        '.jidelnicekTop.semibold',
+        day.children
+      ) as Element;
+      const regex = /^(\p{L}+)\s+(\d{2}\.\d{2}\.\d{4})$/u;
+      const match =
+        dayTextEl?.children
+          .find(c => c.type === 'text')
+          ?.data?.trim()
+          .match(regex) || [];
+
+      const [, dayName, date] = match;
+
+      const foodItems = selectAll('.container', day.children) as Element[];
+      let polevka = '';
+      const items: CanteenMenuItemAnonym[] = [];
+
+      for (const food of foodItems) {
+        const [, locationElement, data] = selectAll(
+          '.jidelnicekItem',
+          food.children
+        ) as Element[];
+
+        const locationElementEl = selectOne(
+          'span',
+          locationElement.children
+        ) as Element;
+
+        const pickupLocation = locationElementEl?.children
+          .find(c => c.type === 'text')
+          ?.data?.trim();
+
+        if (pickupLocation !== this.VYDEJNA) continue;
+
+        const name =
+          data?.children.find(c => c.type === 'text')?.data?.trim() || '';
+        polevka = name.split(',')[0];
+
+        const finalName = name
+          .replace(polevka + ',', '')
+          .replaceAll('\t', ' ')
+          .replaceAll('\n', '')
+          .replace(/\s+/g, ' ')
+          .trim();
+
+        const allergensEl = selectAll(
+          'sub > span.textGrey > span',
+          data.children
+        ) as Element[];
+        const allergens = allergensEl.map(el =>
+          parseInt(
+            el.children
+              .find(c => c.type === 'text')
+              ?.data?.trim()
+              .replaceAll(',', '') || ''
+          )
+        );
+
+        if (finalName.trim().length === 0) {
+          continue;
+        }
+
+        items.push({
+          name: finalName,
+          allergens,
+        });
+      }
+      const dayObj: CanteenMenuDayAnonym = {
+        date,
+        dayName,
+        polevka,
+        items,
+      };
+
+      if (items.length === 0) {
+        continue;
+      }
+      menuItems.push(dayObj);
+    }
+
+    return { menus: menuItems, anonym: true };
   }
 
   /**

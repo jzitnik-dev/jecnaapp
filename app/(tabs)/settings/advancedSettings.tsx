@@ -185,6 +185,14 @@ const SETTINGS: SettingItem[] = [
     description: 'Aktuálně probíhající hodina změni bakground v rozvrhu hodin.',
     defaultValue: true,
   },
+  {
+    type: 'switch',
+    key: 'show-jidelna-no-login',
+    title: 'Zobrazit data z jídelny bez přihlášení',
+    description:
+      'Zobrazení dat z jídelny i v případě, že nemáte přihlášené obědy (pokud přihlašovací údaje nejsou neplatné). Aktivuje se takzvaný anonymní režim.',
+    defaultValue: false,
+  },
 ];
 
 // --- MAIN COMPONENT ---
