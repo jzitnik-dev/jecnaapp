@@ -190,7 +190,7 @@ const SETTINGS: SettingItem[] = [
     key: 'show-jidelna-no-login',
     title: 'Zobrazit data z jídelny bez přihlášení',
     description:
-      'Zobrazení dat z jídelny i v případě, že nemáte přihlášené obědy (pokud přihlašovací údaje nejsou neplatné). Aktivuje se takzvaný anonymní režim.',
+      'Zobrazení dat z jídelny i v případě, že nemáte přihlášené obědy (pokud přihlašovací údaje jsou neplatné). Aktivuje se takzvaný anonymní režim.',
     defaultValue: false,
   },
 ];
