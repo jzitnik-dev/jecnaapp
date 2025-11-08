@@ -28,7 +28,7 @@ export default function TeacherAbsencesScreen() {
 
   const { absences } = useMemo(() => {
     return {
-      absences: teachersQuery.data?.schedule[currentDayIndex].ABSENCE || [],
+      absences: teachersQuery.data?.schedule[currentDayIndex]?.ABSENCE || [],
     };
   }, [teachersQuery.data, currentDayIndex]);
 
