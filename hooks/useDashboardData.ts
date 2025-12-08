@@ -1,5 +1,4 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useEffect, useState } from 'react';
 import type {
   AccountInfo,
   LockerData,
@@ -32,77 +31,50 @@ export function useDashboardData() {
   const { client } = useSpseJecnaClient();
   const queryClient = useQueryClient();
 
-  const [savedSelections, setSavedSelections] = useState<{
-    year?: string;
-    period?: string;
-  } | null>(null);
-
-  const [savedSelectionsZnamky, setSavedSelectionsZnamky] = useState<{
-    year?: string;
-    period?: string;
-  } | null>(null);
-
-  // Load saved timetable selections once on mount
-  useEffect(() => {
-    (async () => {
-      const selections = await getTimetableSelections();
-      setSavedSelections(selections);
-
-      const selectionsZnamky = await getZnamkySelections();
-      setSavedSelectionsZnamky(selectionsZnamky);
-    })();
-  }, []);
-
-  // Helper to check login status
   const isLoggedIn = async () => {
     if (!client) return false;
     return await client.isLoggedIn();
   };
 
-  // Grades query
+  // ---------------------- Grades ----------------------
   const gradesQuery = useQuery<SubjectGrades[], Error>({
     queryKey: ['grades'],
     queryFn: async () => {
       if (!(await isLoggedIn())) throw new Error('Not logged in');
       if (!client) throw new Error('Client not available');
 
-      if (savedSelectionsZnamky?.year || savedSelectionsZnamky?.period) {
-        return client.getZnamky(
-          savedSelectionsZnamky.year,
-          savedSelectionsZnamky.period
-        );
+      const selections = await getZnamkySelections();
+      if (selections?.year || selections?.period) {
+        return client.getZnamky(selections.year, selections.period);
       }
-
       return client.getZnamky();
     },
     enabled: !!client,
-    staleTime: 3 * 60 * 60 * 1000, // 3 hours
+    staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
     retry: 3,
   });
 
-  // Timetable query
+  // ---------------------- Timetable ----------------------
   const timetableQuery = useQuery<Timetable | null, Error>({
-    queryKey: ['timetable', savedSelections?.year, savedSelections?.period],
+    queryKey: ['timetable'],
     queryFn: async () => {
       if (!(await isLoggedIn())) throw new Error('Not logged in');
       if (!client) throw new Error('Client not available');
-      // If we have saved selections, use them; else call without params
-      if (savedSelections?.year || savedSelections?.period) {
-        return client.getTimetable(
-          savedSelections.year,
-          savedSelections.period
-        );
+
+      const selections = await getTimetableSelections();
+      if (selections?.year || selections?.period) {
+        return client.getTimetable(selections.year, selections.period);
       }
       return client.getTimetable();
     },
-    enabled: !!client && savedSelections !== null, // wait for saved selections to load
-    staleTime: 30 * 60 * 1000, // 3 mins
+    enabled: !!client,
+    staleTime: 30 * 60 * 1000,
   });
 
-  // Account info query
+  // ---------------------- Account Info ----------------------
   const accountInfoQuery = useQuery<AccountInfo | null, Error>({
     queryKey: ['accountInfo'],
     queryFn: async () => {
@@ -111,13 +83,14 @@ export function useDashboardData() {
       return client.getAccountInfo();
     },
     enabled: !!client,
-    staleTime: 3 * 60 * 60 * 1000, // 3 hours
+    staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
     retry: 3,
   });
 
+  // ---------------------- Locker ----------------------
   const lockerQuery = useQuery<LockerData | null, Error>({
     queryKey: ['locker'],
     queryFn: async () => {
@@ -126,13 +99,14 @@ export function useDashboardData() {
       return client.getLocker();
     },
     enabled: !!client,
-    staleTime: 3 * 24 * 60 * 60 * 1000, // 3 days
+    staleTime: 3 * 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
     retry: 3,
   });
 
+  // ---------------------- Canteen Menu ----------------------
   const canteenMenuQuery = useQuery<CanteenMenuResult, Error>({
     queryKey: ['canteenMenu'],
     queryFn: async () => {
@@ -142,19 +116,19 @@ export function useDashboardData() {
       return withTimeout(canteenClient.getMonthlyMenu(), 25000);
     },
     enabled: !!client,
-    staleTime: 10 * 60 * 60 * 1000, // 10 hours
+    staleTime: 10 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
     refetchOnReconnect: false,
     retry: 0,
   });
 
+  // ---------------------- Absences ----------------------
   const absenceQuery = useQuery<OmluvnyListResult | null, Error>({
     queryKey: ['absences'],
     queryFn: async () => {
       if (!(await isLoggedIn())) throw new Error('Not logged in');
       if (!client) throw new Error('Client not available');
-      console.warn('OMLUVNY LIST');
       return client.getOmluvnyList();
     },
     enabled: !!client,
@@ -165,23 +139,14 @@ export function useDashboardData() {
     retry: 3,
   });
 
-  // Refresh all dashboard data
+  // ---------------------- Refresh ----------------------
   const refresh = async () => {
-    await queryClient.invalidateQueries({
-      queryKey: ['grades'],
-    });
-    await queryClient.invalidateQueries({
-      queryKey: ['timetable'],
-    });
-    await queryClient.invalidateQueries({
-      queryKey: ['accountInfo'],
-    });
-    await queryClient.invalidateQueries({
-      queryKey: ['locker'],
-    });
-    await queryClient.invalidateQueries({
-      queryKey: ['absences'],
-    });
+    await queryClient.invalidateQueries({ queryKey: ['grades'] });
+    await queryClient.invalidateQueries({ queryKey: ['timetable'] });
+    await queryClient.invalidateQueries({ queryKey: ['accountInfo'] });
+    await queryClient.invalidateQueries({ queryKey: ['locker'] });
+    await queryClient.invalidateQueries({ queryKey: ['absences'] });
+    await queryClient.invalidateQueries({ queryKey: ['canteenMenu'] });
   };
 
   return {
