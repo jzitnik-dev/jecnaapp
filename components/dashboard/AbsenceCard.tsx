@@ -8,6 +8,7 @@ function parse(data: OmluvnyListResult | null) {
   let totalExcused = 0;
   let totalUnexcused = 0;
   let totalAbsences = 0;
+  let totalLateArrivals = 0;
 
   if (data && data.absences) {
     for (const absence of data.absences) {
@@ -18,6 +19,7 @@ function parse(data: OmluvnyListResult | null) {
       } else {
         totalExcused += absence.count;
       }
+      totalLateArrivals += absence.countLate || 0;
     }
   }
 
@@ -25,12 +27,14 @@ function parse(data: OmluvnyListResult | null) {
     totalExcused,
     totalUnexcused,
     totalAbsences,
+    totalLateArrivals,
   };
 }
 
 export function AbsenceCard({ data }: { data: OmluvnyListResult | null }) {
   const theme = useTheme();
-  const { totalExcused, totalUnexcused, totalAbsences } = parse(data);
+  const { totalExcused, totalUnexcused, totalAbsences, totalLateArrivals } =
+    parse(data);
 
   return (
     <Card
@@ -95,7 +99,7 @@ export function AbsenceCard({ data }: { data: OmluvnyListResult | null }) {
               variant="headlineMedium"
               style={[styles.statValue, { color: theme.colors.secondary }]}
             >
-              {totalAbsences}
+              {totalLateArrivals}
             </Text>
             <Text
               variant="bodySmall"
@@ -104,7 +108,7 @@ export function AbsenceCard({ data }: { data: OmluvnyListResult | null }) {
                 { color: theme.colors.onSurfaceVariant },
               ]}
             >
-              Celkem
+              Pozdní příchody
             </Text>
           </View>
         </View>
@@ -132,6 +136,7 @@ const styles = StyleSheet.create({
   },
   statItem: {
     alignItems: 'center',
+    width: 90,
   },
   statValue: {
     fontWeight: 'bold',
