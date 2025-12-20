@@ -1,5 +1,6 @@
 import * as Notifications from 'expo-notifications';
 import * as SecureStore from 'expo-secure-store';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundTask from 'expo-background-task';
 import { Grade, SpseJecnaClient, SubjectGrades } from '../api/SpseJecnaClient';
@@ -41,28 +42,31 @@ export class GradeNotificationService {
 
   private async setupBackgroundTask() {
     if (!BackgroundTask) {
-      console.warn('Background task not available');
+      console.warn('[GradeNotifier] Background task API is not available.');
       this.backgroundTaskAvailable = false;
       return;
     }
 
     try {
-      // Check if background task is available
       await BackgroundTask.getStatusAsync();
       this.backgroundTaskAvailable = true;
 
       TaskManager.defineTask(BACKGROUND_FETCH_TASK, async () => {
         try {
-          console.log('Background task: Checking for new grades...');
+          console.log('[GradeNotifier] Background task started.');
           await this.checkForNewGrades();
+          console.log('[GradeNotifier] Background task finished successfully.');
           return BackgroundTask.BackgroundTaskResult.Success;
         } catch (error) {
-          console.error('Background task error:', error);
+          console.error('[GradeNotifier] Background task failed:', error);
           return BackgroundTask.BackgroundTaskResult.Failed;
         }
       });
     } catch (error) {
-      console.warn('Background task not available:', error);
+      console.warn(
+        '[GradeNotifier] Background task could not be configured:',
+        error
+      );
       this.backgroundTaskAvailable = false;
     }
   }
@@ -78,23 +82,19 @@ export class GradeNotificationService {
     }
 
     if (finalStatus !== 'granted') {
-      console.log('Failed to get push token for push notification!');
+      console.warn('[GradeNotifier] Notification permissions not granted.');
       return false;
     }
 
-    // Only check background task permissions if available
     if (this.backgroundTaskAvailable && BackgroundTask) {
-      try {
-        const backgroundTaskStatus = await BackgroundTask.getStatusAsync();
-        if (
-          backgroundTaskStatus ===
-          BackgroundTask.BackgroundTaskStatus.Restricted
-        ) {
-          console.log('Background task permission restricted');
-          return false;
-        }
-      } catch (error) {
-        console.warn('Background task status check failed:', error);
+      const backgroundTaskStatus = await BackgroundTask.getStatusAsync();
+      if (
+        backgroundTaskStatus === BackgroundTask.BackgroundTaskStatus.Restricted
+      ) {
+        console.warn(
+          '[GradeNotifier] Background task permissions are restricted or denied.'
+        );
+        return false;
       }
     }
 
@@ -103,17 +103,22 @@ export class GradeNotificationService {
 
   async startBackgroundFetch(): Promise<void> {
     if (!this.backgroundTaskAvailable || !BackgroundTask) {
-      console.log('Background task not available, skipping registration');
+      console.log(
+        '[GradeNotifier] Background task not available, skipping registration.'
+      );
       return;
     }
 
     try {
       await BackgroundTask.registerTaskAsync(BACKGROUND_FETCH_TASK, {
-        minimumInterval: 15,
+        minimumInterval: 15 * 60, // 15 minutes
       });
-      console.log('Background task registered');
+      console.log('[GradeNotifier] Background task registered.');
     } catch (error) {
-      console.error('Failed to register background task:', error);
+      console.error(
+        '[GradeNotifier] Failed to register background task:',
+        error
+      );
     }
   }
 
@@ -123,21 +128,41 @@ export class GradeNotificationService {
 
   async stopBackgroundFetch(): Promise<void> {
     if (!this.backgroundTaskAvailable || !BackgroundTask) {
-      console.log('Background task not available, skipping unregistration');
+      console.log(
+        '[GradeNotifier] Background task not available, skipping unregistration.'
+      );
       return;
     }
 
     try {
       await BackgroundTask.unregisterTaskAsync(BACKGROUND_FETCH_TASK);
-      console.log('Background task unregistered');
+      console.log('[GradeNotifier] Background task unregistered.');
     } catch (error) {
-      console.error('Failed to unregister background task:', error);
+      console.error(
+        '[GradeNotifier] Failed to unregister background task:',
+        error
+      );
     }
   }
 
   private async getPreviousGrades(): Promise<Map<string, Grade[]>> {
     try {
-      const stored = await SecureStore.getItemAsync(PREVIOUS_GRADES_KEY);
+      let stored = await AsyncStorage.getItem(PREVIOUS_GRADES_KEY);
+
+      if (!stored) {
+        const storedSecure =
+          await SecureStore.getItemAsync(PREVIOUS_GRADES_KEY);
+        if (storedSecure) {
+          console.log(
+            '[GradeNotifier] Migrating grades from SecureStore to AsyncStorage...'
+          );
+          await AsyncStorage.setItem(PREVIOUS_GRADES_KEY, storedSecure);
+          await SecureStore.deleteItemAsync(PREVIOUS_GRADES_KEY);
+          stored = storedSecure;
+          console.log('[GradeNotifier] Migration complete.');
+        }
+      }
+
       if (stored) {
         const parsed = JSON.parse(stored);
         const map = new Map<string, Grade[]>();
@@ -147,7 +172,7 @@ export class GradeNotificationService {
         return map;
       }
     } catch (error) {
-      console.error('Error loading previous grades:', error);
+      console.error('[GradeNotifier] Error loading previous grades:', error);
     }
     return new Map();
   }
@@ -160,18 +185,12 @@ export class GradeNotificationService {
       grades.forEach((gradeList, subject) => {
         obj[subject] = gradeList;
       });
-      await SecureStore.setItemAsync(PREVIOUS_GRADES_KEY, JSON.stringify(obj));
+      await AsyncStorage.setItem(PREVIOUS_GRADES_KEY, JSON.stringify(obj));
     } catch (error) {
-      console.error('Error saving previous grades:', error);
+      console.error('[GradeNotifier] Error saving previous grades:', error);
+      // Re-throw to notify the caller that the state was not saved
+      throw error;
     }
-  }
-
-  private createGradeKey(grade: Grade): string {
-    const value = String(grade.value);
-    const weight = String(grade.weight);
-    const date = grade.date ? new Date(grade.date).toISOString() : '';
-    const teacher = grade.teacher?.trim() || '';
-    return `${value}-${weight}-${date}-${teacher}`;
   }
 
   private findNewGrades(
@@ -182,14 +201,11 @@ export class GradeNotificationService {
 
     for (const subject of currentGrades) {
       const previousSubjectGrades = previousGrades.get(subject.subject) || [];
-      const previousGradeKeys = new Set(
-        previousSubjectGrades.map(g => this.createGradeKey(g))
-      );
+      const previousGradeKeys = new Set(previousSubjectGrades.map(g => g.id));
 
       for (const split of subject.splits) {
         for (const grade of split.grades) {
-          const gradeKey = this.createGradeKey(grade);
-          if (!previousGradeKeys.has(gradeKey)) {
+          if (!previousGradeKeys.has(grade.id)) {
             newGrades.push({
               subject: subject.subject,
               grade: grade.value.toString(),
@@ -206,6 +222,18 @@ export class GradeNotificationService {
     return newGrades;
   }
 
+  private gradesToMap(grades: SubjectGrades[]): Map<string, Grade[]> {
+    const map = new Map<string, Grade[]>();
+    for (const subject of grades) {
+      const allGrades: Grade[] = [];
+      for (const split of subject.splits) {
+        allGrades.push(...split.grades);
+      }
+      map.set(subject.subject, allGrades);
+    }
+    return map;
+  }
+
   private async sendGradeNotification(
     gradeNotification: GradeNotification
   ): Promise<void> {
@@ -213,7 +241,9 @@ export class GradeNotificationService {
     let body = `Známka: ${gradeNotification.grade} (váha: ${gradeNotification.weight})`;
 
     if (gradeNotification.teacher) {
-      body += ` - ${gradeNotification.teacher}${gradeNotification.note ? '\n\n' + gradeNotification.note : ''}`;
+      body += ` - ${gradeNotification.teacher}${
+        gradeNotification.note ? '\n\n' + gradeNotification.note : ''
+      }`;
     }
 
     await Notifications.scheduleNotificationAsync({
@@ -228,48 +258,58 @@ export class GradeNotificationService {
 
   async checkForNewGrades(): Promise<void> {
     if (!this.client) {
-      console.log('No client available for grade checking');
+      console.log(
+        '[GradeNotifier] Client not available, skipping grade check.'
+      );
       return;
     }
 
-    SecureStore.setItemAsync(LAST_RAN_KEY, new Date().getTime().toString());
-
     try {
-      // Check if user is logged in
       const isLoggedIn = await this.client.isLoggedIn();
       if (!isLoggedIn) {
-        console.log('User not logged in, skipping grade check');
+        console.log(
+          '[GradeNotifier] User not logged in, skipping grade check.'
+        );
         return;
       }
 
-      // Get current grades
+      // 1. Fetch current grades
       const currentGrades = await this.client.getZnamky();
 
-      // Get previous grades
+      // 2. Get previous grades
       const previousGrades = await this.getPreviousGrades();
 
-      // Find new grades
+      // 3. Find new grades
       const newGrades = this.findNewGrades(currentGrades, previousGrades);
 
-      // Send notifications for new grades
-      for (const newGrade of newGrades) {
-        await this.sendGradeNotification(newGrade);
+      // 4. Send notifications
+      if (newGrades.length > 0) {
+        console.log(`[GradeNotifier] Found ${newGrades.length} new grade(s).`);
+        for (const newGrade of newGrades) {
+          await this.sendGradeNotification(newGrade);
+        }
+      } else {
+        console.log('[GradeNotifier] No new grades found.');
       }
 
-      // Save current grades as previous grades
-      const currentGradesMap = new Map<string, Grade[]>();
-      for (const subject of currentGrades) {
-        const allGrades: Grade[] = [];
-        for (const split of subject.splits) {
-          allGrades.push(...split.grades);
-        }
-        currentGradesMap.set(subject.subject, allGrades);
-      }
+      // 5. Save current grades as previous grades for the next run
+      const currentGradesMap = this.gradesToMap(currentGrades);
       await this.savePreviousGrades(currentGradesMap);
 
-      console.log(`Found ${newGrades.length} new grades`);
+      // 6. Mark this run as successful
+      await SecureStore.setItemAsync(
+        LAST_RAN_KEY,
+        new Date().getTime().toString()
+      );
+      console.log(
+        '[GradeNotifier] Successfully checked for grades and updated state.'
+      );
     } catch (error) {
-      console.error('Error checking for new grades:', error);
+      console.error(
+        '[GradeNotifier] An error occurred during grade check. State was not saved to prevent inconsistent data.',
+        error
+      );
+      // Do not update LAST_RAN_KEY, so we know the last run failed.
     }
   }
 
@@ -285,16 +325,20 @@ export class GradeNotificationService {
 
   async getNotificationSettings(): Promise<{
     permissions: Notifications.NotificationPermissionsStatus;
-    backgroundFetchStatus: any | null;
+    backgroundFetchStatus: BackgroundTask.BackgroundTaskStatus | null;
   }> {
     const permissions = await Notifications.getPermissionsAsync();
 
-    let backgroundFetchStatus: any | null = null;
+    let backgroundFetchStatus: BackgroundTask.BackgroundTaskStatus | null =
+      null;
     if (this.backgroundTaskAvailable && BackgroundTask) {
       try {
         backgroundFetchStatus = await BackgroundTask.getStatusAsync();
       } catch (error) {
-        console.warn('Failed to get background task status:', error);
+        console.warn(
+          '[GradeNotifier] Failed to get background task status:',
+          error
+        );
       }
     }
 

@@ -8,6 +8,7 @@ import { iCanteenClient } from './iCanteenClient';
 const extraordURL = 'https://jecnarozvrh.jzitnik.dev';
 
 export type Grade = {
+  id: number;
   value: number | 'N' | 'Pochvala' | 'Důtka'; // 1-5, 'N' (absence), or 'Pochvala'
   weight: number; // 1 for normal, 0.5 for small, 0 for pochvala
   date?: string;
@@ -449,6 +450,7 @@ export class SpseJecnaClient {
 
             if (label && label.includes('Pochvala')) {
               pochvaly.push({
+                id: parseInt(href.split('=')[1]),
                 value: 'Pochvala',
                 weight: 0,
                 note: label,
@@ -456,6 +458,7 @@ export class SpseJecnaClient {
               });
             } else if (label && label.includes('Důtka')) {
               pochvaly.push({
+                id: parseInt(href.split('=')[1]),
                 value: 'Důtka',
                 weight: 0,
                 note: label,
@@ -494,6 +497,8 @@ export class SpseJecnaClient {
               node.attribs.class.includes('score')
             ) {
               const classAttr = node.attribs.class || '';
+              const href = node.attribs.href;
+              const id = parseInt(href.split('?scoreId=')[1]);
               const valueSpan = selectAll('span.value', [node]) as Element[];
               const valueText = valueSpan[0]?.children
                 .find(c => c.type === 'text')
@@ -523,7 +528,14 @@ export class SpseJecnaClient {
                 teacher = secondPart[1]?.trim();
                 date = secondPart[0]?.trim();
               }
-              currentGrades.push({ value, weight, date, note: note, teacher });
+              currentGrades.push({
+                id,
+                value,
+                weight,
+                date,
+                note: note,
+                teacher,
+              });
             }
           }
           if (currentGrades.length > 0 || currentLabel) {
