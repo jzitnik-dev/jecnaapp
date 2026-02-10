@@ -269,13 +269,14 @@ export async function getCurrentAndNextLesson(
   const dayMap = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pa', 'So'];
   const currentDayName = dayMap[currentDay];
 
-  const extraIndex = extraOrdinary?.props.findIndex(
-    el => el.date === now.toISOString().slice(0, 10)
+  const nowDate = now.toISOString().slice(0, 10);
+
+  const isInExtra = Object.keys(extraOrdinary?.schedule || {}).includes(
+    nowDate
   );
-  const isInExtra = extraIndex !== -1 && extraIndex !== undefined;
   const extra =
     isInExtra && className
-      ? extraOrdinary?.schedule[extraIndex][className]
+      ? extraOrdinary?.schedule[nowDate].changes[className]
       : undefined;
 
   // Find today's lessons
@@ -309,7 +310,7 @@ export async function getCurrentAndNextLesson(
       if (extraOrdinary) {
         currentLessons.push({
           kind: 'extraordinary',
-          extraOrdinaryData: extraOrdinary,
+          extraOrdinaryData: extraOrdinary.text,
           time: period.time,
           day: today.day,
           startTime,
@@ -364,7 +365,7 @@ export async function getCurrentAndNextLesson(
       if (extraOrdinary) {
         nextLessons.push({
           kind: 'extraordinary',
-          extraOrdinaryData: extraOrdinary,
+          extraOrdinaryData: extraOrdinary.text,
           time: period.time,
           day: today.day,
           startTime,

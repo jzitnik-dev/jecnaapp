@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useNavigation, useRouter } from 'expo-router';
 import React, { useEffect, useMemo, useState } from 'react';
 import {
-  Dimensions,
   Platform,
   RefreshControl,
   ScrollView,
@@ -211,9 +210,6 @@ export default function RozvrhScreen() {
       </View>
     );
   }
-
-  // Responsive cell width
-  const screenWidth = Dimensions.get('window').width;
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>

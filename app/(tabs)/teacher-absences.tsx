@@ -13,7 +13,7 @@ export default function TeacherAbsencesScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
-  const [currentDayIndex, setCurrentDayIndex] = useState(0);
+  const [currentDay, setCurrentDay] = useState<string>();
   const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -21,16 +21,19 @@ export default function TeacherAbsencesScreen() {
     queryKey: ['extraordinarytimetable'],
     queryFn: async () => {
       if (!client) throw new Error('Client not available');
-      return client.getExtraordinaryTimetable();
+      const data = await client.getExtraordinaryTimetable();
+      setCurrentDay(Object.keys(data.schedule)[0]);
+
+      return data;
     },
     enabled: !!client,
   });
 
   const { absences } = useMemo(() => {
     return {
-      absences: teachersQuery.data?.schedule[currentDayIndex]?.ABSENCE || [],
+      absences: teachersQuery.data?.schedule[currentDay || '']?.absence || [],
     };
-  }, [teachersQuery.data, currentDayIndex]);
+  }, [teachersQuery.data, currentDay]);
 
   function getText(absence: Absence) {
     if (absence.type === 'wholeDay') {
@@ -117,20 +120,22 @@ export default function TeacherAbsencesScreen() {
             }}
           >
             <Picker
-              selectedValue={currentDayIndex}
-              onValueChange={value => setCurrentDayIndex(value)}
+              selectedValue={currentDay}
+              onValueChange={value => setCurrentDay(value)}
               style={{
                 color: theme.colors.onSurface,
                 backgroundColor: theme.colors.surface,
               }}
             >
-              {teachersQuery.data?.props?.map((prop, i) => {
-                const date = new Date(prop.date);
+              {Object.keys(teachersQuery.data?.schedule || {}).map(prop => {
+                const date = new Date(prop);
                 let formattedDate = `${date.getDate()}. ${date.getMonth() + 1}. ${date.getFullYear()}`;
-                if (prop.priprava) {
+                if (teachersQuery.data?.schedule[prop]?.info?.inWork) {
                   formattedDate += ' (příprava)';
                 }
-                return <Picker.Item key={i} label={formattedDate} value={i} />;
+                return (
+                  <Picker.Item key={prop} label={formattedDate} value={prop} />
+                );
               })}
             </Picker>
           </View>

@@ -60,7 +60,7 @@ export function TimetableGrid({
   useEffect(() => {
     (async () => {
       setShowCurrent(
-        (await SecureStore.getItemAsync('show-current-hour')) == 'true'
+        (await SecureStore.getItemAsync('show-current-hour')) === 'true'
       );
     })();
   }, []);
@@ -203,12 +203,11 @@ export function TimetableGrid({
             .toISOString()
             .slice(0, 10);
 
-          const extraIndex = extraordinary?.props.findIndex(
-            el => el.date === newDate
+          const isInExtra = Object.keys(extraordinary?.schedule || {}).includes(
+            newDate
           );
-          const isInExtra = extraIndex !== -1 && extraIndex !== undefined;
           const extra = isInExtra
-            ? extraordinary?.schedule[extraIndex][className]
+            ? extraordinary?.schedule[newDate].changes[className]
             : undefined;
 
           const cellHeight =
@@ -233,7 +232,7 @@ export function TimetableGrid({
                 <Text style={[styles.dayText, { color: textColor }]}>
                   {day.day}
                 </Text>
-                {isInExtra && extraordinary?.props[extraIndex].priprava ? (
+                {isInExtra && extraordinary?.schedule[newDate].info.inWork ? (
                   <Text style={{ color: secondaryTextColor }}>(příprava)</Text>
                 ) : null}
               </View>
@@ -266,7 +265,7 @@ export function TimetableGrid({
                         ellipsizeMode="tail"
                         style={{ textAlign: 'center', color: extraCellBgOn }}
                       >
-                        {extra[periodIdx]}
+                        {extra[periodIdx].text}
                       </Text>
                     </View>
                   );

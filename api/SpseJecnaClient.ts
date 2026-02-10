@@ -167,16 +167,25 @@ export type Absence =
       hours: number;
     };
 
-export type ScheduleRecord = {
-  ABSENCE?: Absence[];
-} & Record<string, (string | null)[]>;
+export type ScheduleChange = {
+  text: string;
+  backgroundColor?: string;
+  foregroundColor?: string;
+  willBeSpecified?: boolean;
+};
+
+export type ScheduleDay = {
+  info: {
+    inWork: boolean;
+  };
+  absence: Absence[];
+  changes: Record<string, (ScheduleChange | null)[]>;
+  takesPlace: string;
+  reservedRooms: (string | null)[];
+};
 
 export type ExtraordinaryTimetable = {
-  schedule: ScheduleRecord[];
-  props: {
-    date: string;
-    priprava: boolean;
-  }[];
+  schedule: Record<string, ScheduleDay>;
   status: {
     currentUpdateSchedule: number;
     lastUpdated: string;
@@ -762,7 +771,7 @@ export class SpseJecnaClient {
   }
 
   public async getExtraordinaryTimetable(): Promise<ExtraordinaryTimetable> {
-    const res = await fetch(extraordURL);
+    const res = await fetch(new URL('/versioned/v3', extraordURL).toString());
     const json = (await res.json()) as ExtraordinaryTimetable;
 
     return json;
