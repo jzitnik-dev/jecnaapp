@@ -1,34 +1,21 @@
 import { IconSymbol } from '@/components/ui/IconSymbol';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
-  createDrawerNavigator,
+  Drawer,
   DrawerContentScrollView,
   DrawerItemList,
-} from '@react-navigation/drawer';
+} from 'expo-router/drawer';
 import { useRouter } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { Linking, TouchableOpacity, View } from 'react-native';
 import { Text, TouchableRipple, useTheme } from 'react-native-paper';
-import { ImageViewer } from '../../components/ImageViewer';
-import { useAccountInfo } from '../../hooks/useAccountInfo';
-import { useAppTheme } from '../../hooks/useAppTheme';
-import HomeScreen from './home';
-import JidelnaScreen from './jidelna';
-import OmluvnyListScreen from './omluvny-list';
-import PrichodyScreen from './prichody';
-import RoomsListScreen from './rooms-list';
-import RozvrhScreen from './rozvrh';
-import SettingsScreen from './settings';
-import TeachersListScreen from './teachers-list';
-import ZnamkyScreen from './znamky';
+import { ImageViewer } from '../../../components/ImageViewer';
+import { useAccountInfo } from '../../../hooks/useAccountInfo';
+import { useAppTheme } from '../../../hooks/useAppTheme';
 import MoodleIcon from '@/components/icons/Moodle';
 import * as SecureStore from 'expo-secure-store';
-import NovinkyScreen from './novinky';
 import useIsUpdateAvailable from '@/utils/updates';
-import TeacherAbsencesScreen from './teacher-absences';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-const Drawer = createDrawerNavigator();
 
 export default function DrawerLayout() {
   const { navigationTheme } = useAppTheme();
@@ -104,8 +91,8 @@ export default function DrawerLayout() {
   const isUpdateAvailable = useIsUpdateAvailable();
 
   return (
-    <Drawer.Navigator
-      initialRouteName="Home"
+    <Drawer
+      initialRouteName="index"
       screenOptions={({ navigation }) => ({
         headerLeft: () => (
           <TouchableOpacity
@@ -183,7 +170,7 @@ export default function DrawerLayout() {
                         style={{
                           color: navigationTheme.colors.text,
                           fontWeight: '600',
-                          fontSize: 16, // match drawer font size
+                          fontSize: 16,
                         }}
                       >
                         Aktualizace k dispozici
@@ -192,7 +179,7 @@ export default function DrawerLayout() {
                         style={{
                           color: theme?.colors?.onSurfaceVariant,
                           fontWeight: '600',
-                          fontSize: 13, // match drawer font size
+                          fontSize: 13,
                         }}
                       >
                         Nová verze aplikace je k dispozici na GitHubu.
@@ -205,7 +192,6 @@ export default function DrawerLayout() {
 
             <DrawerItemList {...props} />
 
-            {/* Divider */}
             <View
               style={{
                 height: 1,
@@ -220,7 +206,7 @@ export default function DrawerLayout() {
                 key={idx}
                 style={{
                   borderRadius: 9999,
-                  overflow: 'hidden', // important to clip ripple
+                  overflow: 'hidden',
                 }}
               >
                 <TouchableRipple
@@ -228,7 +214,7 @@ export default function DrawerLayout() {
                   borderless={false}
                   rippleColor={`${navigationTheme.colors.onBackground}50`}
                   style={{
-                    paddingVertical: 15, // match drawer item height (around 48px total)
+                    paddingVertical: 15,
                     paddingHorizontal: 16,
                     flexDirection: 'row',
                     alignItems: 'center',
@@ -245,7 +231,7 @@ export default function DrawerLayout() {
                           marginLeft: 12,
                           color: navigationTheme.colors.text,
                           fontWeight: '600',
-                          fontSize: 16, // match drawer font size
+                          fontSize: 16,
                         }}
                       >
                         {page.name}
@@ -263,7 +249,6 @@ export default function DrawerLayout() {
             ))}
           </DrawerContentScrollView>
 
-          {/* Account Section */}
           <View
             style={{
               padding: 16,
@@ -284,7 +269,7 @@ export default function DrawerLayout() {
                     <ImageViewer
                       imageUrl={accountInfo?.photoUrl}
                       size={48}
-                      fallbackSource={require('../../assets/images/icon.png')}
+                      fallbackSource={require('../../../assets/images/icon.png')}
                     />
                   </View>
                 )}
@@ -321,8 +306,7 @@ export default function DrawerLayout() {
       )}
     >
       <Drawer.Screen
-        name="Home"
-        component={HomeScreen}
+        name="index"
         options={{
           title: 'Domov',
           drawerIcon: ({ color, size }) => (
@@ -331,8 +315,7 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
-        name="Rozvrh"
-        component={RozvrhScreen}
+        name="rozvrh"
         options={{
           title: 'Rozvrh',
           drawerIcon: ({ color, size }) => (
@@ -341,8 +324,7 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
-        name="Známky"
-        component={ZnamkyScreen}
+        name="znamky"
         options={{
           title: 'Známky',
           drawerIcon: ({ color, size }) => (
@@ -352,7 +334,6 @@ export default function DrawerLayout() {
       />
       <Drawer.Screen
         name="teachers-list"
-        component={TeachersListScreen}
         options={{
           title: 'Učitelé',
           drawerIcon: ({ color, size }) => (
@@ -366,8 +347,7 @@ export default function DrawerLayout() {
       />
       {extraEnabled && (
         <Drawer.Screen
-          name="teachers-absences"
-          component={TeacherAbsencesScreen}
+          name="teacher-absences"
           options={{
             title: 'Absence učitelů',
             drawerIcon: ({ color, size }) => (
@@ -382,7 +362,6 @@ export default function DrawerLayout() {
       )}
       <Drawer.Screen
         name="rooms-list"
-        component={RoomsListScreen}
         options={{
           title: 'Učebny',
           drawerIcon: ({ color, size }) => (
@@ -392,7 +371,6 @@ export default function DrawerLayout() {
       />
       <Drawer.Screen
         name="prichody"
-        component={PrichodyScreen}
         options={{
           title: 'Příchody a odchody',
           drawerIcon: ({ color, size }) => (
@@ -406,7 +384,6 @@ export default function DrawerLayout() {
       />
       <Drawer.Screen
         name="omluvny-list"
-        component={OmluvnyListScreen}
         options={{
           title: 'Omluvný list',
           drawerIcon: ({ color, size }) => (
@@ -420,7 +397,6 @@ export default function DrawerLayout() {
       />
       <Drawer.Screen
         name="jidelna"
-        component={JidelnaScreen}
         options={{
           title: 'Jídelna',
           drawerIcon: ({ color, size }) => (
@@ -430,7 +406,6 @@ export default function DrawerLayout() {
       />
       <Drawer.Screen
         name="novinky"
-        component={NovinkyScreen}
         options={{
           title: 'Novinky',
           headerShown: true,
@@ -441,7 +416,6 @@ export default function DrawerLayout() {
       />
       <Drawer.Screen
         name="settings"
-        component={SettingsScreen}
         options={{
           title: 'Nastavení',
           headerShown: true,
@@ -450,6 +424,6 @@ export default function DrawerLayout() {
           ),
         }}
       />
-    </Drawer.Navigator>
+    </Drawer>
   );
 }

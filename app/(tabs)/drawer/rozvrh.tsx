@@ -19,15 +19,15 @@ import {
 import type {
   ExtraordinaryTimetable,
   Timetable,
-} from '../../api/SpseJecnaClient';
-import { TimetableGrid } from '../../components/TimetableGrid';
-import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
+} from '../../../api/SpseJecnaClient';
+import { TimetableGrid } from '../../../components/TimetableGrid';
+import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 import * as SecureStore from 'expo-secure-store';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
 import {
   getTimetableSelections,
   saveTimetableSelections,
-} from '../../utils/timetableStorage';
+} from '../../../utils/timetableStorage';
 import { Ionicons } from '@expo/vector-icons';
 import ExtraReport from '@/components/ExtraReport';
 

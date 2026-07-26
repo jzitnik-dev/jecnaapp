@@ -2,15 +2,15 @@ import {
   ThemeProvider,
   DarkTheme,
   DefaultTheme,
-} from '@react-navigation/native';
-import { AppState, ActivityIndicator, View } from 'react-native';
+} from 'expo-router/react-navigation';
+import { AppState } from 'react-native';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
-import React, { useEffect, useState } from 'react';
-import { Button, Provider as PaperProvider } from 'react-native-paper';
+import { useEffect } from 'react';
+import { Provider as PaperProvider } from 'react-native-paper';
 import 'react-native-reanimated';
 
 import { useColorScheme } from '@/hooks/useColorScheme';
@@ -26,23 +26,10 @@ export default function RootLayout() {
   const { client, setClient } = useSpseJecnaClient();
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
-  const [fastLoad, setFastLoad] = useState(false);
-  const [superFastLoad, setSuperFastLoad] = useState(false);
-
-  useEffect(() => {
-    (async () => {
-      setFastLoad((await SecureStore.getItemAsync('fast-load')) === 'normal');
-      setSuperFastLoad(
-        (await SecureStore.getItemAsync('fast-load')) === 'super'
-      );
-    })();
-  }, []);
 
   const [fontsLoaded, fontError] = useFonts({
     SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
   });
-
-  const [isLoading, setIsLoading] = useState(true); // 👈 Loading state
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -108,8 +95,6 @@ export default function RootLayout() {
         }
       } catch (error) {
         console.error('Initialization error:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -128,35 +113,6 @@ export default function RootLayout() {
 
   if (fontError) {
     console.error('Font loading error:', fontError);
-  }
-
-  const shouldWaitForFonts = __DEV__;
-  if (
-    ((shouldWaitForFonts && !fontsLoaded) || (isLoading && !fastLoad)) &&
-    !superFastLoad
-  ) {
-    // 👇 Full-screen spinner
-    return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#6200ee" />
-        <Button
-          style={{
-            backgroundColor: 'red',
-            marginTop: 20,
-            zIndex: 1000,
-            display: 'none',
-          }}
-          textColor="white"
-          onPress={async () => {
-            alert('Resetting themes!!! U sure?');
-            await SecureStore.deleteItemAsync('customColors');
-            alert('DONE! Restart app');
-          }}
-        >
-          Emergency menu
-        </Button>
-      </View>
-    );
   }
 
   const baseTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;

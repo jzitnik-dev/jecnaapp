@@ -24,9 +24,9 @@ import type {
   Grade as GradeBase,
   PochvalaDetail,
   SubjectGrades,
-} from '../../api/SpseJecnaClient';
-import { useGradeNotifications } from '../../hooks/useGradeNotifications';
-import { useSpseJecnaClient } from '../../hooks/useSpseJecnaClient';
+} from '../../../api/SpseJecnaClient';
+import { useGradeNotifications } from '../../../hooks/useGradeNotifications';
+import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 import {
   getZnamkySelections,
   saveZnamkySelections,
