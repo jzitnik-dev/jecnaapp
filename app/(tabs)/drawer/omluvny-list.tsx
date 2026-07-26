@@ -1,6 +1,6 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { Picker } from '@react-native-picker/picker';
-import { useTheme } from '@react-navigation/native';
+import { useTheme } from 'expo-router/react-navigation';
 import React, { useState } from 'react';
 import {
   ActivityIndicator,
@@ -11,7 +11,7 @@ import {
 import type {
   OmluvnyListAbsence,
   OmluvnyListResult,
-} from '../../api/SpseJecnaClient';
+} from '../../../api/SpseJecnaClient';
 import { Text } from 'react-native-paper';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 

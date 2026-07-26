@@ -36,7 +36,7 @@ export default function LoginScreen() {
         setClient(client);
         setCookies(client.getCookies());
         setError(null);
-        router.replace('/(tabs)');
+        router.replace('/(tabs)/drawer');
       } else {
         setError('Uživatelské jméno nebo heslo není správné.');
         if (!silent) {

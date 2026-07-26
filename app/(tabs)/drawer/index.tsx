@@ -85,7 +85,7 @@ const WelcomeCard = React.memo(
               <ImageViewer
                 imageUrl={accountInfo?.photoUrl}
                 size={60}
-                fallbackSource={require('../../assets/images/icon.png')}
+                fallbackSource={require('../../../assets/images/icon.png')}
               />
             </View>
           )}
