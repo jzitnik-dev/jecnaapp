@@ -1,72 +1,45 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
-import type {
-  ExtraordinaryTimetable,
-  Timetable,
-} from '../../api/SpseJecnaClient';
-import type { LessonInfo, StaticLesson } from '../../utils/dashboardUtils';
-import { getCurrentAndNextLesson } from '../../utils/dashboardUtils';
+import type { LessonInfo, StaticLesson } from '@/utils/dashboard/nextClass';
+import { getCurrentAndNextLesson } from '@/utils/dashboard/nextClass';
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
-import { useQuery } from '@tanstack/react-query';
-import * as SecureStore from 'expo-secure-store';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
+import { TimetablePage } from 'jecnaapi-react-native/jecnaapi';
+import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
+import Skeleton from '../ui/Skeleton';
 
 interface NextLessonCardProps {
-  timetable?: Timetable | null;
+  timetable?: TimetablePage | null;
+  extraord?: SuplResult | null;
 }
 
-export function NextLessonCard({ timetable }: NextLessonCardProps) {
+export function NextLessonCard({ timetable, extraord }: NextLessonCardProps) {
   const theme = useTheme();
+  const isDark = theme.dark;
   const router = useRouter();
   const [lessonInfo, setLessonInfo] = useState<{
     currentLessons: LessonInfo[];
     nextLessons: LessonInfo[];
   }>({ currentLessons: [], nextLessons: [] });
   const { client } = useSpseJecnaClient();
-
-  const [extraenabled, setExtraenabled] = useState(false);
-  useEffect(() => {
-    (async () => {
-      const enabled =
-        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
-        'true';
-      if (enabled) {
-        setExtraenabled(true);
-      }
-    })();
-  }, []);
-
-  const { data: extraordinaryData } = useQuery<ExtraordinaryTimetable>({
-    queryKey: ['extraordinarytimetable'],
-    queryFn: async () => {
-      if (!client) throw new Error('Not logged in');
-      return await client.getExtraordinaryTimetable();
-    },
-    enabled: !!client && extraenabled,
-  });
-
   const { accountInfo } = useAccountInfo();
 
   useEffect(() => {
-    if (!timetable || !client || !accountInfo?.class) return;
+    if (!timetable || !client || !accountInfo?.className) return;
 
     const updateLessonInfo = async () => {
-      const info = await getCurrentAndNextLesson(
-        timetable,
-        extraordinaryData,
-        accountInfo?.class
-      );
+      const info = await getCurrentAndNextLesson(timetable, extraord);
       setLessonInfo(info);
     };
 
     updateLessonInfo();
-    const interval = setInterval(updateLessonInfo, 30000); // Update every 30 seconds
+    const interval = setInterval(updateLessonInfo, 30000);
 
     return () => clearInterval(interval);
-  }, [timetable, client, extraordinaryData, accountInfo]);
+  }, [timetable, client, extraord, accountInfo]);
 
   const { currentLessons, nextLessons } = lessonInfo;
 
@@ -78,7 +51,9 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
     router.push(`/ucebna/${room}`);
   };
 
-  if (!timetable) {
+  const isLoading = !timetable;
+
+  if (isLoading) {
     return (
       <Card
         style={[styles.card, { backgroundColor: theme.colors.surface }]}
@@ -99,21 +74,61 @@ export function NextLessonCard({ timetable }: NextLessonCardProps) {
               Rozvrh hodin
             </Text>
           </View>
-          <View style={styles.noLessonContainer}>
-            <MaterialCommunityIcons
-              name="calendar-blank"
-              size={48}
-              color={theme.colors.onSurfaceVariant}
-            />
-            <Text
-              variant="bodyLarge"
-              style={[
-                styles.noLessonText,
-                { color: theme.colors.onSurfaceVariant },
-              ]}
-            >
-              Rozvrh není k dispozici
-            </Text>
+
+          <View
+            style={[
+              styles.lessonContainer,
+              {
+                backgroundColor: isDark
+                  ? 'rgba(255,255,255,0.05)'
+                  : 'rgba(0,0,0,0.03)',
+              },
+            ]}
+          >
+            <View style={styles.lessonHeader}>
+              <View style={styles.statusContainer}>
+                <Skeleton
+                  style={{ width: 24, height: 24, borderRadius: 12 }}
+                  isDark={isDark}
+                />
+                <Skeleton style={{ width: 100, height: 20 }} isDark={isDark} />
+              </View>
+              <View style={styles.countdownContainer}>
+                <Skeleton
+                  style={{ width: 40, height: 24, marginBottom: 4 }}
+                  isDark={isDark}
+                />
+                <Skeleton style={{ width: 60, height: 14 }} isDark={isDark} />
+              </View>
+            </View>
+
+            <View style={styles.subjectContainer}>
+              <Skeleton
+                style={{ width: 150, height: 28, marginBottom: 8 }}
+                isDark={isDark}
+              />
+              <Skeleton
+                style={{ width: 100, height: 16, marginBottom: 8 }}
+                isDark={isDark}
+              />
+            </View>
+
+            <View style={styles.lessonDetails}>
+              <View style={styles.detailRow}>
+                <Skeleton
+                  style={{ width: 20, height: 20, borderRadius: 10 }}
+                  isDark={isDark}
+                />
+                <Skeleton style={{ width: 140, height: 16 }} isDark={isDark} />
+              </View>
+              <View style={styles.detailRow}>
+                <Skeleton
+                  style={{ width: 20, height: 20, borderRadius: 10 }}
+                  isDark={isDark}
+                />
+                <Skeleton style={{ width: 80, height: 16 }} isDark={isDark} />
+              </View>
+            </View>
           </View>
         </Card.Content>
       </Card>

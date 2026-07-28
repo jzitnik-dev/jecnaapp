@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import {
   RefreshControl,
   Text as RNText,
@@ -7,15 +7,13 @@ import {
   StyleSheet,
   View,
 } from 'react-native';
-import { Pressable } from 'react-native-gesture-handler';
 import { ActivityIndicator, Divider, Text, useTheme } from 'react-native-paper';
-import type {
-  TimetableDay,
-  TimetablePeriod,
-} from '../../../api/SpseJecnaClient';
+import { useQuery } from '@tanstack/react-query';
+
 import { TeacherImageViewer } from '../../../components/TeacherImageViewer';
 import { TimetableGrid } from '../../../components/TimetableGrid';
 import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
+import { Teacher } from 'jecnaapi-react-native/jecnaapi';
 
 export default function TeacherScreen() {
   const params = useLocalSearchParams();
@@ -25,73 +23,64 @@ export default function TeacherScreen() {
   const routeName = params.name;
   const theme = useTheme();
   const { client } = useSpseJecnaClient();
-  const [info, setInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [refreshing, setRefreshing] = useState(false);
 
-  const fetchData = async () => {
-    if (!client || typeof teacher !== 'string') {
-      setError(
-        'Chyba: Parametr učitele není předán nebo není string.\nVšechny parametry: ' +
-          JSON.stringify(params)
-      );
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await client.getTeacherProfile(teacher);
-      setInfo(data);
-    } catch (e: any) {
-      setError(e?.message || 'Chyba při načítání profilu.');
-    } finally {
-      setLoading(false);
-    }
-  };
+  const {
+    data: info,
+    isLoading,
+    isError,
+    isFetching,
+    error,
+    refetch,
+  } = useQuery<Teacher, Error>({
+    queryKey: ['teacherProfile', teacher],
+    queryFn: async () => {
+      if (!client || typeof teacher !== 'string') {
+        throw new Error('Parametr učitele není předán nebo není string.');
+      }
+      return await client.getTeacherProfile(teacher);
+    },
+    enabled: !!client && typeof teacher === 'string',
+    staleTime: 15 * 60 * 1000,
+  });
 
   useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-    setInfo(null);
-    fetchData().then(() => {
-      if (cancelled) return;
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [client, teacher]);
-
-  useEffect(() => {
-    if (loading && navigation?.setOptions) {
+    if (isLoading && navigation?.setOptions) {
       navigation.setOptions({ title: 'Učitel' });
-    } else if (info && info.name && navigation?.setOptions) {
-      navigation.setOptions({ title: info.name });
+    } else if (info?.fullName && navigation?.setOptions) {
+      navigation.setOptions({ title: info.fullName });
     }
-  }, [info, loading, navigation]);
+  }, [info, isLoading, navigation]);
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await fetchData();
-    setRefreshing(false);
-  };
-
-  if (loading) {
+  if (typeof teacher !== 'string') {
     return (
       <View style={styles.centered}>
-        <ActivityIndicator />
-        <Text>Načítám učitele…</Text>
+        <Text style={{ color: theme.colors.error }}>
+          Chyba: Parametr učitele není předán nebo není string.
+        </Text>
       </View>
     );
   }
-  if (error) {
+
+  if (isLoading) {
     return (
       <View style={styles.centered}>
-        <Text style={{ color: 'red' }}>{error}</Text>
+        <ActivityIndicator size="large" color={theme.colors.primary} />
+        <Text style={{ marginTop: 16 }}>Načítám učitele…</Text>
       </View>
     );
   }
+
+  // 3. Error state
+  if (isError) {
+    return (
+      <View style={styles.centered}>
+        <Text style={{ color: theme.colors.error }}>
+          {error?.message || 'Chyba při načítání profilu.'}
+        </Text>
+      </View>
+    );
+  }
+
   if (!info) return null;
 
   return (
@@ -99,7 +88,7 @@ export default function TeacherScreen() {
       style={{ flex: 1, backgroundColor: theme.colors.background }}
       contentContainerStyle={{ padding: 0 }}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl refreshing={isFetching} onRefresh={refetch} />
       }
     >
       <View
@@ -120,7 +109,7 @@ export default function TeacherScreen() {
           }}
         >
           <View style={styles.photoShadow}>
-            <TeacherImageViewer imageUrl={info.photo} />
+            <TeacherImageViewer imageUrl={info.profilePicturePath} />
           </View>
           <View style={{ flex: 1 }}>
             <Text
@@ -134,7 +123,7 @@ export default function TeacherScreen() {
                 },
               ]}
             >
-              {routeName || info.name}
+              {routeName || info.fullName}
             </Text>
             <Text
               style={[
@@ -142,7 +131,7 @@ export default function TeacherScreen() {
                 { color: theme.colors.primary, marginBottom: 12 },
               ]}
             >
-              {info.code}
+              {info.tag}
               {info.username ? ` • ${info.username}` : ''}
             </Text>
           </View>
@@ -155,94 +144,75 @@ export default function TeacherScreen() {
           }}
         />
         <View style={{ marginTop: 8, paddingHorizontal: 24, marginBottom: 18 }}>
-          {info.room && info.roomHref ? (
-            <View style={[styles.infoRow, { marginBottom: 6 }]}>
-              <Text style={styles.infoLabel}>Kabinet:</Text>
-              <Pressable
-                onPress={() => {
-                  router.push(`/ucebna/${info.room}`);
-                }}
-              >
-                <RNText
-                  style={[
-                    styles.infoValue,
-                    { color: '#2196f3', textDecorationLine: 'underline' },
-                  ]}
-                >
-                  {info.room}
-                </RNText>
-              </Pressable>
-            </View>
-          ) : (
-            info.room && (
-              <View style={[styles.infoRow, { marginBottom: 6 }]}>
-                <Text style={styles.infoLabel}>Kabinet:</Text>
-                <Text
-                  style={[styles.infoValue, { color: theme.colors.onSurface }]}
-                  selectable={true}
-                >
-                  {info.room}
-                </Text>
-              </View>
-            )
-          )}
-          {info.consultation && (
+          <View style={[styles.infoRow, { marginBottom: 6 }]}>
+            <Text style={styles.infoLabel}>Kabinet:</Text>
+            <RNText
+              style={[
+                styles.infoValue,
+                { color: '#2196f3', textDecorationLine: 'underline' },
+              ]}
+            >
+              {info.cabinet}
+            </RNText>
+          </View>
+          {info.consultationHours && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Konzultační hodiny:</Text>
               <Text
                 style={[styles.infoValue, { color: theme.colors.onSurface }]}
                 selectable={true}
               >
-                {info.consultation}
+                {info.consultationHours}
               </Text>
             </View>
           )}
-          {info.email && (
+          {info.schoolMail && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>E-mail:</Text>
               <Text
                 style={[styles.infoValue, { color: theme.colors.onSurface }]}
                 selectable={true}
               >
-                {info.email}
+                {info.schoolMail}
               </Text>
             </View>
           )}
-          {info.privateEmail && (
+          {info.privateMail && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Soukromý e-mail:</Text>
               <Text
                 style={[styles.infoValue, { color: theme.colors.onSurface }]}
                 selectable={true}
               >
-                {info.privateEmail}
+                {info.privateMail}
               </Text>
             </View>
           )}
-          {info.phone && (
+          {info.phoneNumbers && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Telefon:</Text>
               <Text
                 style={[styles.infoValue, { color: theme.colors.onSurface }]}
                 selectable={true}
               >
-                {info.phone}
+                {info.phoneNumbers.join(', ')}
               </Text>
             </View>
           )}
-          {info.privatePhone && (
+          {info.privatePhoneNumber && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Soukromý telefon:</Text>
               <Text
                 style={[styles.infoValue, { color: theme.colors.onSurface }]}
                 selectable={true}
               >
-                {info.privatePhone}
+                {info.privatePhoneNumber}
               </Text>
             </View>
           )}
         </View>
       </View>
+
       <Text
         variant="titleLarge"
         style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
@@ -255,14 +225,10 @@ export default function TeacherScreen() {
           { backgroundColor: theme.colors.surfaceVariant },
         ]}
       >
-        {info.timetable &&
-        info.timetable.periods &&
-        info.timetable.days &&
-        info.timetable.days.length > 0 ? (
+        {info.timetable ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TimetableGrid
-              periods={info.timetable.periods as TimetablePeriod[]}
-              days={info.timetable.days as TimetableDay[]}
+              timetable={info.timetable}
               onRoomPress={room => router.push(`/ucebna/${room}`)}
             />
           </ScrollView>
@@ -286,16 +252,18 @@ export default function TeacherScreen() {
           { backgroundColor: theme.colors.surfaceVariant },
         ]}
       >
-        {info.certifications && info.certifications.length > 0 ? (
-          info.certifications.map((cert: any, i: number) => (
+        {info.certificates && info.certificates.length > 0 ? (
+          info.certificates.map((cert, i: number) => (
             <View key={i} style={styles.certRow}>
               <Text style={{ fontWeight: 'bold', marginRight: 8 }}>
-                {cert.date}
+                {cert.dateIssued
+                  ? cert.dateIssued.toLocaleDateString('cs-CZ')
+                  : '-'}
               </Text>
               <View style={{ flex: 1 }}>
                 <Text style={{ fontWeight: 'bold' }}>{cert.label}</Text>
                 <Text style={{ color: theme.colors.onSurfaceVariant }}>
-                  {cert.institution}
+                  {cert.issuer}
                 </Text>
               </View>
             </View>

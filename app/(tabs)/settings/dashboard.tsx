@@ -67,13 +67,7 @@ interface WidgetLogic {
   customText: string;
 }
 
-const CUSTOM_LOGIC: Record<string, WidgetLogic> = {
-  canteen: {
-    function: () => SecureStore.getItem('show-jidelna-no-login') === 'true',
-    setValue: false,
-    customText: 'Nelze zobrazit při jídelně v anonymním módu',
-  },
-};
+const CUSTOM_LOGIC: Record<string, WidgetLogic> = {};
 
 export default function WidgetSettingsScreen() {
   const theme = useTheme();

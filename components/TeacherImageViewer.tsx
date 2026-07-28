@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Image, StyleSheet } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import ImageView from 'react-native-image-viewing';
-import { buildHeaders, normalizeHeaders } from './ImageViewer';
+import { useCachedImage } from '../hooks/useCachedImage';
 
 interface TeacherImageViewerProps {
   imageUrl?: string;
@@ -18,11 +18,10 @@ export function TeacherImageViewer({
   style,
 }: TeacherImageViewerProps) {
   const [isImageViewVisible, setIsImageViewVisible] = useState(false);
+  const localUri = useCachedImage(imageUrl);
 
   const handleImagePress = () => {
-    if (imageUrl) {
-      setIsImageViewVisible(true);
-    }
+    if (localUri) setIsImageViewVisible(true);
   };
 
   if (!imageUrl) {
@@ -33,25 +32,21 @@ export function TeacherImageViewer({
     <>
       <Pressable onPress={handleImagePress}>
         <Image
-          source={{
-            uri: imageUrl,
-            headers: normalizeHeaders(buildHeaders({})),
-          }}
+          source={localUri ? { uri: localUri } : undefined}
           style={[styles.photo, { width, height }, style]}
         />
       </Pressable>
-
-      <ImageView
-        images={[
-          { uri: imageUrl, headers: normalizeHeaders(buildHeaders({})) },
-        ]}
-        imageIndex={0}
-        visible={isImageViewVisible}
-        onRequestClose={() => setIsImageViewVisible(false)}
-        swipeToCloseEnabled={true}
-        doubleTapToZoomEnabled={true}
-        backgroundColor="rgba(0, 0, 0, 0.95)"
-      />
+      {localUri && (
+        <ImageView
+          images={[{ uri: localUri }]}
+          imageIndex={0}
+          visible={isImageViewVisible}
+          onRequestClose={() => setIsImageViewVisible(false)}
+          swipeToCloseEnabled={true}
+          doubleTapToZoomEnabled={true}
+          backgroundColor="rgba(0, 0, 0, 0.95)"
+        />
+      )}
     </>
   );
 }

@@ -11,12 +11,6 @@ import {
   Portal,
   Modal,
 } from 'react-native-paper';
-import ColorPicker, {
-  Preview,
-  Panel1,
-  HueSlider,
-  Swatches,
-} from 'reanimated-color-picker';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 
 export default function AppearanceScreen() {
@@ -267,21 +261,15 @@ export default function AppearanceScreen() {
               const formatted = text.startsWith('#') ? text : `#${text}`;
               setPickerColor(formatted);
             }}
-            style={{ marginTop: 16, color: theme.colors.onSurface }}
-          />
-          <ColorPicker
-            style={{ width: '100%', height: 320 }}
-            value={pickerColor}
-            onComplete={color => {
-              setPickerColor(color.hex.slice(0, 7));
+            placeholder="#000000"
+            style={{
+              marginTop: 16,
+              color: theme.colors.onSurface,
+              borderBottomWidth: 1,
+              borderBottomColor: theme.colors.onSurfaceVariant,
+              paddingVertical: 8,
             }}
-          >
-            <Preview />
-
-            <Panel1 style={{ flex: 1, marginVertical: 20 }} />
-            <HueSlider style={{ height: 30, marginVertical: 10 }} />
-            <Swatches />
-          </ColorPicker>
+          />
 
           {/* Manual HEX Input */}
 

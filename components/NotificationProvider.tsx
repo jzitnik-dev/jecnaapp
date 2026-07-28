@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import React, { useEffect, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 import { gradeNotificationService } from '../services/GradeNotificationService';
 

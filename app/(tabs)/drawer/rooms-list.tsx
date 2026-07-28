@@ -1,6 +1,6 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
@@ -9,36 +9,27 @@ import {
   Text,
   useTheme,
 } from 'react-native-paper';
+import { useQuery } from '@tanstack/react-query';
 
 export default function RoomsListScreen() {
   const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [rooms, setRooms] = useState<{ label: string; code: string }[]>([]);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    if (!client) return;
-    setLoading(true);
-    setError(null);
-    client
-      .getRoomsList()
-      .then(list => {
-        setRooms(list);
-        setLoading(false);
-      })
-      .catch(() => {
-        setError('Chyba při načítání učeben.');
-        setLoading(false);
-      });
-  }, [client]);
+  const roomsQuery = useQuery({
+    queryKey: ['rooms'],
+    queryFn: async () => {
+      if (!client) throw new Error('Client not available');
+      return client.getRoomsList();
+    },
+    enabled: !!client,
+  });
 
-  const filtered = rooms.filter(
+  const filtered = roomsQuery.data?.roomReferences.filter(
     r =>
-      r.label.toLowerCase().includes(search.toLowerCase()) ||
-      r.code.toLowerCase().includes(search.toLowerCase())
+      r.name.toLowerCase().includes(search.toLowerCase()) ||
+      r.roomCode.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -50,20 +41,22 @@ export default function RoomsListScreen() {
         style={{ margin: 16, marginBottom: 8, borderRadius: 16 }}
         inputStyle={{ fontSize: 18 }}
       />
-      {loading ? (
+      {roomsQuery.isLoading ? (
         <View style={styles.centered}>
           <ActivityIndicator size="large" color={theme.colors.onBackground} />
           <Text style={{ color: theme.colors.onBackground }}>
             Načítám učebny…
           </Text>
         </View>
-      ) : error ? (
+      ) : roomsQuery.error ? (
         <View style={styles.centered}>
-          <Text style={{ color: 'red' }}>{error}</Text>
+          <Text style={{ color: 'red' }}>
+            {roomsQuery.error.message || 'Chyba při načítání učeben.'}
+          </Text>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 0 }}>
-          {filtered.length === 0 ? (
+          {filtered && filtered.length === 0 ? (
             <Text
               style={{
                 color: theme.colors.onSurfaceVariant,
@@ -74,25 +67,27 @@ export default function RoomsListScreen() {
               Žádná učebna nenalezena.
             </Text>
           ) : (
-            filtered.map((r, i) => (
+            filtered?.map(r => (
               <Surface
-                key={r.code}
+                key={r.roomCode}
                 style={[
                   styles.roomCard,
                   { backgroundColor: theme.colors.surfaceVariant },
                 ]}
-                onTouchEnd={() => router.push(`/ucebna/${r.code}`)}
+                onTouchEnd={() => router.push(`/ucebna/${r.roomCode}`)}
               >
                 <Text
                   style={[styles.roomLabel, { color: theme.colors.onSurface }]}
                 >
-                  {r.label}
+                  {r.name}
                 </Text>
-                <Text
-                  style={[styles.roomCode, { color: theme.colors.primary }]}
-                >
-                  {r.code}
-                </Text>
+                {r.roomCode.length < 5 && (
+                  <Text
+                    style={[styles.roomCode, { color: theme.colors.primary }]}
+                  >
+                    {r.roomCode}
+                  </Text>
+                )}
               </Surface>
             ))
           )}

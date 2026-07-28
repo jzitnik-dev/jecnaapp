@@ -1,35 +1,22 @@
-import {
-  ThemeProvider,
-  DarkTheme,
-  DefaultTheme,
-} from 'expo-router/react-navigation';
-import { AppState } from 'react-native';
+import { ThemeProvider, DarkTheme } from 'expo-router/react-navigation';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { useFonts } from 'expo-font';
 import { Stack, useRouter } from 'expo-router';
-import * as SecureStore from 'expo-secure-store';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
-import 'react-native-reanimated';
-
-import { useColorScheme } from '@/hooks/useColorScheme';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 import { queryClient } from '@/utils/queryClient';
+import { getItemAsync } from 'expo-secure-store';
+import JecnaRozvrhClientManager from '@/components/JecnaRozvrhClientManager';
 
 export default function RootLayout() {
-  const colorScheme = useColorScheme();
   const { client, setClient } = useSpseJecnaClient();
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
-
-  const [fontsLoaded, fontError] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -46,53 +33,21 @@ export default function RootLayout() {
     const initializeClient = async () => {
       const activeClient = client ?? new SpseJecnaClient();
       if (!client) setClient(activeClient);
+      const u = await getItemAsync('username');
+      const p = await getItemAsync('password');
 
-      const tryLoginWithRetry = async (
-        username: string,
-        password: string,
-        maxRetries = 20
-      ) => {
-        let attempt = 0;
-        while (attempt < maxRetries) {
-          try {
-            await activeClient.login(username, password);
-            return true; // success
-          } catch (error) {
-            attempt++;
-            console.log(`Auto-login failed (attempt ${attempt}):`, error);
-
-            if (attempt >= maxRetries) return false;
-
-            // Exponential backoff: 500ms, 1s, 2s, 4s, ...
-            const delay = 500 * Math.pow(2, Math.max(attempt - 1, 5));
-            await new Promise(res => setTimeout(res, delay));
-          }
+      if (u && p) {
+        const res = await activeClient.login(u, p);
+        if (res) {
+          router.push('/(tabs)/drawer');
+        } else {
+          router.push('/login'); // TODO
         }
-        return false;
-      };
+      } else {
+        router.push('/login');
+      }
 
       try {
-        const isLoggedIn = await activeClient.isLoggedIn();
-        if (!isLoggedIn) {
-          const savedUsername = await SecureStore.getItemAsync('username');
-          const savedPassword = await SecureStore.getItemAsync('password');
-
-          if (savedUsername && savedPassword) {
-            const success = await tryLoginWithRetry(
-              savedUsername,
-              savedPassword
-            );
-
-            if (!success) {
-              console.log(
-                'Auto-login ultimately failed, redirecting to login.'
-              );
-              router.replace('/login');
-            }
-          } else {
-            router.replace('/login');
-          }
-        }
       } catch (error) {
         console.error('Initialization error:', error);
       }
@@ -102,24 +57,19 @@ export default function RootLayout() {
     initializeClient();
 
     // Run when app comes to foreground
-    const subscription = AppState.addEventListener('change', state => {
-      if (state === 'active') {
-        initializeClient();
-      }
-    });
+    // const subscription = AppState.addEventListener('change', state => {
+    //   if (state === 'active') {
+    //     initializeClient();
+    //   }
+    // });
 
-    return () => subscription.remove();
+    // return () => subscription.remove();
   }, []);
 
-  if (fontError) {
-    console.error('Font loading error:', fontError);
-  }
-
-  const baseTheme = colorScheme === 'dark' ? DarkTheme : DefaultTheme;
   const hybridTheme = {
-    ...baseTheme,
+    ...DarkTheme,
     colors: {
-      ...baseTheme.colors,
+      ...DarkTheme.colors,
       ...navigationTheme.colors,
     },
   };
@@ -130,6 +80,7 @@ export default function RootLayout() {
         <ThemeProvider value={hybridTheme}>
           <GestureHandlerRootView style={{ flex: 1 }}>
             <NotificationProvider>
+              <JecnaRozvrhClientManager />
               <Stack>
                 <Stack.Screen name="login" options={{ headerShown: false }} />
                 <Stack.Screen name="(tabs)" options={{ headerShown: false }} />

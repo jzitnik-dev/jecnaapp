@@ -1,8 +1,7 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useQuery } from '@tanstack/react-query';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
-  Linking,
   RefreshControl,
   ScrollView,
   StyleSheet,
@@ -11,13 +10,7 @@ import {
   Image,
   TouchableOpacity,
 } from 'react-native';
-import {
-  Card,
-  Text as PaperText,
-  TouchableRipple,
-  useTheme,
-} from 'react-native-paper';
-import { Event } from '@/api/SpseJecnaClient';
+import { Card, Text as PaperText, useTheme } from 'react-native-paper';
 import RenderHtml from 'react-native-render-html';
 import ImageViewing from 'react-native-image-viewing';
 import { buildHeaders, normalizeHeaders } from '@/components/ImageViewer';
@@ -32,7 +25,7 @@ export default function NovinkyScreen() {
   const [lightboxImages, setLightboxImages] = useState<{ uri: string }[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const { data, isLoading, refetch } = useQuery<Event[]>({
+  const { data, isLoading, refetch } = useQuery({
     queryKey: ['events'],
     queryFn: async () => {
       if (!client) throw new Error('Not logged in');
@@ -54,7 +47,7 @@ export default function NovinkyScreen() {
           />
         }
       >
-        {data?.map((event, id) => (
+        {data?.articles?.map((event, id) => (
           <Card
             style={[styles.card, { backgroundColor: colors.surface }]}
             elevation={3}
@@ -70,12 +63,11 @@ export default function NovinkyScreen() {
                 </PaperText>
 
                 <PaperText style={{ color: colors.onSurfaceVariant }}>
-                  {event.author.trim()} • {event.date.trim()}{' '}
-                  {event.onlyForSchool && '• Pouze pro školu'}
+                  {event.author?.trim()} •{' '}
+                  {event.date.toLocaleDateString('cs-CZ')}
                 </PaperText>
               </View>
 
-              {/* Image Gallery */}
               {(event.images?.length || 0) > 0 && (
                 <ScrollView
                   horizontal
@@ -164,34 +156,34 @@ export default function NovinkyScreen() {
               />
 
               {/* File Links */}
-              <View style={{ flexDirection: 'column', gap: 8 }}>
-                {event.files?.map((file, key) => (
-                  <TouchableRipple
-                    key={key}
-                    onPress={() => Linking.openURL(file.url)}
-                    borderless={false}
-                    style={{
-                      backgroundColor: theme.colors.surfaceVariant,
-                      borderRadius: 4,
-                      paddingVertical: 15,
-                      paddingHorizontal: 15,
-                      flexDirection: 'row',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <PaperText
-                      style={{
-                        color: theme.colors.onSurface,
-                        fontWeight: '600',
-                        fontSize: 16,
-                      }}
-                    >
-                      {file.label}
-                    </PaperText>
-                  </TouchableRipple>
-                ))}
-              </View>
+              {/* <View style={{ flexDirection: 'column', gap: 8 }}> */}
+              {/*   {event.files?.map((file, key) => ( */}
+              {/*     <TouchableRipple */}
+              {/*       key={key} */}
+              {/*       onPress={() => Linking.openURL(file.url)} */}
+              {/*       borderless={false} */}
+              {/*       style={{ */}
+              {/*         backgroundColor: theme.colors.surfaceVariant, */}
+              {/*         borderRadius: 4, */}
+              {/*         paddingVertical: 15, */}
+              {/*         paddingHorizontal: 15, */}
+              {/*         flexDirection: 'row', */}
+              {/*         alignItems: 'center', */}
+              {/*         justifyContent: 'space-between', */}
+              {/*       }} */}
+              {/*     > */}
+              {/*       <PaperText */}
+              {/*         style={{ */}
+              {/*           color: theme.colors.onSurface, */}
+              {/*           fontWeight: '600', */}
+              {/*           fontSize: 16, */}
+              {/*         }} */}
+              {/*       > */}
+              {/*         {file.label} */}
+              {/*       </PaperText> */}
+              {/*     </TouchableRipple> */}
+              {/*   ))} */}
+              {/* </View> */}
             </Card.Content>
           </Card>
         ))}

@@ -1,6 +1,8 @@
 import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
+import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import { Room } from 'jecnaapi-react-native/jecnaapi';
+import { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { TimetableGrid } from '../../../components/TimetableGrid';
@@ -11,38 +13,27 @@ export default function UcebnaScreen() {
   const theme = useTheme();
   const router = useRouter();
   const navigation = useNavigation();
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<any>(null);
 
-  useEffect(() => {
-    if (!client) return;
-    setLoading(true);
-    setError(null);
-    setData(null);
-    client
-      .getUcebnaParsed(String(code))
-      .then((parsed: any) => {
-        setData(parsed);
-        setLoading(false);
-      })
-      .catch((e: unknown) => {
-        setError('Chyba při načítání dat.');
-        setLoading(false);
-      });
-  }, [code, client]);
+  const { data, isLoading, error } = useQuery<Room>({
+    queryKey: ['room', code],
+    queryFn: async () => {
+      if (!client) throw new Error('Client not available');
+      return client.getRoom(String(code));
+    },
+    enabled: !!client && !!code,
+  });
 
   useEffect(() => {
     if (navigation?.setOptions) {
-      if (loading) {
+      if (isLoading) {
         navigation.setOptions({ title: 'Učebna' });
-      } else if (data && data.title) {
-        navigation.setOptions({ title: data.title });
+      } else if (data && data.name) {
+        navigation.setOptions({ title: data.name });
       }
     }
-  }, [loading, data, navigation]);
+  }, [isLoading, data, navigation]);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.centered}>
         <ActivityIndicator size="large" />
@@ -50,13 +41,17 @@ export default function UcebnaScreen() {
       </View>
     );
   }
+
   if (error) {
     return (
       <View style={styles.centered}>
-        <Text style={{ color: 'red' }}>{error}</Text>
+        <Text style={{ color: 'red' }}>
+          {error.message || 'Chyba při načítání dat.'}
+        </Text>
       </View>
     );
   }
+
   if (!data) return null;
 
   return (
@@ -93,16 +88,16 @@ export default function UcebnaScreen() {
                 },
               ]}
             >
-              {data.title}
+              {data.name}
             </Text>
-            {data.mainClassroom ? (
+            {data.homeroomOf ? (
               <Text
                 style={[
                   styles.code,
                   { color: theme.colors.primary, marginBottom: 12 },
                 ]}
               >
-                {data.mainClassroom}
+                {data.homeroomOf}
               </Text>
             ) : null}
           </View>
@@ -126,46 +121,40 @@ export default function UcebnaScreen() {
           {data.manager && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>
               <Text style={styles.infoLabel}>Správce:</Text>
-              {data.managerHref ? (
+              {data.manager.tag ? (
                 <Text
                   style={[styles.infoValue, styles.link]}
-                  onPress={() =>
-                    router.push(
-                      data.managerHref.replace('/ucitel/', '/teachers/')
-                    )
-                  }
+                  onPress={() => router.push(`/teachers/${data.manager?.tag}`)}
                 >
-                  {data.manager}
+                  {data.manager.fullName}
                 </Text>
               ) : (
                 <Text style={styles.infoValue} selectable={true}>
-                  {data.manager}
+                  {data.manager.fullName}
                 </Text>
               )}
             </View>
           )}
         </View>
       </Surface>
+
       <Text
         variant="titleLarge"
         style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
       >
         Rozvrh učebny
       </Text>
+
       <View
         style={[
           styles.sectionSurface,
           { backgroundColor: theme.colors.surfaceVariant },
         ]}
       >
-        {data.timetable &&
-        data.timetable.periods &&
-        data.timetable.days &&
-        data.timetable.days.length > 0 ? (
+        {data.timetable ? (
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
             <TimetableGrid
-              periods={data.timetable.periods}
-              days={data.timetable.days}
+              timetable={data.timetable}
               onTeacherPress={teacherCode =>
                 router.push(`/teachers/${teacherCode}`)
               }

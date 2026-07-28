@@ -44,12 +44,11 @@ export default function ExtraReport({
         body: JSON.stringify({
           location: reportLocation,
           content: description,
-          class: accountInfo?.class,
+          class: accountInfo?.className,
         }),
       });
 
       if (!response.ok) {
-        console.log(response);
         throw new Error('Nepodařilo se odeslat nahlášení.');
       }
 

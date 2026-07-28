@@ -1,14 +1,15 @@
 import * as SecureStore from 'expo-secure-store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import type { AccountInfo } from '../api/SpseJecnaClient';
 import { useSpseJecnaClient } from './useSpseJecnaClient';
+import { StudentProfile } from 'jecnaapi-react-native/jecnaapi';
+import { parseJson } from 'jecnaapi-react-native';
 
 const ACCOUNT_INFO_KEY = 'account_info';
 const ACCOUNT_INFO_TIMESTAMP_KEY = 'account_info_timestamp';
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
-async function loadFromCache(): Promise<AccountInfo | null> {
+async function loadFromCache(): Promise<StudentProfile | null> {
   try {
     const cachedData = await SecureStore.getItemAsync(ACCOUNT_INFO_KEY);
     const timestampStr = await SecureStore.getItemAsync(
@@ -18,7 +19,7 @@ async function loadFromCache(): Promise<AccountInfo | null> {
     if (cachedData && timestampStr) {
       const age = Date.now() - parseInt(timestampStr, 10);
       if (age < CACHE_DURATION) {
-        return JSON.parse(cachedData);
+        return parseJson(cachedData);
       }
     }
   } catch (err) {
@@ -27,7 +28,7 @@ async function loadFromCache(): Promise<AccountInfo | null> {
   return null;
 }
 
-async function saveToCache(data: AccountInfo) {
+async function saveToCache(data: StudentProfile) {
   try {
     await SecureStore.setItemAsync(ACCOUNT_INFO_KEY, JSON.stringify(data));
     await SecureStore.setItemAsync(
@@ -52,8 +53,7 @@ export function useAccountInfo() {
   const { client } = useSpseJecnaClient();
   const queryClient = useQueryClient();
 
-  // This function fetches fresh data from the client
-  const fetchAccountInfo = async (): Promise<AccountInfo> => {
+  const fetchAccountInfo = async () => {
     if (!client) throw new Error('Client not available');
     const isLoggedIn = await client.isLoggedIn();
     if (!isLoggedIn) throw new Error('Not logged in');
@@ -77,7 +77,7 @@ export function useAccountInfo() {
     });
   }, [client, queryClient]);
 
-  const query = useQuery<AccountInfo, Error>({
+  const query = useQuery<StudentProfile, Error>({
     queryKey: ['accountInfo'],
     queryFn: fetchAccountInfo,
     enabled: !!client,
