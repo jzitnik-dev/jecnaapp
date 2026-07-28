@@ -1,6 +1,13 @@
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View, ActivityIndicator } from 'react-native';
-import { Card, Switch, Text, TextInput, useTheme } from 'react-native-paper';
+import {
+  Card,
+  Switch,
+  Text,
+  TextInput,
+  useTheme,
+  Button,
+} from 'react-native-paper';
 import { useSecureStore } from '@/hooks/useSecureStore';
 
 const STORAGE_KEY = 'extraordinary_schedule_enabled';
@@ -27,8 +34,15 @@ export default function ExtraordinarySchedule() {
     }
   );
 
-  // 1. Change this to string OR undefined. No more useEffect!
   const [localUrl, setLocalUrl] = useState<string | undefined>(undefined);
+
+  const hasUnsavedChanges = localUrl !== undefined && localUrl !== storedUrl;
+
+  const handleSaveUrl = () => {
+    if (localUrl !== undefined) {
+      setStoredUrl(localUrl);
+    }
+  };
 
   return (
     <ScrollView
@@ -63,15 +77,8 @@ export default function ExtraordinarySchedule() {
                 mode="outlined"
                 label="Vlastní URL adresa (volitelné)"
                 placeholder="např. https://moje-suplovani.cz"
-                // 2. Fallback to storedUrl if the user hasn't typed anything yet
                 value={localUrl ?? storedUrl}
                 onChangeText={setLocalUrl}
-                onBlur={() => {
-                  // 3. Only save to SecureStore if the user actually typed something
-                  if (localUrl !== undefined) {
-                    setStoredUrl(localUrl);
-                  }
-                }}
                 disabled={isLoadingUrl}
                 autoCapitalize="none"
                 keyboardType="url"
@@ -84,9 +91,17 @@ export default function ExtraordinarySchedule() {
                   marginBottom: 12,
                 }}
               >
-                Ponechte prázdné pro použití výchozího serveru. Změna se
-                aplikuje po opuštění textového pole.
+                Ponechte prázdné pro použití výchozího serveru.
               </Text>
+
+              <Button
+                mode="contained"
+                onPress={handleSaveUrl}
+                disabled={!hasUnsavedChanges || isLoadingUrl}
+                style={styles.saveButton}
+              >
+                Uložit URL
+              </Button>
             </View>
           )}
 
@@ -137,7 +152,11 @@ const styles = StyleSheet.create({
   },
   urlInputContainer: {
     marginTop: 8,
-    marginBottom: 8,
+    marginBottom: 16,
+  },
+  saveButton: {
+    marginTop: 4,
+    alignSelf: 'flex-start',
   },
   warningText: { marginBottom: 16, fontWeight: '600' },
   description: { lineHeight: 22, marginBottom: 12 },
