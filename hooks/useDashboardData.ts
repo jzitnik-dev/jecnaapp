@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSpseJecnaClient } from './useSpseJecnaClient';
 import { useJecnaRozvrhClient } from './useJecnaRozvrhClient';
 import { useAccountInfo } from './useAccountInfo';
 import { GradesPage } from 'jecnaapi-react-native/jecnaapi';
+import { JecnaAPI } from 'jecnaapi-react-native';
 // import { CanteenMenuResult } from '@/api/iCanteenClient';
 //
 // function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -22,7 +22,6 @@ import { GradesPage } from 'jecnaapi-react-native/jecnaapi';
 // }
 
 export function useDashboardData() {
-  const { client } = useSpseJecnaClient();
   const { client: extraordClient } = useJecnaRozvrhClient();
   const queryClient = useQueryClient();
   const { accountInfo } = useAccountInfo();
@@ -31,11 +30,8 @@ export function useDashboardData() {
   const gradesQuery = useQuery<GradesPage, Error>({
     queryKey: ['grades'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-
-      return client.getGrades();
+      return JecnaAPI.getGradesPage();
     },
-    enabled: !!client,
     staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -47,11 +43,8 @@ export function useDashboardData() {
   const timetableQuery = useQuery({
     queryKey: ['timetable'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-
-      return client.getTimetable();
+      return await JecnaAPI.getTimetablePage();
     },
-    enabled: !!client,
     staleTime: 30 * 60 * 1000,
   });
 
@@ -73,10 +66,8 @@ export function useDashboardData() {
   const accountInfoQuery = useQuery({
     queryKey: ['accountInfo'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getAccountInfo();
+      return JecnaAPI.getStudentProfile();
     },
-    enabled: !!client,
     staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -88,10 +79,8 @@ export function useDashboardData() {
   const lockerQuery = useQuery({
     queryKey: ['locker'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getLocker();
+      return JecnaAPI.getLocker();
     },
-    enabled: !!client,
     staleTime: 3 * 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -103,12 +92,10 @@ export function useDashboardData() {
   const canteenMenuQuery = useQuery({
     queryKey: ['canteenMenu'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
       // const canteenClient = await withTimeout(client.getCanteenClient(), 25000);
       // return withTimeout(canteenClient.getMonthlyMenu(), 25000);
       return null;
     },
-    enabled: !!client && false,
     staleTime: 10 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -120,10 +107,8 @@ export function useDashboardData() {
   const absenceQuery = useQuery({
     queryKey: ['absences'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getOmluvnyList();
+      return JecnaAPI.getAbsencesPage();
     },
-    enabled: !!client,
     staleTime: 5 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,

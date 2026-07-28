@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
+import { JecnaAPI } from 'jecnaapi-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -9,7 +10,6 @@ import {
   Text,
   TextInput,
 } from 'react-native-paper';
-import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -18,14 +18,13 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
-  const client = useSpseJecnaClient(state => state.client);
 
   const handleLogin = async (u?: string, p?: string) => {
     setLoading(true);
     setError(null);
     setSuccess(false);
     try {
-      const ok = await client?.login(u ?? username, p ?? password);
+      const ok = await JecnaAPI.login(u ?? username, p ?? password);
       if (ok) {
         setSuccess(true);
         await SecureStore.setItemAsync('username', u ?? username);

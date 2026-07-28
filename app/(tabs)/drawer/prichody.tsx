@@ -1,4 +1,3 @@
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
@@ -9,12 +8,16 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
-import { MonthSelector, YearSelector } from '@/utils/selectors';
-import { MonthName } from 'jecnaapi-react-native/jecnaapi';
+import {
+  getCurrentSchoolYearStart,
+  MonthSelector,
+  YearSelector,
+} from '@/utils/selectors';
+import { MONTH_NAMES, MonthName } from 'jecnaapi-react-native/jecnaapi';
 import { formatTime } from '@/utils/dateUtils';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function PrichodyScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
 
   const [selectedYear, setSelectedYear] = useState<number | undefined>();
@@ -23,10 +26,33 @@ export default function PrichodyScreen() {
   const { data, error, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['prichody', selectedYear, selectedMonth],
     queryFn: async () => {
-      if (!client) return null;
-      return await client.getPrichody(selectedYear, selectedMonth);
+      const date = new Date();
+      let final:
+        | { firstCalendarYear: number; month: MonthName }
+        | { firstCalendarYear: undefined; month: undefined } = {
+        firstCalendarYear: undefined,
+        month: undefined,
+      };
+
+      if (selectedYear === undefined && selectedMonth !== undefined) {
+        final = {
+          firstCalendarYear: getCurrentSchoolYearStart(),
+          month: selectedMonth,
+        };
+      } else if (selectedMonth === undefined && selectedYear !== undefined) {
+        final = {
+          firstCalendarYear: selectedYear,
+          month: MONTH_NAMES[date.getMonth()],
+        };
+      } else if (selectedYear !== undefined && selectedMonth !== undefined) {
+        final = {
+          firstCalendarYear: selectedYear,
+          month: selectedMonth,
+        };
+      }
+
+      return await JecnaAPI.getAttendances(final);
     },
-    enabled: !!client,
     staleTime: 1000 * 60 * 5,
     retry: 0,
   });

@@ -1,4 +1,3 @@
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -10,9 +9,9 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function RoomsListScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -20,10 +19,8 @@ export default function RoomsListScreen() {
   const roomsQuery = useQuery({
     queryKey: ['rooms'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getRoomsList();
+      return JecnaAPI.getRoomsPage();
     },
-    enabled: !!client,
   });
 
   const filtered = roomsQuery.data?.roomReferences.filter(

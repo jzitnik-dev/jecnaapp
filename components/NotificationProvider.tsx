@@ -1,28 +1,15 @@
 import * as Notifications from 'expo-notifications';
 import { useEffect, useRef } from 'react';
-import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
-import { gradeNotificationService } from '../services/GradeNotificationService';
 
 export function NotificationProvider({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { client } = useSpseJecnaClient();
   const notificationListener = useRef<Notifications.EventSubscription | null>(
     null
   );
   const responseListener = useRef<Notifications.EventSubscription | null>(null);
-
-  useEffect(() => {
-    try {
-      if (client) {
-        gradeNotificationService.setClient(client);
-      }
-    } catch (error) {
-      console.error('Error setting client in notification service:', error);
-    }
-  }, [client]);
 
   useEffect(() => {
     try {

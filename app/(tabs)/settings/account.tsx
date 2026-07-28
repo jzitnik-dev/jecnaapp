@@ -19,14 +19,16 @@ import {
 import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
 import { useAppTheme } from '../../../hooks/useAppTheme';
-import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 import { useSecureStore } from '@/hooks/useSecureStore';
+import { JecnaAPI } from 'jecnaapi-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { PREVIOUS_GRADES_KEY } from '@/services/GradeNotificationService';
+import * as SecureStore from 'expo-secure-store';
 
 export default function AccountScreen() {
   const theme = useTheme();
   const { currentTheme: appTheme } = useAppTheme();
   const { accountInfo, loading, error, refresh } = useAccountInfo();
-  const { logout } = useSpseJecnaClient();
   const [hideProfilePicture] = useSecureStore<boolean>('hide-profilepicture', {
     initialValue: false,
     parse: val => val === 'true',
@@ -46,7 +48,13 @@ export default function AccountScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await logout();
+            await JecnaAPI.logout();
+            await SecureStore.deleteItemAsync('account_info');
+            await SecureStore.deleteItemAsync('account_info_timestamp');
+            await SecureStore.deleteItemAsync('username');
+            await SecureStore.deleteItemAsync('password');
+            await SecureStore.deleteItemAsync(PREVIOUS_GRADES_KEY);
+            await AsyncStorage.clear();
             router.replace('/login');
           } catch (err) {
             console.error('Logout error:', err);

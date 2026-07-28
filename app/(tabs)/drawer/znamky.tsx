@@ -20,7 +20,6 @@ import {
 } from 'react-native-paper';
 import { HalfSelector, YearSelector } from '@/utils/selectors';
 
-import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 import {
   FinalGrade,
   Grade,
@@ -28,6 +27,7 @@ import {
   Subject,
 } from 'jecnaapi-react-native/jecnaapi';
 import NotificationDetailModal from '@/components/ui/NotificationDetailModal';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 const gradeColor = (value: number) => {
   const colors = [
@@ -167,7 +167,6 @@ function getWeightedAverage(grades: Grade[]): number | null {
 }
 
 export default function ZnamkyScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
 
   const [selectedYear, setSelectedYear] = useState<number | undefined>(
@@ -195,16 +194,14 @@ export default function ZnamkyScreen() {
   const { data, error, refetch, isFetching } = useQuery({
     queryKey: ['znamky', selectedYear, selectedHalf],
     queryFn: async () => {
-      if (!client) throw new Error('Not logged in');
       if (selectedYear === undefined) {
-        return client.getGrades();
+        return JecnaAPI.getGradesPage();
       }
-      return client.getGrades({
+      return JecnaAPI.getGradesPage({
         firstCalendarYear: selectedYear,
         half: selectedHalf,
       });
     },
-    enabled: !!client,
   });
 
   const getSubjectRealGrades = (subject: Subject): Grade[] => {

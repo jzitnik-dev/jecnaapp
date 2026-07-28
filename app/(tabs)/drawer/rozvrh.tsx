@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Menu, Text, useTheme } from 'react-native-paper';
 import { TimetableGrid } from '../../../components/TimetableGrid';
-import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 import ExtraReport from '@/components/ExtraReport';
 import { YearSelector } from '@/utils/selectors';
 import { PeriodOption } from 'jecnaapi-react-native/jecnaapi';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 function getPeriodStr(period?: PeriodOption) {
   if (!period) {
@@ -25,7 +25,6 @@ function getPeriodStr(period?: PeriodOption) {
 }
 
 export default function RozvrhScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const [periodMenuVisible, setPeriodMenuVisible] = useState(false);
   const [selectedYear, setSelectedYear] = useState<number | undefined>(
@@ -38,17 +37,15 @@ export default function RozvrhScreen() {
   const { data, error, refetch, isFetching } = useQuery({
     queryKey: ['timetable', selectedYear, selectedPeriod],
     queryFn: async () => {
-      if (!client) throw new Error('Not logged in');
       if (selectedYear === undefined) {
-        return client.getTimetable();
+        return JecnaAPI.getTimetablePage();
       }
 
-      return client.getTimetable({
+      return JecnaAPI.getTimetablePage({
         schoolYear: selectedYear,
         periodOptionId: selectedPeriod,
       });
     },
-    enabled: !!client,
   });
 
   const router = useRouter();

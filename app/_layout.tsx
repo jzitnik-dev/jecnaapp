@@ -5,16 +5,14 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { SpseJecnaClient } from '../api/SpseJecnaClient';
 import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
-import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 import { queryClient } from '@/utils/queryClient';
 import { getItemAsync } from 'expo-secure-store';
 import JecnaRozvrhClientManager from '@/components/JecnaRozvrhClientManager';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function RootLayout() {
-  const { client, setClient } = useSpseJecnaClient();
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
 
@@ -31,13 +29,11 @@ export default function RootLayout() {
 
   useEffect(() => {
     const initializeClient = async () => {
-      const activeClient = client ?? new SpseJecnaClient();
-      if (!client) setClient(activeClient);
       const u = await getItemAsync('username');
       const p = await getItemAsync('password');
 
       if (u && p) {
-        const res = await activeClient.login(u, p);
+        const res = await JecnaAPI.login(u, p);
         if (res) {
           router.push('/(tabs)/drawer');
         } else {

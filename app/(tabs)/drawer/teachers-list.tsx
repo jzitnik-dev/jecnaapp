@@ -1,4 +1,3 @@
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
@@ -10,9 +9,9 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function TeachersListScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
   const [search, setSearch] = useState('');
@@ -20,10 +19,8 @@ export default function TeachersListScreen() {
   const teachersQuery = useQuery({
     queryKey: ['teachers'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getTeachersList();
+      return JecnaAPI.getTeachersPage();
     },
-    enabled: !!client,
   });
 
   const filtered = teachersQuery.data?.teachersReferences.filter(

@@ -1,4 +1,3 @@
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { Picker } from '@react-native-picker/picker';
 import { useTheme } from 'expo-router/react-navigation';
 import { useMemo, useState } from 'react';
@@ -12,9 +11,9 @@ import { Text } from 'react-native-paper';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { AbsenceInfo, AbsencesPage } from 'jecnaapi-react-native/jecnaapi';
 import { getAvaliableYears } from '@/utils/selectors';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function OmluvnyListScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const queryClient = useQueryClient();
 
@@ -26,10 +25,8 @@ export default function OmluvnyListScreen() {
     useQuery<AbsencesPage | null>({
       queryKey: ['omluvnyList', selectedYear],
       queryFn: async () => {
-        if (!client) return null;
-        return await client.getOmluvnyList(selectedYear);
+        return await JecnaAPI.getAbsencesPage(selectedYear);
       },
-      enabled: !!client,
     });
 
   const onRefresh = () => {
@@ -40,7 +37,7 @@ export default function OmluvnyListScreen() {
     setSelectedYear(year);
     queryClient.prefetchQuery({
       queryKey: ['omluvnyList', year],
-      queryFn: () => client?.getOmluvnyList(year),
+      queryFn: () => JecnaAPI.getAbsencesPage(year),
     });
   };
 

@@ -12,8 +12,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { TeacherImageViewer } from '../../../components/TeacherImageViewer';
 import { TimetableGrid } from '../../../components/TimetableGrid';
-import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
 import { Teacher } from 'jecnaapi-react-native/jecnaapi';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function TeacherScreen() {
   const params = useLocalSearchParams();
@@ -22,7 +22,6 @@ export default function TeacherScreen() {
   const teacher = params.teacher;
   const routeName = params.name;
   const theme = useTheme();
-  const { client } = useSpseJecnaClient();
 
   const {
     data: info,
@@ -34,12 +33,12 @@ export default function TeacherScreen() {
   } = useQuery<Teacher, Error>({
     queryKey: ['teacherProfile', teacher],
     queryFn: async () => {
-      if (!client || typeof teacher !== 'string') {
-        throw new Error('Parametr učitele není předán nebo není string.');
+      if (typeof teacher !== 'string') {
+        throw new Error('Unreachable hopefully');
       }
-      return await client.getTeacherProfile(teacher);
+      return await JecnaAPI.getTeacher(teacher);
     },
-    enabled: !!client && typeof teacher === 'string',
+    enabled: typeof teacher === 'string',
     staleTime: 15 * 60 * 1000,
   });
 

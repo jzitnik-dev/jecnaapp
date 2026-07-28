@@ -1,4 +1,3 @@
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { Room } from 'jecnaapi-react-native/jecnaapi';
@@ -6,10 +5,10 @@ import { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { TimetableGrid } from '../../../components/TimetableGrid';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function UcebnaScreen() {
   const { code } = useLocalSearchParams();
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
   const navigation = useNavigation();
@@ -17,10 +16,9 @@ export default function UcebnaScreen() {
   const { data, isLoading, error } = useQuery<Room>({
     queryKey: ['room', code],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getRoom(String(code));
+      return JecnaAPI.getRoom(String(code));
     },
-    enabled: !!client && !!code,
+    enabled: !!code,
   });
 
   useEffect(() => {

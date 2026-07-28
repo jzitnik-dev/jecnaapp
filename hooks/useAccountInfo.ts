@@ -1,9 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { useSpseJecnaClient } from './useSpseJecnaClient';
 import { StudentProfile } from 'jecnaapi-react-native/jecnaapi';
-import { parseJson } from 'jecnaapi-react-native';
+import { JecnaAPI, parseJson } from 'jecnaapi-react-native';
 
 const ACCOUNT_INFO_KEY = 'account_info';
 const ACCOUNT_INFO_TIMESTAMP_KEY = 'account_info_timestamp';
@@ -50,45 +49,31 @@ async function clearCache() {
 }
 
 export function useAccountInfo() {
-  const { client } = useSpseJecnaClient();
   const queryClient = useQueryClient();
 
   const fetchAccountInfo = async () => {
-    if (!client) throw new Error('Client not available');
-    const isLoggedIn = await client.isLoggedIn();
-    if (!isLoggedIn) throw new Error('Not logged in');
-    const data = await client.getAccountInfo();
-    await saveToCache(data); // Save fresh data to SecureStore
+    const data = await JecnaAPI.getStudentProfile();
+    await saveToCache(data);
     return data;
   };
 
-  // Load cached data from SecureStore once on mount
-  // We use this to initialize query data without refetching if valid cache exists
-  // We update the React Query cache with the SecureStore data
   useEffect(() => {
-    if (!client) {
-      queryClient.removeQueries({ queryKey: ['accountInfo'] });
-      return;
-    }
     loadFromCache().then(cachedData => {
       if (cachedData) {
         queryClient.setQueryData(['accountInfo'], cachedData);
       }
     });
-  }, [client, queryClient]);
+  }, [queryClient]);
 
   const query = useQuery<StudentProfile, Error>({
     queryKey: ['accountInfo'],
     queryFn: fetchAccountInfo,
-    enabled: !!client,
-    staleTime: CACHE_DURATION, // mark data fresh for 15 mins
+    staleTime: CACHE_DURATION,
     refetchOnWindowFocus: false,
   });
 
-  // Manual refresh method invalidates & refetches the query
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['accountInfo'] });
-    // queryClient.refetchQueries({ queryKey: ['accountInfo'] }); // alternatively
   };
 
   return {

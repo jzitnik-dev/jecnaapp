@@ -5,7 +5,6 @@ import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
 import type { LessonInfo, StaticLesson } from '@/utils/dashboard/nextClass';
 import { getCurrentAndNextLesson } from '@/utils/dashboard/nextClass';
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
 import { TimetablePage } from 'jecnaapi-react-native/jecnaapi';
 import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
@@ -24,11 +23,10 @@ export function NextLessonCard({ timetable, extraord }: NextLessonCardProps) {
     currentLessons: LessonInfo[];
     nextLessons: LessonInfo[];
   }>({ currentLessons: [], nextLessons: [] });
-  const { client } = useSpseJecnaClient();
   const { accountInfo } = useAccountInfo();
 
   useEffect(() => {
-    if (!timetable || !client || !accountInfo?.className) return;
+    if (!timetable || !accountInfo?.className) return;
 
     const updateLessonInfo = async () => {
       const info = await getCurrentAndNextLesson(timetable, extraord);
@@ -39,7 +37,7 @@ export function NextLessonCard({ timetable, extraord }: NextLessonCardProps) {
     const interval = setInterval(updateLessonInfo, 30000);
 
     return () => clearInterval(interval);
-  }, [timetable, client, extraord, accountInfo]);
+  }, [timetable, extraord, accountInfo]);
 
   const { currentLessons, nextLessons } = lessonInfo;
 

@@ -7,9 +7,9 @@ import {
   Button,
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { StyleSheet } from 'react-native';
 import { NotificationType } from 'jecnaapi-react-native/jecnaapi';
+import { JecnaAPI } from 'jecnaapi-react-native';
 
 export default function NotificationDetailModal({
   notificationId,
@@ -18,12 +18,10 @@ export default function NotificationDetailModal({
   notificationId?: number;
   onClose: () => unknown;
 }) {
-  const { client } = useSpseJecnaClient();
   const { data, isFetching } = useQuery({
     queryKey: ['notification', notificationId],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getNotification(notificationId || 0);
+      return JecnaAPI.getNotification(notificationId || 0);
     },
     enabled: typeof notificationId === 'number',
   });

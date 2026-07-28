@@ -3,7 +3,6 @@ import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as TaskManager from 'expo-task-manager';
 import * as BackgroundTask from 'expo-background-task';
-import { Grade, SpseJecnaClient, SubjectGrades } from '../api/SpseJecnaClient';
 
 const BACKGROUND_FETCH_TASK = 'background-grade-fetch';
 export const PREVIOUS_GRADES_KEY = 'previous_grades';
@@ -29,16 +28,12 @@ export interface GradeNotification {
 }
 
 export class GradeNotificationService {
-  private client: SpseJecnaClient | null = null;
   private backgroundTaskAvailable: boolean = false;
 
   constructor() {
     this.setupBackgroundTask();
   }
 
-  setClient(client: SpseJecnaClient) {
-    this.client = client;
-  }
 
   private async setupBackgroundTask() {
     if (!BackgroundTask) {
