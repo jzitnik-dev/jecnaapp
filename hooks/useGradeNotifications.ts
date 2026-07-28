@@ -5,7 +5,6 @@ import {
   LAST_RAN_KEY,
   PREVIOUS_GRADES_KEY,
 } from '../services/GradeNotificationService';
-import { useSpseJecnaClient } from './useSpseJecnaClient';
 import * as BackgroundTask from 'expo-background-task';
 
 export interface NotificationSettings {
@@ -17,18 +16,11 @@ export interface NotificationSettings {
 }
 
 export function useGradeNotifications() {
-  const { client } = useSpseJecnaClient();
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [isEnabled, setIsEnabled] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [taskRegistered, setTaskRegistered] = useState(false);
   const [lastRan, setLastRan] = useState<Date | undefined>();
-
-  useEffect(() => {
-    if (client) {
-      gradeNotificationService.setClient(client);
-    }
-  }, [client]);
 
   useEffect(() => {
     (async () => {

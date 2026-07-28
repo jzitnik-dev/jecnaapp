@@ -1,13 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
-import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { useNavigation, useRouter } from 'expo-router';
+import { useEffect, useState } from 'react';
+import {
+  RefreshControl,
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { Button, Menu, Text, useTheme } from 'react-native-paper';
 import { TimetableGrid } from '../../../components/TimetableGrid';
 import ExtraReport from '@/components/ExtraReport';
 import { YearSelector } from '@/utils/selectors';
 import { PeriodOption } from 'jecnaapi-react-native/jecnaapi';
 import { JecnaAPI } from 'jecnaapi-react-native';
+import { useAccountInfo } from '@/hooks/useAccountInfo';
+import { useJecnaRozvrhClient } from '@/hooks/useJecnaRozvrhClient';
+import { SubstitutionSummary } from '@/components/timetable/supl';
+import { useSecureStore } from '@/hooks/useSecureStore';
+import { Ionicons } from '@expo/vector-icons';
 
 function getPeriodStr(period?: PeriodOption) {
   if (!period) {
@@ -33,6 +44,7 @@ export default function RozvrhScreen() {
   const [selectedPeriod, setSelectedPeriod] = useState<number | undefined>(
     undefined
   );
+  const navigation = useNavigation();
   const [modalVisible, setModalVisible] = useState(false);
   const { data, error, refetch, isFetching } = useQuery({
     queryKey: ['timetable', selectedYear, selectedPeriod],
@@ -48,6 +60,70 @@ export default function RozvrhScreen() {
     },
   });
 
+  const { accountInfo } = useAccountInfo();
+  const { client: extraordClient } = useJecnaRozvrhClient();
+
+  const { data: extraordinaryData } = useQuery({
+    queryKey: ['extraordinarytimetable', accountInfo?.className],
+    queryFn: async () => {
+      return await extraordClient?.getSchedule(accountInfo?.className || '');
+    },
+    enabled: !!extraordClient && !!accountInfo,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+  });
+
+  const [extraordenabled] = useSecureStore<boolean>(
+    'extraordinary_schedule_enabled',
+    {
+      initialValue: false,
+      parse: val => val === 'true',
+      stringify: val => (val ? 'true' : 'false'),
+    }
+  );
+
+  useEffect(() => {
+    if (extraordenabled) {
+      navigation.setOptions({
+        headerRight: () => (
+          <View
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              flexDirection: 'row',
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                borderRadius: 4,
+                paddingVertical: 15,
+                paddingHorizontal: 15,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+              onPress={() => setModalVisible(true)}
+            >
+              <Ionicons
+                name="alert-circle-outline"
+                size={25}
+                color={theme.colors.onSurface}
+              />
+            </TouchableOpacity>
+          </View>
+        ),
+      });
+    } else {
+      navigation.setOptions({
+        headerRight: () => <></>,
+      });
+    }
+  }, [extraordenabled, navigation, theme]);
+
+  const [showExtra, setShowExtra] = useState<boolean>(true);
+
   const router = useRouter();
 
   return (
@@ -55,7 +131,6 @@ export default function RozvrhScreen() {
       <ExtraReport
         modalVisible={modalVisible}
         setModalVisible={setModalVisible}
-        reportLocation="TIMETABLE"
       />
 
       <ScrollView
@@ -71,6 +146,21 @@ export default function RozvrhScreen() {
           zIndex: 10,
         }}
       >
+        {extraordenabled && (
+          <Button
+            mode="outlined"
+            style={{
+              backgroundColor: showExtra ? theme.colors.primary : undefined,
+            }}
+            labelStyle={{
+              color: showExtra ? theme.colors.background : theme.colors.primary,
+            }}
+            onPress={() => setShowExtra(prev => !prev)}
+          >
+            Mimořádný rozvrh
+          </Button>
+        )}
+
         {/* Year select */}
         <YearSelector
           selected={selectedYear}
@@ -114,12 +204,21 @@ export default function RozvrhScreen() {
           />
         }
       >
+        {extraordenabled && (
+          <SubstitutionSummary
+            suplResult={extraordinaryData}
+            style={styles.summary}
+          />
+        )}
+
         {data?.timetable && (
           <ScrollView horizontal contentContainerStyle={styles.scrollContent}>
             <TimetableGrid
               timetable={data.timetable}
               onTeacherPress={code => router.push(`/teachers/${code}`)}
               onRoomPress={room => router.push(`/ucebna/${room}`)}
+              extraordinary={extraordinaryData}
+              showExtraordinary={extraordenabled && showExtra}
               showClass={false}
             />
           </ScrollView>
@@ -141,6 +240,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 16,
+  },
+  summary: {
+    padding: 12,
   },
   scrollContent: {
     padding: 12,

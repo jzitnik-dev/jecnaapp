@@ -1,40 +1,40 @@
-import {
-  CanteenMenuDayAnonym,
-  type CanteenMenuResult,
-} from '@/api/iCanteenClient';
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { Badge, useTheme } from 'react-native-paper';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useState } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
   RefreshControl,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
+  FlatList,
 } from 'react-native';
 import { useRouter, useNavigation } from 'expo-router';
-import { useQuery } from '@tanstack/react-query';
-import * as SecureStore from 'expo-secure-store';
+import {
+  useInfiniteQuery,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
+import { Canteen } from 'jecnaapi-react-native';
+import { DayMenu, MenuItem } from 'jecnaapi-react-native/canteen';
 
 const allergenColors: { [key: string]: string } = {
-  '1': '#FF6B6B', // Obiloviny - červená
-  '2': '#4ECDC4', // Korýši - tyrkysová
-  '3': '#45B7D1', // Vejce - modrá
-  '4': '#96CEB4', // Ryby - zelená
-  '5': '#FFEAA7', // Arašídy - žlutá
-  '6': '#DDA0DD', // Sója - fialová
-  '7': '#98D8C8', // Mléko - světle zelená
-  '8': '#F7DC6F', // Ořechy - žlutá
-  '9': '#BB8FCE', // Celer - fialová
-  '10': '#F8C471', // Hořčice - oranžová
-  '11': '#85C1E9', // Sezam - světle modrá
-  '12': '#F1948A', // Oxid siřičitý - růžová
-  '13': '#82E0AA', // Vlčí bob - světle zelená
-  '14': '#F9E79F', // Měkkýši - světle žlutá
+  '1': '#FF6B6B',
+  '2': '#4ECDC4',
+  '3': '#45B7D1',
+  '4': '#96CEB4',
+  '5': '#FFEAA7',
+  '6': '#DDA0DD',
+  '7': '#98D8C8',
+  '8': '#F7DC6F',
+  '9': '#BB8FCE',
+  '10': '#F8C471',
+  '11': '#85C1E9',
+  '12': '#F1948A',
+  '13': '#82E0AA',
+  '14': '#F9E79F',
 };
 
 const allergenNames: { [key: string]: string } = {
@@ -54,92 +54,325 @@ const allergenNames: { [key: string]: string } = {
   '14': 'Měkkýši',
 };
 
-function getStatusColor(type: 'přeobjednat' | 'objednat' | 'zrušit') {
-  if (type === 'přeobjednat' || type === 'objednat') {
-    return 'green';
-  }
-  if (type === 'zrušit') {
-    return 'red';
-  }
+const DAYS_PER_PAGE = 7;
+
+function getDaysForPage(pageParam: number): Date[] {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() + pageParam * DAYS_PER_PAGE);
+
+  return Array.from({ length: DAYS_PER_PAGE }).map((_, i) => {
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + i);
+    return d;
+  });
 }
 
-function getIcon(type: 'přeobjednat' | 'objednat' | 'zrušit') {
-  if (type === 'zrušit') {
-    return 'close-circle-outline';
-  }
-  if (type === 'objednat' || type === 'přeobjednat') {
-    return 'cart-outline';
-  }
+function formatDateToCzech(dateString: Date | string) {
+  const d = new Date(dateString);
+  const days = [
+    'Neděle',
+    'Pondělí',
+    'Úterý',
+    'Středa',
+    'Čtvrtek',
+    'Pátek',
+    'Sobota',
+  ];
+  return `${days[d.getDay()]} ${d.getDate()}. ${d.getMonth() + 1}.`;
 }
 
 export default function Jidelna() {
   const theme = useTheme();
   const router = useRouter();
   const navigation = useNavigation();
-  const { client: spseClient } = useSpseJecnaClient();
+  const queryClient = useQueryClient();
   const [ordering, setOrdering] = useState<string | undefined>();
 
   const backgroundColor = theme.colors.background;
   const textColor = theme.colors.onBackground;
   const cardBackground = theme.colors.surface;
 
-  // --- TanStack Query for fetching menu
-  const menuQuery = useQuery<
-    CanteenMenuResult | { menus: CanteenMenuDayAnonym[]; anonym: true },
-    Error
-  >({
-    queryKey: ['canteenMenu'],
-    queryFn: async () => {
-      if (!spseClient) {
-        throw new Error('SpseJecnaClient not available. Please login first.');
-      }
-      const useAnonym = SecureStore.getItem('show-jidelna-no-login') === 'true';
-
-      const canteenClient = await spseClient.getCanteenClient(useAnonym);
-      if (useAnonym) {
-        const menu = await canteenClient.getAnonymMenu();
-
-        return menu;
-      }
-
-      const menu = await canteenClient.getMonthlyMenu();
-
-      // update header with credit
-      navigation.setOptions({
-        headerRight: () => (
-          <View
-            style={{
-              display: 'flex',
-              gap: 8,
-              alignItems: 'center',
-              flexDirection: 'row',
-            }}
-          >
-            <Ionicons name="wallet-outline" size={20} color={textColor} />
-            <Text
-              style={{
-                marginRight: 15,
-                fontWeight: 'bold',
-                color: theme.colors.onSurface,
-              }}
-            >
-              {menu.credit}
-            </Text>
-          </View>
-        ),
-      });
-
-      return menu;
-    },
-    enabled: !!spseClient,
-    staleTime: 10 * 60 * 60 * 1000,
-    retry: 1,
+  const { data: creditData } = useQuery({
+    queryKey: ['canteenCredit'],
+    queryFn: Canteen.getCredit,
+    staleTime: 10 * 60 * 1000,
   });
 
-  // --- Loading state
-  if (menuQuery.isLoading) {
+  useEffect(() => {
+    navigation.setOptions({
+      headerRight: () => (
+        <View style={styles.headerRightContainer}>
+          <Ionicons name="wallet-outline" size={20} color={textColor} />
+          <Text
+            style={[styles.headerCreditText, { color: theme.colors.onSurface }]}
+          >
+            {creditData !== undefined ? `${creditData} Kč` : '...'}
+          </Text>
+        </View>
+      ),
+    });
+  }, [navigation, creditData, theme, textColor]);
+
+  const {
+    data,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isFetching,
+    isLoading,
+    refetch,
+  } = useInfiniteQuery({
+    queryKey: ['canteenMenu'],
+    queryFn: async ({ pageParam = 0 }) => {
+      const days = getDaysForPage(pageParam);
+      return await Canteen.getMenuAsync(days);
+    },
+    initialPageParam: 0,
+    getNextPageParam: (lastPage, allPages) => {
+      const hasFoodInLastPage = lastPage?.some(day => day.items?.length > 0);
+
+      if (!hasFoodInLastPage && allPages.length > 3) {
+        return undefined;
+      }
+
+      return allPages.length;
+    },
+    staleTime: 10 * 60 * 1000,
+  });
+
+  const menuData = useMemo(() => {
+    if (!data) return [];
+    return data.pages.flat().filter(day => day.items?.length > 0);
+  }, [data]);
+
+  const handleOrder = async (item: MenuItem, dayDate: Date) => {
+    const itemKey = `${dayDate.toString()}-${item.number}`;
+    setOrdering(itemKey);
+    try {
+      const response = await Canteen.order(item);
+      if (response.success) {
+        if (response.credit !== undefined) {
+          queryClient.setQueryData(['canteenCredit'], response.credit);
+        }
+        await refetch();
+      } else {
+        Alert.alert('Chyba', 'Akci se nepodařilo provést.');
+      }
+    } catch (e) {
+      Alert.alert('Chyba', 'Nastala neočekávaná chyba.');
+    } finally {
+      setOrdering(undefined);
+    }
+  };
+
+  const handleExchange = async (item: MenuItem, dayDate: Date) => {
+    const itemKey = `exchange-${dayDate.toString()}-${item.number}`;
+    setOrdering(itemKey);
+    try {
+      await Canteen.putOnExchange(item);
+      await refetch();
+    } catch (e) {
+      Alert.alert('Chyba', 'Nepodařilo se vložit jídlo do burzy.');
+    } finally {
+      setOrdering(undefined);
+    }
+  };
+
+  const renderMenuItem = ({ item: dayMenu }: { item: DayMenu }) => (
+    <View style={[styles.menuCard, { backgroundColor: cardBackground }]}>
+      <View style={styles.dateHeader}>
+        <Text style={[styles.dateText, { color: textColor }]}>
+          {formatDateToCzech(dayMenu.day)}
+        </Text>
+      </View>
+
+      <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {dayMenu.items.map(el => {
+          const itemKey = `${dayMenu.day.toString()}-${el.number}`;
+          const isProcessing = ordering === itemKey;
+          const isProcessingExchange = ordering === `exchange-${itemKey}`;
+
+          return (
+            <View
+              key={el.number}
+              style={[
+                styles.foodItemContainer,
+                { backgroundColor: theme.colors.surfaceVariant },
+              ]}
+            >
+              {el.isOrdered && (
+                <Badge style={styles.orderedBadge} size={25}>
+                  Objednáno
+                </Badge>
+              )}
+              {el.isInExchange && (
+                <Badge style={styles.exchangeBadge} size={25}>
+                  V burze
+                </Badge>
+              )}
+
+              {el.description.soup && (
+                <View style={styles.foodSection}>
+                  <Text style={[styles.foodTitle, { color: textColor }]}>
+                    Polévka
+                  </Text>
+                  <Text style={[styles.foodDescription, { color: textColor }]}>
+                    {el.description.soup}
+                  </Text>
+                </View>
+              )}
+
+              <View style={styles.foodSection}>
+                <Text style={[styles.foodTitle, { color: textColor }]}>
+                  Jídlo {el.number}
+                </Text>
+                <Text style={[styles.foodDescription, { color: textColor }]}>
+                  {el.description.rest}
+                </Text>
+              </View>
+
+              <View style={styles.priceSection}>
+                <Text style={[styles.priceText, { color: textColor }]}>
+                  {el.price} Kč
+                </Text>
+              </View>
+
+              {el.allergens && el.allergens.length > 0 && (
+                <View style={styles.allergenSection}>
+                  <Text style={[styles.allergenTitle, { color: textColor }]}>
+                    Alergeny
+                  </Text>
+                  <View style={styles.allergenList}>
+                    {el.allergens.map((allergen, index) => (
+                      <TouchableOpacity
+                        key={index}
+                        style={[
+                          styles.allergenBadge,
+                          {
+                            backgroundColor: allergenColors[allergen] || '#999',
+                          },
+                        ]}
+                        onPress={() =>
+                          Alert.alert(
+                            'Alergen',
+                            allergenNames[allergen] || 'Neznámý'
+                          )
+                        }
+                      >
+                        <Text style={styles.allergenText}>{allergen}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              )}
+
+              <View style={styles.actionRow}>
+                {el.isEnabled && (
+                  <TouchableOpacity
+                    style={[
+                      styles.orderButton,
+                      {
+                        backgroundColor: el.isOrdered ? '#E53935' : '#4CAF50',
+                        opacity: isProcessing || isFetching ? 0.7 : 1,
+                        flex: 1,
+                        justifyContent: 'center',
+                      },
+                    ]}
+                    onPress={() => handleOrder(el, dayMenu.day)}
+                    disabled={ordering !== undefined || isFetching}
+                  >
+                    {isProcessing ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <>
+                        <Ionicons
+                          name={
+                            el.isOrdered
+                              ? 'close-circle-outline'
+                              : 'cart-outline'
+                          }
+                          size={20}
+                          color="white"
+                        />
+                        <Text style={styles.orderButtonText}>
+                          {el.isOrdered ? 'Zrušit' : 'Objednat'}
+                        </Text>
+                      </>
+                    )}
+                  </TouchableOpacity>
+                )}
+
+                {el.isOrdered && el.putOnExchangePath && !el.isInExchange && (
+                  <TouchableOpacity
+                    style={[
+                      styles.orderButton,
+                      {
+                        backgroundColor: '#FF9800',
+                        opacity: isProcessingExchange || isFetching ? 0.7 : 1,
+                        marginLeft: 8,
+                        paddingHorizontal: 12,
+                        justifyContent: 'center',
+                      },
+                    ]}
+                    onPress={() => handleExchange(el, dayMenu.day)}
+                    disabled={ordering !== undefined || isFetching}
+                  >
+                    {isProcessingExchange ? (
+                      <ActivityIndicator size="small" color="white" />
+                    ) : (
+                      <Text style={styles.orderButtonText}>Do burzy</Text>
+                    )}
+                  </TouchableOpacity>
+                )}
+              </View>
+            </View>
+          );
+        })}
+      </View>
+    </View>
+  );
+
+  const renderHeader = () => (
+    <TouchableOpacity
+      style={[
+        styles.orderButton,
+        {
+          backgroundColor: theme.colors.surface,
+          marginBottom: 16,
+          justifyContent: 'space-between',
+        },
+      ]}
+      onPress={() => router.push('/jidelna/burza')}
+    >
+      <Text
+        style={{
+          color: theme.colors.onSurface,
+          fontWeight: 'bold',
+          fontSize: 16,
+        }}
+      >
+        Burza
+      </Text>
+      <MaterialCommunityIcons
+        name="chevron-right"
+        size={16}
+        color={theme.colors.onSurfaceVariant}
+      />
+    </TouchableOpacity>
+  );
+
+  const renderFooter = () => {
+    if (!isFetchingNextPage) return null;
     return (
-      <View style={[styles.container, { backgroundColor }]}>
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color={textColor} />
+      </View>
+    );
+  };
+
+  if (isLoading) {
+    return (
+      <View style={[styles.container, styles.centerAlign, { backgroundColor }]}>
         <ActivityIndicator size="large" color={textColor} />
         <Text style={[styles.loadingText, { color: textColor }]}>
           Načítání jídelníčku...
@@ -148,315 +381,69 @@ export default function Jidelna() {
     );
   }
 
-  const menuData = menuQuery.data;
-
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor }]}
-      refreshControl={
-        <RefreshControl
-          refreshing={menuQuery.isFetching}
-          onRefresh={() => menuQuery.refetch()}
-        />
-      }
-    >
-      {(menuData && 'anonym' in menuData) ||
-        (!(!menuData?.menus || menuData.menus.length === 0) && (
-          <TouchableOpacity
-            style={[
-              styles.orderButton,
-              {
-                backgroundColor: theme.colors.surface,
-                marginBottom: 16,
-                justifyContent: 'space-between',
-              },
-            ]}
-            onPress={() => {
-              router.push('/jidelna/burza');
-            }}
+    <View style={[styles.container, { backgroundColor }]}>
+      <FlatList
+        data={menuData}
+        keyExtractor={item => item.day.toString()}
+        renderItem={renderMenuItem}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        ListEmptyComponent={
+          <View
+            style={[styles.emptyState, { backgroundColor: cardBackground }]}
           >
-            <Text
-              style={{
-                color: theme.colors.onSurface,
-                fontWeight: 'bold',
-                fontSize: 16,
-              }}
-            >
-              Burza
-            </Text>
-
-            <MaterialCommunityIcons
-              name="chevron-right"
-              size={16}
-              color={theme.colors.onSurfaceVariant}
-            />
-          </TouchableOpacity>
-        ))}
-      {menuData?.menus.map(menuItem => (
-        <View
-          key={menuItem.date}
-          style={[styles.menuCard, { backgroundColor: cardBackground }]}
-        >
-          {/* Date header */}
-          <View style={styles.dateHeader}>
-            <Text style={[styles.dateText, { color: textColor }]}>
-              {menuItem.dayName} {menuItem.date}
+            <Ionicons name="restaurant-outline" size={64} color={textColor} />
+            <Text style={[styles.emptyText, { color: textColor }]}>
+              Žádné jídlo k dispozici
             </Text>
           </View>
-
-          <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <View style={{ marginBottom: 16 }}>
-              <Text style={[styles.foodTitle, { color: textColor }]}>
-                Polévka
-              </Text>
-              <Text style={[styles.foodDescription, { color: textColor }]}>
-                {menuItem.polevka}
-              </Text>
-            </View>
-            {menuItem.items.map(el => (
-              <View
-                key={el.name}
-                style={{
-                  backgroundColor: theme.colors.surfaceVariant,
-                  borderRadius: 4,
-                  paddingVertical: 15,
-                  paddingHorizontal: 15,
-                }}
-              >
-                {'ordered' in el && el.ordered && (
-                  <Badge
-                    style={{
-                      backgroundColor: 'green',
-                      color: 'white',
-                      position: 'absolute',
-                      right: 10,
-                      top: 10,
-                    }}
-                    size={25}
-                  >
-                    Objednáno
-                  </Badge>
-                )}
-                {/* Food description */}
-                <View style={styles.foodSection}>
-                  <Text style={[styles.foodTitle, { color: textColor }]}>
-                    Jídlo
-                  </Text>
-                  <Text style={[styles.foodDescription, { color: textColor }]}>
-                    {el.name}
-                  </Text>
-                </View>
-
-                {/* Price */}
-                {'price' in el && (
-                  <View style={styles.priceSection}>
-                    <Text style={[styles.priceText, { color: textColor }]}>
-                      {el.price}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Allergens */}
-                {el.allergens.length > 0 && (
-                  <View style={styles.allergenSection}>
-                    <Text style={[styles.allergenTitle, { color: textColor }]}>
-                      Alergeny
-                    </Text>
-                    <View style={styles.allergenList}>
-                      {el.allergens.map((allergen, index) => (
-                        <TouchableOpacity
-                          key={index}
-                          style={[
-                            styles.allergenBadge,
-                            {
-                              backgroundColor:
-                                allergenColors[allergen] || '#999',
-                            },
-                          ]}
-                          onPress={() =>
-                            Alert.alert(
-                              'Alergen',
-                              allergenNames[allergen] || 'Neznámý'
-                            )
-                          }
-                        >
-                          <Text style={styles.allergenText}>{allergen}</Text>
-                        </TouchableOpacity>
-                      ))}
-                    </View>
-                  </View>
-                )}
-
-                {/* Timings */}
-                {'pickupTime' in el &&
-                  (el.pickupTime || el.orderDeadline || el.cancelDeadline) && (
-                    <View style={styles.timingSection}>
-                      <Ionicons
-                        name="time-outline"
-                        size={16}
-                        color={textColor}
-                      />
-                      <View style={styles.timingInfo}>
-                        {el.pickupTime && (
-                          <Text
-                            style={[styles.timingText, { color: textColor }]}
-                          >
-                            Výdej: {el.pickupTime}
-                          </Text>
-                        )}
-                        {el.orderDeadline && (
-                          <Text
-                            style={[styles.timingText, { color: textColor }]}
-                          >
-                            Objednat do: {el.orderDeadline}
-                          </Text>
-                        )}
-                        {el.cancelDeadline && (
-                          <Text
-                            style={[styles.timingText, { color: textColor }]}
-                          >
-                            Zrušit do: {el.cancelDeadline}
-                          </Text>
-                        )}
-                      </View>
-                    </View>
-                  )}
-
-                {/* Order button */}
-                {'disabledAction' in el && !el.disabledAction && (
-                  <TouchableOpacity
-                    style={[
-                      styles.orderButton,
-                      {
-                        backgroundColor: getStatusColor(el.buttonPresstype),
-                        justifyContent:
-                          ordering === el.name ? 'center' : 'flex-start',
-                        opacity:
-                          ordering === el.name || menuQuery.isFetching
-                            ? 0.7
-                            : 1,
-                      },
-                    ]}
-                    onPress={async () => {
-                      setOrdering(el.name);
-                      const canteenClient =
-                        await spseClient?.getCanteenClient(false);
-                      await canteenClient?.runAction(el);
-                      await menuQuery.refetch();
-                      setOrdering(undefined);
-                    }}
-                    disabled={ordering !== undefined || menuQuery.isFetching}
-                  >
-                    {ordering === el.name ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <>
-                        <Ionicons
-                          name={getIcon(el.buttonPresstype) as any}
-                          size={20}
-                          color="white"
-                        />
-                        <Text style={styles.orderButtonText}>
-                          {el.buttonPresstype[0].toUpperCase() +
-                            el.buttonPresstype.slice(1)}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                )}
-
-                {'burzable' in el && el.burzable && (
-                  <TouchableOpacity
-                    style={[
-                      styles.orderButton,
-                      {
-                        backgroundColor:
-                          el.burzaType === 'do burzy' ? 'green' : 'red',
-                        justifyContent:
-                          ordering === el.name ? 'center' : 'flex-start',
-                        opacity:
-                          ordering === el.name || menuQuery.isFetching
-                            ? 0.7
-                            : 1,
-                      },
-                    ]}
-                    onPress={async () => {
-                      setOrdering(el.name);
-                      const canteenClient =
-                        await spseClient?.getCanteenClient(false);
-                      await canteenClient?.runBurza(el);
-                      await menuQuery.refetch();
-                      setOrdering(undefined);
-                    }}
-                    disabled={ordering !== undefined || menuQuery.isFetching}
-                  >
-                    {ordering === el.name ? (
-                      <ActivityIndicator size="small" color="white" />
-                    ) : (
-                      <>
-                        <Text style={styles.orderButtonText}>
-                          {el.burzaType === 'z burzy' ? 'Z burzy' : 'Do burzy'}
-                        </Text>
-                      </>
-                    )}
-                  </TouchableOpacity>
-                )}
-              </View>
-            ))}
-          </View>
-        </View>
-      ))}
-
-      {/* Empty state */}
-      {(!menuData?.menus || menuData.menus.length === 0) && (
-        <View style={[styles.emptyState, { backgroundColor: cardBackground }]}>
-          <Ionicons name="restaurant-outline" size={64} color={textColor} />
-          <Text style={[styles.emptyText, { color: textColor }]}>
-            Žádné jídlo k dispozici
-          </Text>
-        </View>
-      )}
-    </ScrollView>
+        }
+        contentContainerStyle={styles.listContent}
+        onEndReached={() => {
+          if (hasNextPage && !isFetchingNextPage) {
+            fetchNextPage();
+          }
+        }}
+        onEndReachedThreshold={0.5}
+        refreshControl={
+          <RefreshControl
+            refreshing={isFetching && !isFetchingNextPage}
+            onRefresh={() => {
+              refetch();
+              queryClient.invalidateQueries({ queryKey: ['canteenCredit'] });
+            }}
+          />
+        }
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  listContent: {
     padding: 16,
+  },
+  centerAlign: {
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   loadingText: {
     marginTop: 16,
     fontSize: 16,
-    textAlign: 'center',
   },
-  header: {
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  headerItem: {
+  headerRightContainer: {
+    display: 'flex',
+    gap: 8,
     alignItems: 'center',
-    flex: 1,
+    flexDirection: 'row',
   },
-  headerLabel: {
-    fontSize: 12,
-    marginTop: 4,
-    opacity: 0.7,
-  },
-  headerValue: {
-    fontSize: 16,
+  headerCreditText: {
+    marginRight: 15,
     fontWeight: 'bold',
-    marginTop: 2,
   },
   menuCard: {
     borderRadius: 12,
@@ -469,27 +456,33 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   dateHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 12,
   },
   dateText: {
     fontSize: 18,
     fontWeight: 'bold',
   },
-  statusBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
+  foodItemContainer: {
+    borderRadius: 4,
+    paddingVertical: 15,
+    paddingHorizontal: 15,
+    position: 'relative',
   },
-  statusText: {
+  orderedBadge: {
+    backgroundColor: 'green',
     color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-    marginLeft: 4,
+    position: 'absolute',
+    right: 10,
+    top: 10,
+    zIndex: 1,
+  },
+  exchangeBadge: {
+    backgroundColor: '#FF9800',
+    color: 'white',
+    position: 'absolute',
+    right: 10,
+    top: 38,
+    zIndex: 1,
   },
   foodSection: {
     marginBottom: 12,
@@ -538,21 +531,9 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: 'bold',
   },
-  timingSection: {
+  actionRow: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    marginBottom: 16,
-    padding: 12,
-    backgroundColor: 'rgba(0,0,0,0.05)',
-    borderRadius: 8,
-  },
-  timingInfo: {
-    marginLeft: 8,
-    flex: 1,
-  },
-  timingText: {
-    fontSize: 14,
-    marginBottom: 2,
+    marginTop: 8,
   },
   orderButton: {
     flexDirection: 'row',
@@ -565,6 +546,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     marginLeft: 8,
+  },
+  footerLoader: {
+    paddingVertical: 20,
+    alignItems: 'center',
   },
   emptyState: {
     alignItems: 'center',

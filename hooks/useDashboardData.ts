@@ -2,7 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useJecnaRozvrhClient } from './useJecnaRozvrhClient';
 import { useAccountInfo } from './useAccountInfo';
 import { GradesPage } from 'jecnaapi-react-native/jecnaapi';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
 // import { CanteenMenuResult } from '@/api/iCanteenClient';
 //
 // function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
@@ -30,7 +30,7 @@ export function useDashboardData() {
   const gradesQuery = useQuery<GradesPage, Error>({
     queryKey: ['grades'],
     queryFn: async () => {
-      return JecnaAPI.getGradesPage();
+      return await JecnaAPI.getGradesPage();
     },
     staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -49,7 +49,7 @@ export function useDashboardData() {
   });
 
   const extraordinary = useQuery({
-    queryKey: ['extraordinarytimetable'],
+    queryKey: ['extraordinarytimetable', accountInfo?.className],
     queryFn: async () => {
       const res = await extraordClient?.getSchedule(
         accountInfo?.className || ''
@@ -66,7 +66,7 @@ export function useDashboardData() {
   const accountInfoQuery = useQuery({
     queryKey: ['accountInfo'],
     queryFn: async () => {
-      return JecnaAPI.getStudentProfile();
+      return await JecnaAPI.getStudentProfile();
     },
     staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -79,7 +79,7 @@ export function useDashboardData() {
   const lockerQuery = useQuery({
     queryKey: ['locker'],
     queryFn: async () => {
-      return JecnaAPI.getLocker();
+      return await JecnaAPI.getLocker();
     },
     staleTime: 3 * 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
@@ -92,9 +92,7 @@ export function useDashboardData() {
   const canteenMenuQuery = useQuery({
     queryKey: ['canteenMenu'],
     queryFn: async () => {
-      // const canteenClient = await withTimeout(client.getCanteenClient(), 25000);
-      // return withTimeout(canteenClient.getMonthlyMenu(), 25000);
-      return null;
+      return await Canteen.getMenuPage();
     },
     staleTime: 10 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,

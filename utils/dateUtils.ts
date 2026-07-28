@@ -1,6 +1,10 @@
 import { Time } from 'jecnaapi-react-native';
 
-export function formatTime(time?: Time) {
+export function formatTime(time?: Time | string) {
+  if (typeof time === 'string') {
+    return time;
+  }
+
   if (!time) {
     return '0:00';
   }

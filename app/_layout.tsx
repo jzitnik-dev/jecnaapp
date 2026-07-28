@@ -1,8 +1,8 @@
 import { ThemeProvider, DarkTheme } from 'expo-router/react-navigation';
 import { QueryClientProvider } from '@tanstack/react-query';
-import { Stack, useRouter } from 'expo-router';
+import { SplashScreen, Stack, useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { NotificationProvider } from '../components/NotificationProvider';
@@ -10,11 +10,14 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { queryClient } from '@/utils/queryClient';
 import { getItemAsync } from 'expo-secure-store';
 import JecnaRozvrhClientManager from '@/components/JecnaRozvrhClientManager';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
+
+SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
+  const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -29,37 +32,31 @@ export default function RootLayout() {
 
   useEffect(() => {
     const initializeClient = async () => {
-      const u = await getItemAsync('username');
-      const p = await getItemAsync('password');
-
-      if (u && p) {
-        const res = await JecnaAPI.login(u, p);
-        if (res) {
-          router.push('/(tabs)/drawer');
-        } else {
-          router.push('/login'); // TODO
-        }
-      } else {
-        router.push('/login');
-      }
-
       try {
+        const u = await getItemAsync('username');
+        const p = await getItemAsync('password');
+
+        if (u && p) {
+          const res = await JecnaAPI.login(u, p);
+          await Canteen.login(u, p);
+          if (res) {
+            router.replace('/(tabs)/drawer');
+          } else {
+            router.replace('/login');
+          }
+        } else {
+          router.replace('/login');
+        }
       } catch (error) {
         console.error('Initialization error:', error);
+        router.replace('/login');
+      } finally {
+        setIsReady(true);
+        await SplashScreen.hideAsync();
       }
     };
 
-    // Run once at mount
     initializeClient();
-
-    // Run when app comes to foreground
-    // const subscription = AppState.addEventListener('change', state => {
-    //   if (state === 'active') {
-    //     initializeClient();
-    //   }
-    // });
-
-    // return () => subscription.remove();
   }, []);
 
   const hybridTheme = {
@@ -69,6 +66,10 @@ export default function RootLayout() {
       ...navigationTheme.colors,
     },
   };
+
+  if (!isReady) {
+    return null;
+  }
 
   return (
     <QueryClientProvider client={queryClient}>

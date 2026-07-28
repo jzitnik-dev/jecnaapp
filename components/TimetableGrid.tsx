@@ -19,13 +19,16 @@ import {
 } from 'jecnaapi-react-native/jecnaapi';
 import { formatTime } from '@/utils/dateUtils';
 import { useSecureStore } from '@/hooks/useSecureStore';
+import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
 
 type TimetableGridProps = {
   timetable: Timetable;
   style?: any;
   onTeacherPress?: (teacherCode: string, teacherFull?: string) => void;
   onRoomPress?: (roomCode: string) => void;
+  extraordinary?: SuplResult;
   showClass?: boolean;
+  showExtraordinary?: boolean;
 };
 
 const DAYS_ORDER: DayOfWeek[] = [
@@ -53,7 +56,9 @@ export function TimetableGrid({
   style,
   onTeacherPress,
   onRoomPress,
+  extraordinary,
   showClass = true,
+  showExtraordinary = true,
 }: TimetableGridProps) {
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
@@ -75,6 +80,8 @@ export function TimetableGrid({
 
   const tableBg = theme.colors.surface;
   const cellBg = theme.colors.surfaceVariant;
+  const extraCellBg = theme.colors.primary;
+  const extraCellBgOn = theme.colors.onPrimary;
   const headerBg = theme.colors.surface;
   const textColor = theme.colors.onSurface;
   const borderColor = theme.colors.outline;
@@ -109,6 +116,10 @@ export function TimetableGrid({
       setTimeout(() => onRoomPress(code), 100);
     }
   };
+
+  const date = new Date();
+  const dayNumberMondayStart =
+    date.getDay() === 0 ? -1 : date.getDay() === 6 ? -2 : date.getDay() - 1;
 
   function isCurrentPeriod(period: LessonPeriod, dayName: DayOfWeek) {
     const dayMap: Record<DayOfWeek, number> = {
@@ -214,6 +225,20 @@ export function TimetableGrid({
           const spots = timetable.timetable[dayKey];
           const isLast = dayIdx + 1 === presentDays.length;
 
+          // Date logic exactly from legacy
+          const dayIndexInWeek = DAYS_ORDER.indexOf(dayKey);
+          const addDays = dayIndexInWeek - dayNumberMondayStart;
+          const targetDate = new Date(date.getTime() + addDays * 24 * 60 * 60 * 1000);
+          
+          const year = targetDate.getFullYear();
+          const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+          const dayString = String(targetDate.getDate()).padStart(2, '0');
+          const newDate = `${year}-${month}-${dayString}`;
+
+          // Only retrieve extraordinary schedule if showExtraordinary is true
+          const dailySchedule = showExtraordinary ? extraordinary?.schedule?.[newDate] : undefined;
+          const extraChanges = dailySchedule?.changes;
+
           const maxLessonsInSpot = Math.max(
             1,
             ...spots.map(spot => spot.lessons.length)
@@ -245,6 +270,41 @@ export function TimetableGrid({
                 const periodIndexForSpot = spots
                   .slice(0, spotIdx)
                   .reduce((acc, s) => acc + s.periodSpan, 0);
+
+                // Handle extraordinary substitution for this specific period
+                const extraChange = extraChanges?.[periodIndexForSpot];
+
+                if (extraChange) {
+                  return (
+                    <View
+                      key={spotIdx}
+                      style={[
+                        styles.cell,
+                        {
+                          width: cellWidth * spot.periodSpan,
+                          height: cellHeight,
+                          backgroundColor: extraCellBg, // Ignored extraChange.backgroundColor
+                          borderBottomRightRadius:
+                            isLast && spotIdx === spots.length - 1 ? 18 : 0,
+                          borderColor,
+                          borderRightWidth: spotIdx === spots.length - 1 ? 0 : 1,
+                          borderBottomWidth: isLast ? 0 : 1,
+                        },
+                      ]}
+                    >
+                      <Text
+                        ellipsizeMode="tail"
+                        style={{
+                          textAlign: 'center',
+                          color: extraCellBgOn, // Ignored extraChange.foregroundColor
+                          paddingHorizontal: 6,
+                        }}
+                      >
+                        {extraChange.text}
+                      </Text>
+                    </View>
+                  );
+                }
 
                 const period = periods[periodIndexForSpot];
                 const isCurrent =

@@ -411,22 +411,24 @@ export default function ZnamkyScreen() {
                           </Text>
                         )}
 
-                        <View style={styles.gradesRowContainer}>
-                          <View style={styles.gradesRow}>
-                            {grades.map(grade => (
-                              <GradeSquare
-                                grade={grade}
-                                key={grade.gradeId}
-                                onPress={() =>
-                                  setModal({
-                                    grade,
-                                    subjectName: subjectNameStr,
-                                  })
-                                }
-                              />
-                            ))}
+                        {grades.length > 0 && (
+                          <View style={styles.gradesRowContainer}>
+                            <View style={styles.gradesRow}>
+                              {grades.map(grade => (
+                                <GradeSquare
+                                  grade={grade}
+                                  key={grade.gradeId}
+                                  onPress={() =>
+                                    setModal({
+                                      grade,
+                                      subjectName: subjectNameStr,
+                                    })
+                                  }
+                                />
+                              ))}
+                            </View>
                           </View>
-                        </View>
+                        )}
                       </View>
                     )
                   )}
@@ -510,8 +512,6 @@ export default function ZnamkyScreen() {
                     </View>
                   </PaperModal>
                 </Portal>
-
-                <Divider style={styles.divider} />
               </View>
             );
           })}

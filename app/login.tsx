@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
@@ -25,6 +25,7 @@ export default function LoginScreen() {
     setSuccess(false);
     try {
       const ok = await JecnaAPI.login(u ?? username, p ?? password);
+      Canteen.login(u ?? username, p ?? password);
       if (ok) {
         setSuccess(true);
         await SecureStore.setItemAsync('username', u ?? username);

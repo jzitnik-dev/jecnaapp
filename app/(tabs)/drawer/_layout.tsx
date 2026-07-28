@@ -320,6 +320,16 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="substitution"
+        options={{
+          title: 'Mimořádný rozvrh',
+          drawerItemStyle: extraEnabled ? {} : { display: 'none' },
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="calendar" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="znamky"
         options={{
           title: 'Známky',
