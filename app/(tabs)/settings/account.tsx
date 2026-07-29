@@ -265,6 +265,19 @@ export default function AccountScreen() {
         </Card.Content>
       </Card>
 
+      {/* Sdělení */}
+      <Card style={[styles.card, { backgroundColor: appTheme.colors.surface }]}>
+        <Card.Content>
+          <List.Item
+            title="Zobrazit sdělení"
+            description="Pochvaly, důtky a informace"
+            left={props => <List.Icon {...props} icon="bell-outline" />}
+            right={props => <List.Icon {...props} icon="arrow-right" />}
+            onPress={() => router.push('/(tabs)/settings/sdeleni')}
+          />
+        </Card.Content>
+      </Card>
+
       {/* Logout Button */}
       <View style={styles.logoutContainer}>
         <Button
