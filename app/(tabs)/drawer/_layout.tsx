@@ -406,6 +406,16 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="dokumenty"
+        options={{
+          title: 'Dokumenty',
+          headerShown: false,
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="folder-outline" size={size} color={color} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="settings"
         options={{
           title: 'Nastavení',
