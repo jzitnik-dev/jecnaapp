@@ -2,7 +2,7 @@ import * as Notifications from 'expo-notifications';
 import { GradesPage, FinalGrade, Name } from 'jecnaapi-react-native/jecnaapi';
 import { Change } from './changeDetectionLogic';
 import { getChangesWithCache } from './gradeChecking';
-import { GradeNotificationData } from '../notificationts';
+import { GradeNotificationData } from '../notifications';
 
 function formatName(name: Name): string {
   if (name.short && name.full) {
@@ -134,6 +134,8 @@ async function sendGradeNotifications(changes: Change[]): Promise<void> {
 
 export async function entryCheckGradeNotifications(page: GradesPage) {
   const changes = await getChangesWithCache(page);
+
+  console.info('[BG_TASK] FOUND CHANGES: ' + changes.length);
 
   await sendGradeNotifications(changes);
 }

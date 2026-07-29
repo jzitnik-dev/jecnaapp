@@ -13,7 +13,7 @@ import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
 import {
   consumeNotifications,
   useNotificationListener,
-} from '@/services/notificationts';
+} from '@/services/notifications';
 
 SplashScreen.preventAutoHideAsync();
 

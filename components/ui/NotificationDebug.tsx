@@ -2,8 +2,9 @@ import { clearCache } from '@/services/grades/gradeCache';
 import { getChangesWithCache } from '@/services/grades/gradeChecking';
 import { JecnaAPI } from 'jecnaapi-react-native';
 import { Grade, GradesPage } from 'jecnaapi-react-native/jecnaapi';
-import { Alert } from 'react-native';
+import { Alert, View } from 'react-native';
 import { Button, Modal, Portal, Text, useTheme } from 'react-native-paper';
+import * as BackgroundTask from 'expo-background-task';
 
 async function setCustomCache() {
   const page = await JecnaAPI.getGradesPage();
@@ -85,23 +86,36 @@ export default function NotificationDebug({
           style={{
             textAlign: 'center',
             fontSize: 25,
-            marginBottom: 8,
+            marginBottom: 16,
             color: theme.colors.onSurface,
           }}
         >
           DEBUG
         </Text>
 
-        <Button
-          mode="outlined"
-          compact
-          onPress={() => {
-            setCustomCache();
-          }}
-          style={{ borderRadius: 8 }}
-        >
-          Set custom cache
-        </Button>
+        <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <Button
+            mode="outlined"
+            compact
+            onPress={() => {
+              setCustomCache();
+            }}
+            style={{ borderRadius: 8 }}
+          >
+            Set custom cache
+          </Button>
+
+          <Button
+            mode="outlined"
+            compact
+            onPress={() => {
+              BackgroundTask.triggerTaskWorkerForTestingAsync();
+            }}
+            style={{ borderRadius: 8 }}
+          >
+            Trigger task worker
+          </Button>
+        </View>
       </Modal>
     </Portal>
   );

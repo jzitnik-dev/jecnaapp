@@ -1,4 +1,10 @@
-import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  ScrollView,
+  StyleSheet,
+  TouchableOpacity,
+  View,
+  Platform,
+} from 'react-native';
 import {
   Card,
   Text,
@@ -21,14 +27,16 @@ import checkGradesDefaultFetch from '@/services/grades/defaultFetch';
 import { useEffect, useState } from 'react';
 import { useNavigation } from 'expo-router';
 import NotificationDebug from '@/components/ui/NotificationDebug';
+import { useBatterySettings } from '@/hooks/useBattery';
 
 export default function NotificationSettingsScreen() {
   const theme = useTheme();
-
   const [debug, setDebug] = useState(false);
 
   const { hasPermission, canAskAgain, showSuccess, handleRequestPermissions } =
     useNotificationSettings();
+
+  const { openBatterySettings } = useBatterySettings();
 
   const gradeBackgroundTask = useBackgroundTask({
     taskName: BACKGROUND_GRADE_TASK,
@@ -42,7 +50,6 @@ export default function NotificationSettingsScreen() {
       if (parse?.timestamp) {
         return new Date(parse.timestamp);
       }
-
       return undefined;
     },
   });
@@ -210,6 +217,52 @@ export default function NotificationSettingsScreen() {
             )}
           </Card.Content>
         </Card>
+
+        {Platform.OS === 'android' && (
+          <Card
+            style={[styles.card, { backgroundColor: theme.colors.surface }]}
+          >
+            <Card.Content>
+              <View style={styles.bannerHeader}>
+                <Ionicons
+                  name="battery-half-outline"
+                  size={24}
+                  color={theme.colors.primary}
+                />
+                <Text
+                  variant="titleMedium"
+                  style={[styles.bannerText, { color: theme.colors.onSurface }]}
+                >
+                  Spolehlivost notifikací
+                </Text>
+              </View>
+
+              <Text
+                variant="bodySmall"
+                style={[
+                  styles.description,
+                  { color: theme.colors.onSurfaceVariant, marginBottom: 12 },
+                ]}
+              >
+                Android často ukončuje aplikace na pozadí, pokud je ze seznamu
+                spuštěných aplikací odstraníte (tzv. "swipe away"). Aby kontrola
+                známek fungovala spolehlivě i v těchto případech, je nutné v
+                nastavení telefonu povolit aplikaci "Neomezené" (Unrestricted)
+                využití baterie.
+              </Text>
+
+              <Button
+                mode="outlined"
+                icon="cog"
+                onPress={openBatterySettings}
+                textColor={theme.colors.primary}
+                style={{ alignSelf: 'flex-start', borderRadius: 8 }}
+              >
+                Nastavení baterie pro aplikaci
+              </Button>
+            </Card.Content>
+          </Card>
+        )}
 
         {/* Grade Notifications & Background Task Card */}
         <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
