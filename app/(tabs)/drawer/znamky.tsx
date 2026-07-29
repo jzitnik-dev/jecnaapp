@@ -1,6 +1,6 @@
 import { Ionicons, MaterialIcons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   Dimensions,
   RefreshControl,
@@ -12,7 +12,6 @@ import { Pressable } from 'react-native-gesture-handler';
 import {
   Button,
   Chip,
-  Divider,
   Modal as PaperModal,
   Portal,
   Text,
@@ -28,6 +27,8 @@ import {
 } from 'jecnaapi-react-native/jecnaapi';
 import NotificationDetailModal from '@/components/ui/NotificationDetailModal';
 import { JecnaAPI } from 'jecnaapi-react-native';
+import { useLocalSearchParams } from 'expo-router/build/hooks';
+import { Change } from '@/services/grades/changeDetectionLogic';
 
 const gradeColor = (value: number) => {
   const colors = [
@@ -166,7 +167,15 @@ function getWeightedAverage(grades: Grade[]): number | null {
   return sum / weightSum;
 }
 
+// Special key used to track/scroll to the "Chování" (behaviour) block,
+// since it isn't a subject and doesn't have a subject name.
+const BEHAVIOUR_LAYOUT_KEY = '__behaviour__';
+
 export default function ZnamkyScreen() {
+  const { handleGradeChange } = useLocalSearchParams<{
+    handleGradeChange?: string;
+  }>();
+
   const theme = useTheme();
 
   const [selectedYear, setSelectedYear] = useState<number | undefined>(
@@ -190,6 +199,12 @@ export default function ZnamkyScreen() {
   const [notificationDetail, setNotificationDetail] = useState<
     number | undefined
   >();
+
+  const [highlightedBlock, setHighlightedBlock] = useState<string | null>(null);
+
+  const scrollViewRef = useRef<ScrollView>(null);
+  const blockLayoutY = useRef<Record<string, number>>({});
+  const processedChangeRef = useRef<string | null>(null);
 
   const { data, error, refetch, isFetching } = useQuery({
     queryKey: ['znamky', selectedYear, selectedHalf],
@@ -245,6 +260,97 @@ export default function ZnamkyScreen() {
     }));
   };
 
+  const findCurrentGrade = (
+    subjectName: string,
+    gradeId: number
+  ): Grade | null => {
+    if (!data?.subjectsMap) return null;
+    for (const subject of Object.values(data.subjectsMap)) {
+      if (subject.name.full !== subjectName) continue;
+      const groups = subject.grades?.subjectPartsGrades;
+      if (!groups) continue;
+      for (const grades of Object.values(groups)) {
+        const found = grades.find(g => g.gradeId === gradeId);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  const scrollToBlock = (key: string) => {
+    setTimeout(() => {
+      const y = blockLayoutY.current[key];
+      if (y !== undefined && scrollViewRef.current) {
+        scrollViewRef.current.scrollTo({
+          y: Math.max(y - 12, 0),
+          animated: true,
+        });
+      }
+    }, 350);
+
+    setHighlightedBlock(key);
+    setTimeout(() => {
+      setHighlightedBlock(prev => (prev === key ? null : prev));
+    }, 2500);
+  };
+
+  const handleIncomingChange = (change: Change) => {
+    switch (change.type) {
+      case 'GradeAddition':
+      case 'GradeWeightChange':
+      case 'GradeValueChange': {
+        const subjectName = change.subjectName.full;
+        const currentGrade =
+          findCurrentGrade(subjectName, change.newGrade.gradeId) ??
+          change.newGrade;
+        setModal({ grade: currentGrade, subjectName });
+        scrollToBlock(subjectName);
+        break;
+      }
+      case 'GradeDeletion': {
+        const subjectName = change.subjectName.full;
+        // The grade no longer exists in fresh data, so show it straight
+        // from the change payload.
+        setModal({ grade: change.oldGrade, subjectName });
+        scrollToBlock(subjectName);
+        break;
+      }
+      case 'FinalGradeChange': {
+        // No modal for final grades — just scroll to & highlight the subject.
+        scrollToBlock(change.subjectName.full);
+        break;
+      }
+      case 'BehaviourFinalGradeChange': {
+        scrollToBlock(BEHAVIOUR_LAYOUT_KEY);
+        break;
+      }
+      case 'BehaviourNotificationAdded': {
+        setNotificationDetail(change.newNotification.recordId);
+        scrollToBlock(BEHAVIOUR_LAYOUT_KEY);
+        break;
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (!handleGradeChange || !data) {
+      return;
+    }
+    if (processedChangeRef.current === handleGradeChange) {
+      return;
+    }
+    processedChangeRef.current = handleGradeChange;
+
+    try {
+      const change: Change = JSON.parse(handleGradeChange);
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      handleIncomingChange(change);
+    } catch (e) {
+      console.warn('Failed to parse handleGradeChange param', e);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleGradeChange, data]);
+
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
       <ScrollView
@@ -279,6 +385,7 @@ export default function ZnamkyScreen() {
       </ScrollView>
 
       <ScrollView
+        ref={scrollViewRef}
         style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
@@ -300,13 +407,18 @@ export default function ZnamkyScreen() {
             const plannedAvg = getPlannedAverage(subject);
             const allGrades = getSubjectRealGrades(subject);
             const avg = getWeightedAverage(allGrades);
+            const isHighlighted = highlightedBlock === subjectNameStr;
 
             return (
               <View
                 key={subjectKey}
+                onLayout={e => {
+                  blockLayoutY.current[subjectNameStr] = e.nativeEvent.layout.y;
+                }}
                 style={[
                   styles.subjectBlock,
                   { backgroundColor: theme.colors.surfaceVariant },
+                  isHighlighted && styles.subjectBlockHighlighted,
                 ]}
               >
                 <View style={styles.subjectHeader}>
@@ -518,9 +630,15 @@ export default function ZnamkyScreen() {
 
         {data?.behaviour && data.behaviour.notifications.length > 0 && (
           <View
+            onLayout={e => {
+              blockLayoutY.current[BEHAVIOUR_LAYOUT_KEY] =
+                e.nativeEvent.layout.y;
+            }}
             style={[
               styles.subjectBlock,
               { backgroundColor: theme.colors.surfaceVariant },
+              highlightedBlock === BEHAVIOUR_LAYOUT_KEY &&
+                styles.subjectBlockHighlighted,
             ]}
           >
             <View style={styles.subjectHeader}>
@@ -615,6 +733,10 @@ const styles = StyleSheet.create({
     elevation: 4,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.04)',
+  },
+  subjectBlockHighlighted: {
+    borderColor: '#4CAF50',
+    borderWidth: 2,
   },
   subjectHeader: {
     flexDirection: 'row',

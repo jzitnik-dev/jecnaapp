@@ -25,7 +25,7 @@ export default function LoginScreen() {
     setSuccess(false);
     try {
       const ok = await JecnaAPI.login(u ?? username, p ?? password);
-      Canteen.login(u ?? username, p ?? password);
+      await Canteen.login(u ?? username, p ?? password);
       if (ok) {
         setSuccess(true);
         await SecureStore.setItemAsync('username', u ?? username);

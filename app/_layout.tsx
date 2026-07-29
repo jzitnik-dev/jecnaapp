@@ -10,6 +10,10 @@ import { queryClient } from '@/utils/queryClient';
 import { getItemAsync } from 'expo-secure-store';
 import JecnaRozvrhClientManager from '@/components/JecnaRozvrhClientManager';
 import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
+import {
+  consumeNotifications,
+  useNotificationListener,
+} from '@/services/notificationts';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -17,6 +21,8 @@ export default function RootLayout() {
   const { currentTheme, navigationTheme, loadThemeSettings } = useAppTheme();
   const router = useRouter();
   const [isReady, setIsReady] = useState(false);
+
+  useNotificationListener();
 
   useEffect(() => {
     const loadTheme = async () => {
@@ -36,10 +42,13 @@ export default function RootLayout() {
         const p = await getItemAsync('password');
 
         if (u && p) {
-          const res = await JecnaAPI.login(u, p);
+          const loggedIn = await JecnaAPI.login(u, p);
           await Canteen.login(u, p);
-          if (res) {
-            router.replace('/(tabs)/drawer');
+          if (loggedIn) {
+            if (!consumeNotifications()) {
+              // No notification so redirect to dashboard
+              router.replace('/(tabs)/drawer');
+            }
           } else {
             router.replace('/login');
           }
@@ -56,7 +65,7 @@ export default function RootLayout() {
     };
 
     initializeClient();
-  }, []);
+  }, [router]);
 
   const hybridTheme = {
     ...DarkTheme,

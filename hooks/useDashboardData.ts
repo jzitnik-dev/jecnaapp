@@ -3,23 +3,6 @@ import { useJecnaRozvrhClient } from './useJecnaRozvrhClient';
 import { useAccountInfo } from './useAccountInfo';
 import { GradesPage } from 'jecnaapi-react-native/jecnaapi';
 import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
-// import { CanteenMenuResult } from '@/api/iCanteenClient';
-//
-// function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-//   return new Promise<T>((resolve, reject) => {
-//     const timer = setTimeout(() => reject(new Error('Request timed out')), ms);
-//
-//     promise
-//       .then(value => {
-//         clearTimeout(timer);
-//         resolve(value);
-//       })
-//       .catch(err => {
-//         clearTimeout(timer);
-//         reject(err);
-//       });
-//   });
-// }
 
 export function useDashboardData() {
   const { client: extraordClient } = useJecnaRozvrhClient();
