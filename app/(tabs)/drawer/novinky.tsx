@@ -14,6 +14,9 @@ import RenderHtml from 'react-native-render-html';
 import ImageViewing from 'react-native-image-viewing';
 import { JecnaAPI } from 'jecnaapi-react-native';
 import { useCachedImage } from '@/hooks/useCachedImage';
+import { ArticleFile, Cookies } from 'jecnaapi-react-native/jecnaapi';
+import { Ionicons } from '@expo/vector-icons';
+import downloadFile from '@/utils/fileDownload';
 
 function GalleryThumbnail({
   url,
@@ -99,6 +102,41 @@ function EventImageGallery({ images }: { images: string[] }) {
   );
 }
 
+function FilesList({ files }: { files: ArticleFile[] }) {
+  const { colors } = useTheme();
+
+  return (
+    <View style={styles.filesContainer}>
+      {files.map((file, index) => (
+        <TouchableOpacity
+          key={index}
+          style={[
+            styles.fileItem,
+            { backgroundColor: colors.elevation.level2 },
+          ]}
+          onPress={() => {
+            downloadFile(file.downloadPath, file.label);
+          }}
+        >
+          <Ionicons
+            name="document-text-outline"
+            size={22}
+            color={colors.primary}
+            style={styles.fileIcon}
+          />
+          <PaperText
+            variant="bodyMedium"
+            style={[styles.fileText, { color: colors.onSurface }]}
+            numberOfLines={1}
+          >
+            {file.label}
+          </PaperText>
+        </TouchableOpacity>
+      ))}
+    </View>
+  );
+}
+
 export default function NovinkyScreen() {
   const { colors } = useTheme();
   const { width } = useWindowDimensions();
@@ -143,9 +181,11 @@ export default function NovinkyScreen() {
               </PaperText>
             </View>
 
-            {(event.images?.length || 0) > 0 && (
+            {event.images.length > 0 && (
               <EventImageGallery images={event.images!} />
             )}
+
+            {event.files.length > 0 && <FilesList files={event.files} />}
 
             <RenderHtml
               contentWidth={width}
@@ -232,5 +272,22 @@ const styles = StyleSheet.create({
     marginRight: 8,
     borderRadius: 8,
     backgroundColor: 'rgba(150, 150, 150, 0.2)',
+  },
+  filesContainer: {
+    marginBottom: 16,
+  },
+  fileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 10,
+    marginBottom: 8,
+  },
+  fileIcon: {
+    marginRight: 10,
+  },
+  fileText: {
+    flex: 1,
+    fontWeight: '500',
   },
 });
