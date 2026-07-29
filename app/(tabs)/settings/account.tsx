@@ -22,7 +22,6 @@ import { useAppTheme } from '../../../hooks/useAppTheme';
 import { useSecureStore } from '@/hooks/useSecureStore';
 import { JecnaAPI } from 'jecnaapi-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { PREVIOUS_GRADES_KEY } from '@/services/GradeNotificationService';
 import * as SecureStore from 'expo-secure-store';
 
 export default function AccountScreen() {
@@ -53,7 +52,6 @@ export default function AccountScreen() {
             await SecureStore.deleteItemAsync('account_info_timestamp');
             await SecureStore.deleteItemAsync('username');
             await SecureStore.deleteItemAsync('password');
-            await SecureStore.deleteItemAsync(PREVIOUS_GRADES_KEY);
             await AsyncStorage.clear();
             router.replace('/login');
           } catch (err) {

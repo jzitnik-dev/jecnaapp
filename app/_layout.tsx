@@ -5,7 +5,6 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { Provider as PaperProvider } from 'react-native-paper';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
-import { NotificationProvider } from '../components/NotificationProvider';
 import { useAppTheme } from '../hooks/useAppTheme';
 import { queryClient } from '@/utils/queryClient';
 import { getItemAsync } from 'expo-secure-store';
@@ -76,15 +75,13 @@ export default function RootLayout() {
       <PaperProvider theme={currentTheme}>
         <ThemeProvider value={hybridTheme}>
           <GestureHandlerRootView style={{ flex: 1 }}>
-            <NotificationProvider>
-              <JecnaRozvrhClientManager />
-              <Stack>
-                <Stack.Screen name="login" options={{ headerShown: false }} />
-                <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-                <Stack.Screen name="+not-found" />
-              </Stack>
-              <StatusBar style="auto" />
-            </NotificationProvider>
+            <JecnaRozvrhClientManager />
+            <Stack>
+              <Stack.Screen name="login" options={{ headerShown: false }} />
+              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="+not-found" />
+            </Stack>
+            <StatusBar style="auto" />
           </GestureHandlerRootView>
         </ThemeProvider>
       </PaperProvider>

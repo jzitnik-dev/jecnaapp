@@ -1,250 +1,305 @@
-import React from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Card, Switch, Text, useTheme } from 'react-native-paper';
-import { useGradeNotifications } from '../../../hooks/useGradeNotifications';
+import { ScrollView, StyleSheet, TouchableOpacity, View } from 'react-native';
+import {
+  Card,
+  Text,
+  useTheme,
+  Button,
+  Switch,
+  ActivityIndicator,
+} from 'react-native-paper';
+import { Ionicons } from '@expo/vector-icons';
+import { useNotificationSettings } from '@/hooks/useNotifications';
+import { useBackgroundTask } from '@/hooks/useBackgroundTask';
+import {
+  BACKGROUND_GRADE_TASK,
+  registerBackgroundGradeCheck,
+} from '@/services/grades/backgroundTask';
+import { testNotification } from '@/services/grades/gradeNotifications';
+import { useAsyncStorage } from '@/hooks/useAsyncStorage';
+import { KEY } from '@/services/grades/gradeCache';
+import checkGradesDefaultFetch from '@/services/grades/defaultFetch';
+import { useEffect, useState } from 'react';
+import { useNavigation } from 'expo-router';
+import NotificationDebug from '@/components/ui/NotificationDebug';
 
 export default function NotificationSettingsScreen() {
   const theme = useTheme();
-  const {
-    settings,
-    isEnabled,
-    isLoading,
-    requestPermissions,
-    startNotifications,
-    stopNotifications,
-    testNotification,
-    checkForNewGrades,
-    clearPreviousGrades,
-    taskRegistered,
-    lastRan,
-  } = useGradeNotifications();
 
-  const handleToggleNotifications = async () => {
-    if (isEnabled) {
-      await stopNotifications();
-    } else {
-      const granted = await requestPermissions();
-      if (granted) {
-        await startNotifications();
+  const [debug, setDebug] = useState(false);
+
+  const { hasPermission, canAskAgain, showSuccess, handleRequestPermissions } =
+    useNotificationSettings();
+
+  const gradeBackgroundTask = useBackgroundTask({
+    taskName: BACKGROUND_GRADE_TASK,
+    onRegister: registerBackgroundGradeCheck,
+  });
+
+  const [gradeLastCheckedTimestamp] = useAsyncStorage(KEY, {
+    initialValue: undefined,
+    parse: string => {
+      const parse = JSON.parse(string);
+      if (parse?.timestamp) {
+        return new Date(parse.timestamp);
       }
+
+      return undefined;
+    },
+  });
+
+  const navigation = useNavigation();
+
+  const isDebugMode =
+    process.env.EXPO_PUBLIC_ENABLE_DEBUG_MENU === 'true' || __DEV__;
+
+  useEffect(() => {
+    if (isDebugMode) {
+      navigation.setOptions({
+        headerRight: () => (
+          <View
+            style={{
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              flexDirection: 'row',
+            }}
+          >
+            <TouchableOpacity
+              style={{
+                borderRadius: 4,
+                paddingVertical: 15,
+                paddingHorizontal: 15,
+                flexDirection: 'row',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+              onPress={() => setDebug(true)}
+            >
+              <Ionicons
+                name="bug-outline"
+                size={25}
+                color={theme.colors.onSurface}
+              />
+            </TouchableOpacity>
+          </View>
+        ),
+      });
     }
-  };
-
-  const getPermissionStatusText = () => {
-    if (!settings) return 'Načítání...';
-
-    switch (settings.permissions.status) {
-      case 'granted':
-        return 'Povoleno';
-      case 'denied':
-        return 'Zamítnuto';
-      case 'undetermined':
-        return 'Nepožádáno';
-      default:
-        return 'Neznámý stav';
-    }
-  };
-
-  const getBackgroundFetchStatusText = () => {
-    if (!settings) return 'Načítání...';
-
-    switch (settings.backgroundTaskStatus) {
-      case 'available':
-        return 'Dostupné';
-      case 'denied':
-        return 'Zamítnuto';
-      case 'restricted':
-        return 'Omezeno';
-      case null:
-        return 'Nedostupné';
-      default:
-        return 'Neznámý stav';
-    }
-  };
+  }, [navigation, theme]);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.colors.background }]}
-    >
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Text
-            variant="titleLarge"
-            style={[styles.title, { color: theme.colors.onSurface }]}
-          >
-            Notifikace známek
-          </Text>
-          <Text
-            variant="bodyMedium"
-            style={[
-              styles.description,
-              { color: theme.colors.onSurfaceVariant },
-            ]}
-          >
-            Získejte notifikace o nových známkách. Aplikace bude kontrolovat
-            nové známky každou hodinu na pozadí.
-          </Text>
-        </Card.Content>
-      </Card>
+    <>
+      <NotificationDebug modalVisible={debug} setModalVisible={setDebug} />
+      <ScrollView
+        style={[styles.container, { backgroundColor: theme.colors.background }]}
+      >
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <Card.Content>
+            <Text
+              variant="titleLarge"
+              style={[styles.title, { color: theme.colors.onSurface }]}
+            >
+              Notifikace
+            </Text>
+            <Text
+              variant="bodyMedium"
+              style={[
+                styles.description,
+                { color: theme.colors.onSurfaceVariant },
+              ]}
+            >
+              Spravujte, jak vás aplikace bude informovat o důležitých
+              událostech.
+            </Text>
 
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <View style={styles.settingRow}>
-            <View style={styles.settingText}>
-              <Text
-                variant="titleMedium"
-                style={{ color: theme.colors.onSurface }}
-              >
-                Notifikace známek
-              </Text>
-              <Text
-                variant="bodySmall"
-                style={{ color: theme.colors.onSurfaceVariant }}
-              >
-                Zapnout/vypnout notifikace
-              </Text>
+            {hasPermission !== null && (!hasPermission || showSuccess) && (
+              <View style={styles.statusSection}>
+                {!hasPermission ? (
+                  <View
+                    style={[
+                      styles.alertBanner,
+                      { backgroundColor: theme.colors.errorContainer },
+                    ]}
+                  >
+                    <View style={styles.bannerHeader}>
+                      <Ionicons
+                        name="alert-circle-outline"
+                        size={24}
+                        color={theme.colors.error}
+                      />
+                      <Text
+                        variant="titleMedium"
+                        style={[
+                          styles.bannerText,
+                          { color: theme.colors.error },
+                        ]}
+                      >
+                        Notifikace jsou vypnuté
+                      </Text>
+                    </View>
+
+                    <Text
+                      variant="bodySmall"
+                      style={[
+                        styles.bannerSubtext,
+                        { color: theme.colors.onErrorContainer },
+                      ]}
+                    >
+                      {canAskAgain !== false
+                        ? 'Pro správné fungování aplikace a příjem upozornění prosím povolte notifikace.'
+                        : 'Notifikace jste dříve zamítli. Pro jejich zapnutí musíte přejít do nastavení zařízení.'}
+                    </Text>
+
+                    <Button
+                      mode="contained"
+                      icon={() => (
+                        <Ionicons
+                          name={
+                            canAskAgain !== false
+                              ? 'notifications-outline'
+                              : 'settings-outline'
+                          }
+                          size={18}
+                          color={theme.colors.onError}
+                        />
+                      )}
+                      onPress={handleRequestPermissions}
+                      buttonColor={theme.colors.error}
+                      textColor={theme.colors.onError}
+                      style={styles.button}
+                    >
+                      {canAskAgain !== false ? 'Povolit' : 'Otevřít nastavení'}
+                    </Button>
+                  </View>
+                ) : (
+                  <View
+                    style={[
+                      styles.alertBanner,
+                      { backgroundColor: theme.colors.primaryContainer },
+                    ]}
+                  >
+                    <View style={styles.bannerHeader}>
+                      <Ionicons
+                        name="checkmark-circle-outline"
+                        size={24}
+                        color={theme.colors.primary}
+                      />
+                      <Text
+                        variant="titleMedium"
+                        style={[
+                          styles.bannerText,
+                          { color: theme.colors.primary },
+                        ]}
+                      >
+                        Vše je připraveno
+                      </Text>
+                    </View>
+                    <Text
+                      variant="bodySmall"
+                      style={[
+                        styles.bannerSubtext,
+                        { color: theme.colors.onPrimaryContainer },
+                      ]}
+                    >
+                      Notifikace jsou povoleny. Budete dostávat všechna důležitá
+                      upozornění.
+                    </Text>
+                  </View>
+                )}
+              </View>
+            )}
+          </Card.Content>
+        </Card>
+
+        {/* Grade Notifications & Background Task Card */}
+        <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
+          <Card.Content>
+            <View style={styles.settingRow}>
+              <View style={styles.settingTextContainer}>
+                <Text
+                  variant="bodyLarge"
+                  style={{ color: theme.colors.onSurface }}
+                >
+                  Nové známky
+                </Text>
+                <Text
+                  variant="bodySmall"
+                  style={{ color: theme.colors.onSurfaceVariant }}
+                >
+                  Pravidelně na pozadí kontroluje nové známky a změny v
+                  klasifikaci.
+                </Text>
+              </View>
+
+              {gradeBackgroundTask.isLoading ? (
+                <ActivityIndicator size="small" color={theme.colors.primary} />
+              ) : (
+                <Switch
+                  value={gradeBackgroundTask.isRegistered}
+                  onValueChange={gradeBackgroundTask.toggleTask}
+                  disabled={gradeBackgroundTask.isLoading}
+                  color={theme.colors.primary}
+                />
+              )}
             </View>
-            <Switch
-              value={isEnabled}
-              onValueChange={handleToggleNotifications}
-              disabled={isLoading}
-            />
-          </View>
-        </Card.Content>
-      </Card>
 
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Text
-            variant="titleMedium"
-            style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
-          >
-            Stav oprávnění
-          </Text>
+            {/* Action Buttons & Status (Visible when background check is enabled) */}
+            {gradeBackgroundTask.isRegistered && (
+              <View style={styles.actionsContainer}>
+                <View style={styles.buttonGroup}>
+                  <Button
+                    mode="outlined"
+                    compact
+                    icon={({ size, color }) => (
+                      <Ionicons
+                        name="notifications-outline"
+                        size={size}
+                        color={color}
+                      />
+                    )}
+                    onPress={() => {
+                      testNotification();
+                    }}
+                    style={styles.actionButton}
+                  >
+                    Otestovat notifikaci
+                  </Button>
 
-          <View style={styles.statusRow}>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              Notifikace:
-            </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurface }}
-            >
-              {getPermissionStatusText()}
-            </Text>
-          </View>
+                  <Button
+                    mode="contained-tonal"
+                    compact
+                    icon={({ size, color }) => (
+                      <Ionicons
+                        name="refresh-outline"
+                        size={size}
+                        color={color}
+                      />
+                    )}
+                    onPress={() => {
+                      checkGradesDefaultFetch();
+                    }}
+                    style={styles.actionButton}
+                  >
+                    Zkontrolovat nové známky
+                  </Button>
+                </View>
 
-          <View style={styles.statusRow}>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              Pozadí:
-            </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurface }}
-            >
-              {getBackgroundFetchStatusText()}
-            </Text>
-          </View>
-
-          <View style={styles.statusRow}>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              Task registrovaný:
-            </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurface }}
-            >
-              {taskRegistered ? 'Ano' : 'Ne'}
-            </Text>
-          </View>
-
-          <View style={styles.statusRow}>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurfaceVariant }}
-            >
-              Poslední kontrola:
-            </Text>
-            <Text
-              variant="bodyMedium"
-              style={{ color: theme.colors.onSurface }}
-            >
-              {lastRan && lastRan.toLocaleString() !== 'Invalid Date'
-                ? lastRan.toLocaleString()
-                : 'Nikdy'}
-            </Text>
-          </View>
-        </Card.Content>
-      </Card>
-
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Text
-            variant="titleMedium"
-            style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
-          >
-            Testování
-          </Text>
-
-          <Button
-            mode="outlined"
-            onPress={testNotification}
-            disabled={isLoading}
-            style={styles.button}
-          >
-            Odeslat testovací notifikaci
-          </Button>
-
-          <Button
-            mode="outlined"
-            onPress={checkForNewGrades}
-            disabled={isLoading}
-            style={styles.button}
-          >
-            Zkontrolovat nové známky
-          </Button>
-
-          <Button
-            mode="outlined"
-            onPress={clearPreviousGrades}
-            disabled={isLoading}
-            style={styles.button}
-          >
-            Vymazat předchozí známky
-          </Button>
-        </Card.Content>
-      </Card>
-
-      <Card style={[styles.card, { backgroundColor: theme.colors.surface }]}>
-        <Card.Content>
-          <Text
-            variant="titleMedium"
-            style={[styles.sectionTitle, { color: theme.colors.onSurface }]}
-          >
-            Informace
-          </Text>
-
-          <Text
-            variant="bodySmall"
-            style={[styles.infoText, { color: theme.colors.onSurfaceVariant }]}
-          >
-            • Notifikace se kontrolují každou hodinu na pozadí{'\n'}• Aplikace
-            musí být alespoň jednou spuštěna{'\n'}• Pro správnou funkčnost
-            musíte být přihlášeni{'\n'}• Notifikace se zobrazí pouze pro nové
-            známky{'\n'}• Data o předchozích známkách se ukládají lokálně
-          </Text>
-        </Card.Content>
-      </Card>
-    </ScrollView>
+                <Text
+                  variant="labelSmall"
+                  style={[
+                    styles.lastCheckedText,
+                    { color: theme.colors.outline },
+                  ]}
+                >
+                  Naposledy zkontrolováno:{' '}
+                  {gradeLastCheckedTimestamp?.toLocaleString('cs-CZ') || '-'}
+                </Text>
+              </View>
+            )}
+          </Card.Content>
+        </Card>
+      </ScrollView>
+    </>
   );
 }
 
@@ -255,38 +310,66 @@ const styles = StyleSheet.create({
   },
   card: {
     marginBottom: 16,
+    borderRadius: 16,
     elevation: 2,
   },
   title: {
     fontWeight: 'bold',
-    marginBottom: 8,
+    marginBottom: 4,
   },
   description: {
     lineHeight: 20,
+  },
+  statusSection: {
+    marginTop: 16,
+  },
+  alertBanner: {
+    padding: 16,
+    borderRadius: 12,
+  },
+  bannerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bannerText: {
+    marginLeft: 10,
+    fontWeight: '600',
+  },
+  bannerSubtext: {
+    marginBottom: 4,
+    lineHeight: 18,
+  },
+  button: {
+    alignSelf: 'flex-start',
+    marginTop: 12,
+    borderRadius: 8,
   },
   settingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  settingText: {
+  settingTextContainer: {
     flex: 1,
-    marginRight: 16,
+    paddingRight: 16,
   },
-  sectionTitle: {
-    fontWeight: 'bold',
+  actionsContainer: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(150, 150, 150, 0.2)',
+  },
+  buttonGroup: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
     marginBottom: 12,
   },
-  statusRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 4,
+  actionButton: {
+    borderRadius: 8,
   },
-  button: {
-    marginBottom: 8,
-  },
-  infoText: {
-    lineHeight: 20,
+  lastCheckedText: {
+    fontStyle: 'italic',
   },
 });
