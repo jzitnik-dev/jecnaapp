@@ -1,8 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useJecnaRozvrhClient } from './useJecnaRozvrhClient';
 import { useAccountInfo } from './useAccountInfo';
-import { GradesPage } from 'jecnaapi-react-native/jecnaapi';
-import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
+import { GradesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { Canteen, JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export function useDashboardData() {
   const { client: extraordClient } = useJecnaRozvrhClient();

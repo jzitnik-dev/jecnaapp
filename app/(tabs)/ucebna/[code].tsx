@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
-import { Room } from 'jecnaapi-react-native/jecnaapi';
+import { Room } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { useEffect } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, View } from 'react-native';
 import { Divider, Surface, Text, useTheme } from 'react-native-paper';
 import { TimetableGrid } from '../../../components/TimetableGrid';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export default function UcebnaScreen() {
   const { code } = useLocalSearchParams();

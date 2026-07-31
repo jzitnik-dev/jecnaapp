@@ -1,8 +1,8 @@
 import * as SecureStore from 'expo-secure-store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import { StudentProfile } from 'jecnaapi-react-native/jecnaapi';
-import { JecnaAPI, parseJson } from 'jecnaapi-react-native';
+import { StudentProfile } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { JecnaAPI, parseJson } from '@jzitnik/jecnaapi-react-native';
 
 const ACCOUNT_INFO_KEY = 'account_info';
 const ACCOUNT_INFO_TIMESTAMP_KEY = 'account_info_timestamp';

@@ -6,7 +6,7 @@ import { Card, Text, useTheme } from 'react-native-paper';
 import type { LessonInfo, StaticLesson } from '@/utils/dashboard/nextClass';
 import { getCurrentAndNextLesson } from '@/utils/dashboard/nextClass';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
-import { TimetablePage } from 'jecnaapi-react-native/jecnaapi';
+import { TimetablePage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
 import Skeleton from '../ui/Skeleton';
 

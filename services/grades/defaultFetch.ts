@@ -1,4 +1,4 @@
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import { entryCheckGradeNotifications } from './gradeNotifications';
 
 export default async function checkGradesDefaultFetch() {

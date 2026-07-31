@@ -16,7 +16,7 @@ import {
   Lesson,
   LessonPeriod,
   Timetable,
-} from 'jecnaapi-react-native/jecnaapi';
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { formatTime } from '@/utils/dateUtils';
 import { useSecureStore } from '@/hooks/useSecureStore';
 import { SuplResult } from '@jzitnik/jecna_supl_client_ts';

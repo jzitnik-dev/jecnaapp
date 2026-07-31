@@ -1,8 +1,8 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from 'expo-router';
-import { Canteen } from 'jecnaapi-react-native';
-import { ExchangeItem } from 'jecnaapi-react-native/canteen';
+import { Canteen } from '@jzitnik/jecnaapi-react-native';
+import { ExchangeItem } from '@jzitnik/jecnaapi-react-native/canteen';
 import { useEffect, useState } from 'react';
 import {
   RefreshControl,

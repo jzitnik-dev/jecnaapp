@@ -1,5 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { Locker } from 'jecnaapi-react-native/jecnaapi';
+import { Locker } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
 import Skeleton from '../ui/Skeleton';

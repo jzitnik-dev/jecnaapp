@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
+import { Canteen, JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {

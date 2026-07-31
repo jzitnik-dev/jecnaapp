@@ -1,4 +1,4 @@
-import { GradesPage } from 'jecnaapi-react-native/jecnaapi';
+import { GradesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 
 export interface GradeStats {
   average: number;

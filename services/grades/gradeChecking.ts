@@ -5,7 +5,7 @@ import {
   FinalGrade,
   NotificationReference,
   Name,
-} from 'jecnaapi-react-native/jecnaapi';
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import * as Crypto from 'expo-crypto';
 import { findChanges, Change } from './changeDetectionLogic';
 import { loadCache, saveCache, updateTimestamp } from './gradeCache';

@@ -12,9 +12,9 @@ import {
 import { Card, Text as PaperText, useTheme } from 'react-native-paper';
 import RenderHtml from 'react-native-render-html';
 import ImageViewing from 'react-native-image-viewing';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import { useCachedImage } from '@/hooks/useCachedImage';
-import { ArticleFile, Cookies } from 'jecnaapi-react-native/jecnaapi';
+import { ArticleFile, Cookies } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { Ionicons } from '@expo/vector-icons';
 import downloadFile from '@/utils/fileDownload';
 

@@ -2,7 +2,7 @@ import { View, StyleSheet } from 'react-native';
 import { Text, Card } from 'react-native-paper';
 import { ImageViewer } from '@/components/ImageViewer';
 import { GradeStats } from '@/utils/dashboard/grades';
-import { StudentProfile } from 'jecnaapi-react-native/jecnaapi';
+import { StudentProfile } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { WelcomeSkeleton } from '@/components/ui/Skeleton';
 import { useSecureStore } from '@/hooks/useSecureStore';
 

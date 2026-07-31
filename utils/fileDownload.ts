@@ -1,7 +1,7 @@
 import { Platform } from 'react-native';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
-import { Cookies } from 'jecnaapi-react-native/jecnaapi';
+import { Cookies } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 
 const USER_AGENT =
   'Mozilla/5.0 (X11; Linux x86_64; rv:147.0) Gecko/20100101 Firefox/147.0';

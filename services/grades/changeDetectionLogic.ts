@@ -3,7 +3,7 @@ import {
   Grade,
   Name,
   NotificationReference,
-} from 'jecnaapi-react-native/jecnaapi';
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { ExtractedData } from './gradeChecking';
 
 export type Change =

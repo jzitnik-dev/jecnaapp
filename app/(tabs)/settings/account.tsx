@@ -20,7 +20,7 @@ import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 import { useSecureStore } from '@/hooks/useSecureStore';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 

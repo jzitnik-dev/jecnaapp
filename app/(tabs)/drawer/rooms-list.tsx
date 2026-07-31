@@ -9,7 +9,7 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export default function RoomsListScreen() {
   const theme = useTheme();

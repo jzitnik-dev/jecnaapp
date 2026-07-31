@@ -8,8 +8,8 @@ import {
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
 import { StyleSheet } from 'react-native';
-import { NotificationType } from 'jecnaapi-react-native/jecnaapi';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { NotificationType } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export default function NotificationDetailModal({
   notificationId,

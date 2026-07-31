@@ -13,9 +13,9 @@ import {
   MonthSelector,
   YearSelector,
 } from '@/utils/selectors';
-import { MONTH_NAMES, MonthName } from 'jecnaapi-react-native/jecnaapi';
+import { MONTH_NAMES, MonthName } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { formatTime } from '@/utils/dateUtils';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export default function PrichodyScreen() {
   const theme = useTheme();

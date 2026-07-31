@@ -24,9 +24,9 @@ import {
   Grade,
   SchoolYearHalf,
   Subject,
-} from 'jecnaapi-react-native/jecnaapi';
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import NotificationDetailModal from '@/components/ui/NotificationDetailModal';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import { useLocalSearchParams } from 'expo-router/build/hooks';
 import { Change } from '@/services/grades/changeDetectionLogic';
 

@@ -9,7 +9,7 @@ import { useAppTheme } from '../hooks/useAppTheme';
 import { queryClient } from '@/utils/queryClient';
 import { getItemAsync } from 'expo-secure-store';
 import JecnaRozvrhClientManager from '@/components/JecnaRozvrhClientManager';
-import { Canteen, JecnaAPI } from 'jecnaapi-react-native';
+import { Canteen, JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import {
   consumeNotifications,
   useNotificationListener,

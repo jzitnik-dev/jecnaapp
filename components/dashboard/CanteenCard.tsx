@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
-import { MenuPage } from 'jecnaapi-react-native/canteen';
+import { MenuPage } from '@jzitnik/jecnaapi-react-native/canteen';
 import Skeleton from '../ui/Skeleton';
 
 interface CanteenProps {

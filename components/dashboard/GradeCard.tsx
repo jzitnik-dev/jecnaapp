@@ -8,7 +8,7 @@ import {
   getGradeChartData,
   getGradeTrendChartData,
 } from '@/utils/dashboard/grades';
-import { GradesPage } from 'jecnaapi-react-native/jecnaapi';
+import { GradesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import Skeleton from '../ui/Skeleton';
 
 interface GradeCardProps {

@@ -1,7 +1,7 @@
 import { clearCache } from '@/services/grades/gradeCache';
 import { getChangesWithCache } from '@/services/grades/gradeChecking';
-import { JecnaAPI } from 'jecnaapi-react-native';
-import { Grade, GradesPage } from 'jecnaapi-react-native/jecnaapi';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
+import { Grade, GradesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { Alert, View } from 'react-native';
 import { Button, Modal, Portal, Text, useTheme } from 'react-native-paper';
 import * as BackgroundTask from 'expo-background-task';

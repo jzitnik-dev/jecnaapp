@@ -1,5 +1,5 @@
 import * as Notifications from 'expo-notifications';
-import { GradesPage, FinalGrade, Name } from 'jecnaapi-react-native/jecnaapi';
+import { GradesPage, FinalGrade, Name } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { Change } from './changeDetectionLogic';
 import { getChangesWithCache } from './gradeChecking';
 import { GradeNotificationData } from '../notifications';

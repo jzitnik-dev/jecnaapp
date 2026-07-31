@@ -1,4 +1,4 @@
-import { Time } from 'jecnaapi-react-native';
+import { Time } from '@jzitnik/jecnaapi-react-native';
 
 export function formatTime(time?: Time | string) {
   if (typeof time === 'string') {

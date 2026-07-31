@@ -4,7 +4,7 @@ import {
   MONTH_NAMES,
   MonthName,
   SchoolYearHalf,
-} from 'jecnaapi-react-native/jecnaapi';
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 
 export function getCurrentSchoolYearStart() {
   const now = new Date();

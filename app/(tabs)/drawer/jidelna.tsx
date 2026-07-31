@@ -17,8 +17,8 @@ import {
   useQuery,
   useQueryClient,
 } from '@tanstack/react-query';
-import { Canteen } from 'jecnaapi-react-native';
-import { DayMenu, MenuItem } from 'jecnaapi-react-native/canteen';
+import { Canteen } from '@jzitnik/jecnaapi-react-native';
+import { DayMenu, MenuItem } from '@jzitnik/jecnaapi-react-native/canteen';
 
 const allergenColors: { [key: string]: string } = {
   '1': '#FF6B6B',

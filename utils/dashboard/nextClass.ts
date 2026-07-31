@@ -1,4 +1,4 @@
-import { DayOfWeek, TimetablePage } from 'jecnaapi-react-native/jecnaapi';
+import { DayOfWeek, TimetablePage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
 import { getCurrentDateTime } from './manualDateTime';
 

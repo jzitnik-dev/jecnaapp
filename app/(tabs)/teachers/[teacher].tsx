@@ -12,8 +12,8 @@ import { useQuery } from '@tanstack/react-query';
 
 import { TeacherImageViewer } from '../../../components/TeacherImageViewer';
 import { TimetableGrid } from '../../../components/TimetableGrid';
-import { Teacher } from 'jecnaapi-react-native/jecnaapi';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { Teacher } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export default function TeacherScreen() {
   const params = useLocalSearchParams();

@@ -1,7 +1,7 @@
 import * as BackgroundTask from 'expo-background-task';
 import { getItemAsync } from 'expo-secure-store';
 import * as TaskManager from 'expo-task-manager';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import { entryCheckGradeNotifications } from './gradeNotifications';
 
 export const BACKGROUND_GRADE_TASK = 'background-grade-check';

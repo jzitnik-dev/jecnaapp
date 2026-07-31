@@ -1,6 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useQuery } from '@tanstack/react-query';
-import { JecnaAPI } from 'jecnaapi-react-native';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 import { router } from 'expo-router';
 import React from 'react';
 import { RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
