@@ -17,7 +17,7 @@
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
     "@jzitnik/jecna_supl_client_ts": "^0.1.1",
-    "@jzitnik/jecnaapi-react-native": "^10.3.5-alpha.3",
+    "@jzitnik/jecnaapi-react-native": "^10.3.6-alpha.1",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
     "@react-native-picker/picker": "2.11.4",
