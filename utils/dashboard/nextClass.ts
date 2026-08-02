@@ -1,4 +1,7 @@
-import { DayOfWeek, TimetablePage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import {
+  DayOfWeek,
+  TimetablePage,
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
 import { getCurrentDateTime } from './manualDateTime';
 
@@ -27,9 +30,9 @@ export type BaseLesson = {
 export type LessonInfo =
   | StaticLesson
   | ({
-    kind: 'extraordinary';
-    extraOrdinaryData: string;
-  } & BaseLesson);
+      kind: 'extraordinary';
+      extraOrdinaryData: string;
+    } & BaseLesson);
 
 const DAY_MAP: Record<DayOfWeek, string> = {
   MONDAY: 'Po',
@@ -41,13 +44,15 @@ const DAY_MAP: Record<DayOfWeek, string> = {
   SUNDAY: 'Ne',
 };
 
+export type CurrentAndNextLesson = {
+  currentLessons: LessonInfo[];
+  nextLessons: LessonInfo[];
+};
+
 export async function getCurrentAndNextLesson(
   page: TimetablePage,
   extraOrdinary?: SuplResult | null
-): Promise<{
-  currentLessons: LessonInfo[];
-  nextLessons: LessonInfo[];
-}> {
+): Promise<CurrentAndNextLesson> {
   const now = getCurrentDateTime();
   const currentDayNum = now.getDay();
   const currentHour = now.getHours();

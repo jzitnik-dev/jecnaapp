@@ -1,6 +1,5 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
-import React from 'react';
 import { Linking, ScrollView, StyleSheet, Image, View } from 'react-native';
 import { Button, Card, Text, useTheme } from 'react-native-paper';
 

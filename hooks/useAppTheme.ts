@@ -1,8 +1,9 @@
 import * as SecureStore from 'expo-secure-store';
+import { ColorProp } from 'react-native-android-widget';
 import { MD3DarkTheme } from 'react-native-paper';
 import { create } from 'zustand';
 
-interface ThemeColors {
+export interface ThemeColors {
   primary: string;
   onPrimary: string;
   background: string;
@@ -16,7 +17,21 @@ interface ThemeColors {
   notification: string;
 }
 
-interface Theme {
+export interface ThemeColorsWithColorProp {
+  primary: ColorProp;
+  onPrimary: ColorProp;
+  background: ColorProp;
+  surface: ColorProp;
+  surfaceVariant: ColorProp;
+  onSurface: ColorProp;
+  onSurfaceVariant: ColorProp;
+  card: ColorProp;
+  text: ColorProp;
+  border: ColorProp;
+  notification: ColorProp;
+}
+
+export interface Theme {
   name: string;
   description: string;
   colors: ThemeColors;
@@ -212,6 +227,22 @@ const predefinedThemes: Theme[] = [
   },
 ];
 
+export const defaultTheme = {
+  dark: true,
+  colors: {
+    primary: '#4caf50',
+    background: '#0a0a0a',
+    card: '#1a1a1a',
+    text: '#ffffff',
+    border: '#4caf50',
+    notification: '#4caf50',
+    onBackground: '#ffffff',
+    onCard: '#ffffff',
+    onPrimary: '#000000',
+    onSurface: '#ffffff',
+  },
+};
+
 interface AppThemeState {
   selectedTheme: string;
   customColors: ThemeColors | null;
@@ -231,21 +262,7 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
   customColors: null,
   useCustomColors: false,
   currentTheme: {},
-  navigationTheme: {
-    dark: true,
-    colors: {
-      primary: '#4caf50',
-      background: '#0a0a0a',
-      card: '#1a1a1a',
-      text: '#ffffff',
-      border: '#4caf50',
-      notification: '#4caf50',
-      onBackground: '#ffffff',
-      onCard: '#ffffff',
-      onPrimary: '#000000',
-      onSurface: '#ffffff',
-    },
-  },
+  navigationTheme: defaultTheme,
 
   setSelectedTheme: async (themeName: string) => {
     try {
@@ -391,3 +408,26 @@ export const useAppTheme = create<AppThemeState>((set, get) => ({
     }
   },
 }));
+
+export const getAppThemeColors =
+  async (): Promise<ThemeColorsWithColorProp> => {
+    try {
+      const savedTheme = await SecureStore.getItemAsync('selectedTheme');
+      const savedCustomColors = await SecureStore.getItemAsync('customColors');
+      const savedUseCustomColors =
+        await SecureStore.getItemAsync('useCustomColors');
+
+      if (savedUseCustomColors === 'true' && savedCustomColors) {
+        return JSON.parse(savedCustomColors) as ThemeColorsWithColorProp;
+      }
+
+      const themeName = savedTheme || 'Default';
+
+      const predefinedTheme = predefinedThemes.find(t => t.name === themeName);
+      return (predefinedTheme?.colors ||
+        predefinedThemes[0].colors) as ThemeColorsWithColorProp;
+    } catch (error) {
+      console.error('Error fetching theme colors directly:', error);
+      return predefinedThemes[0].colors as ThemeColorsWithColorProp;
+    }
+  };

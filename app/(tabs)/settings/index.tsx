@@ -1,5 +1,4 @@
 import { Link } from 'expo-router';
-import React from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { Divider, List, useTheme } from 'react-native-paper';
 
