@@ -15,7 +15,7 @@ export const widgetConfig = {
       targetCellWidth: 5,
       targetCellHeight: 2,
       previewImage: './assets/widget-preview/current-timetable.png',
-      updatePeriodMillis: 60_000,
+      updatePeriodMillis: 1_800_000,
       resizeMode: 'horizontal|vertical',
     },
   ],

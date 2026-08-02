@@ -17,6 +17,7 @@ import {
   getCurrentAndNextLesson,
   LessonInfo,
 } from '@/utils/dashboard/nextClass';
+import { computeNextTimetableRefresh } from '@/utils/dashboard/computeNextTimetableRefresh';
 import withLogin from '@/utils/external-fetching/withLogin';
 import { getExtra } from '@/utils/external-fetching/getExtra';
 import {
@@ -33,7 +34,6 @@ type AditionalCache = { timetablePage: TimetablePage; supl: SuplResult | null };
 async function fetcher(
   cache?: CacheData<Data, AditionalCache>
 ): Promise<FetcherResult<Data, AditionalCache>> {
-  console.log('REFETCHING TIMETABLE');
   if (cache) {
     const currentTime = new Date();
     const cacheTime = new Date(cache.timestamp);
@@ -58,7 +58,6 @@ async function fetcher(
       };
     }
   }
-
   const timetablePage = await withLogin('getTimetablePage');
   const extraordinary = await getExtra();
 
@@ -442,4 +441,10 @@ function CurrentTimetableWidget({ data }: WidgetProps<Data>) {
 export const CurrentTimetable = {
   component: CurrentTimetableWidget,
   fetcher,
+  nextUpdate: (result: FetcherResult<Data, AditionalCache>, now: Date) =>
+    computeNextTimetableRefresh(
+      result.data.data,
+      result.aditionalCache.timetablePage,
+      now
+    ),
 } satisfies WidgetData<Data, AditionalCache>;
