@@ -214,14 +214,6 @@ export default function DebugScreen() {
           </Button>
         </Card.Content>
       </Card>
-
-      <Text
-        variant="bodySmall"
-        style={[styles.warning, { color: theme.colors.error }]}
-      >
-        Toto je pouze pro testování. Zvolený offset je uložen v zabezpečeném
-        úložišti zařízení.
-      </Text>
     </ScrollView>
   );
 }
