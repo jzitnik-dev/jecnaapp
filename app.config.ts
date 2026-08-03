@@ -1,6 +1,7 @@
 import { ExpoConfig, ConfigContext } from 'expo/config';
 import packageJson from './package.json';
 import { widgetConfig } from './widgets/android/config.ts';
+import { iosWidgetConfig } from './widgets/ios/config.ts';
 
 export default ({ config }: ConfigContext): ExpoConfig => ({
   ...config,
@@ -68,6 +69,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
     'expo-sharing',
     ['react-native-android-widget', widgetConfig],
+    ['expo-widgets', iosWidgetConfig],
   ],
   experiments: {
     typedRoutes: true,
