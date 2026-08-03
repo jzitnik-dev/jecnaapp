@@ -122,7 +122,7 @@ export default function Jidelna() {
     isLoading,
     refetch,
   } = useInfiniteQuery({
-    queryKey: ['canteenMenu'],
+    queryKey: ['canteenMenuFlow'],
     queryFn: async ({ pageParam = 0 }) => {
       const days = getDaysForPage(pageParam);
       return await Canteen.getMenuAsync(days);
