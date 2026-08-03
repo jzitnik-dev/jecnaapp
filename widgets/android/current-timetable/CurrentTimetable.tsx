@@ -377,6 +377,7 @@ function CurrentTimetableWidget({ data }: WidgetProps<Data>) {
           flexDirection: 'row',
           alignItems: 'center',
           marginBottom: 16,
+          width: 'match_parent',
         }}
       >
         <IconWidget
@@ -402,6 +403,7 @@ function CurrentTimetableWidget({ data }: WidgetProps<Data>) {
             flex: 1,
             justifyContent: 'center',
             alignItems: 'center',
+            width: 'match_parent',
           }}
         >
           <IconWidget

@@ -3,6 +3,7 @@
   "main": "index.tsx",
   "version": "1.4.1",
   "scripts": {
+    "prebuild": "expo prebuild",
     "start": "expo start",
     "android": "expo run:android",
     "ios": "expo run:ios",
@@ -18,7 +19,7 @@
     "@expo/ui": "~57.0.8",
     "@expo/vector-icons": "^15.0.2",
     "@jzitnik/jecna_supl_client_ts": "^0.1.1",
-    "@jzitnik/jecnaapi-react-native": "^10.3.6-alpha.1",
+    "@jzitnik/jecnaapi-react-native": "^10.3.6-alpha.4",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
     "@react-native-picker/picker": "2.11.4",
