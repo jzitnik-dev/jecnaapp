@@ -76,6 +76,13 @@ export default function SettingsLayout() {
           headerShown: true,
         }}
       />
+      <Stack.Screen
+        name="debug"
+        options={{
+          title: 'Debug',
+          headerShown: true,
+        }}
+      />
     </Stack>
   );
 }

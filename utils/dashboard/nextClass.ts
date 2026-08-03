@@ -53,7 +53,7 @@ export async function getCurrentAndNextLesson(
   page: TimetablePage,
   extraOrdinary?: SuplResult | null
 ): Promise<CurrentAndNextLesson> {
-  const now = getCurrentDateTime();
+  const now = await getCurrentDateTime();
   const currentDayNum = now.getDay();
   const currentHour = now.getHours();
   const currentMinute = now.getMinutes();

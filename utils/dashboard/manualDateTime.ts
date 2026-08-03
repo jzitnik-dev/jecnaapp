@@ -1,28 +1,12 @@
-// Manuální úprava času a dne pro testování
-export const useCustomDate = false;
+import * as SecureStore from 'expo-secure-store';
 
-// Manuální hodnoty pro čas a den
-export const customDay = 5; // den v týdnu (1-7, kde 1 = pondělí)
-export const customHour = 10; // hodina (0-23)
-export const customMinute = 0; // minuta (0-59)
+export const CUSTOM_TIME_OFFSET_KEY = 'debug_custom_time_offset';
 
-// Funkce pro získání aktuálního nebo custom času
-export const getCurrentDateTime = () => {
-  if (useCustomDate) {
-    const now = new Date();
-    const customDate = new Date();
+export const getCurrentDateTime = async (): Promise<Date> => {
+  const offsetStr = await SecureStore.getItemAsync(CUSTOM_TIME_OFFSET_KEY);
+  const offsetMs = offsetStr ? Number(offsetStr) : 0;
 
-    // Nastav den v týdnu
-    const currentDay = now.getDay();
-    const targetDay = customDay;
-    const daysDiff = targetDay - currentDay;
-    customDate.setDate(now.getDate() + daysDiff);
+  if (!offsetMs) return new Date();
 
-    // Nastav čas
-    customDate.setHours(customHour, customMinute, 0, 0);
-
-    return customDate;
-  }
-
-  return new Date();
+  return new Date(Date.now() + offsetMs);
 };

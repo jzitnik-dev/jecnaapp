@@ -140,12 +140,12 @@ export function getDayLessons(
  * classes have all finished (weekends are skipped, so a Friday evening falls
  * back to Monday).
  */
-export function getTodaysLessons(
+export async function getTodaysLessons(
   page: TimetablePage,
   extraOrdinary?: SuplResult | null,
   now?: Date
-): DaySchedule {
-  const ref = now ?? getCurrentDateTime();
+): Promise<DaySchedule> {
+  const ref = now ?? (await getCurrentDateTime());
   const nowMinutes = ref.getHours() * 60 + ref.getMinutes();
 
   for (let offset = 0; offset < 7; offset++) {

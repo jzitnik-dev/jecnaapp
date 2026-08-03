@@ -94,7 +94,7 @@ export interface WidgetProps<T> {
   handlerProps: WidgetTaskHandlerProps;
 }
 
-function renderAndSchedule<T, U>(
+function renderWidgetContent<T, U>(
   props: WidgetTaskHandlerProps,
   widgetName: WidgetName,
   widgetData: WidgetData<T, U>,
@@ -108,13 +108,28 @@ function renderAndSchedule<T, U>(
       handlerProps={props}
     />
   );
+}
 
+function rescheduleNextUpdate<T, U>(
+  widgetName: WidgetName,
+  widgetData: WidgetData<T, U>,
+  result: FetcherResult<T, U>
+) {
   const nextUpdateAt = widgetData.nextUpdate?.(result, new Date());
-  if (nextUpdateAt == null) {
-    cancelWidgetUpdate(widgetName);
-  } else {
+  cancelWidgetUpdate(widgetName);
+  if (nextUpdateAt != null) {
     scheduleWidgetUpdate(widgetName, nextUpdateAt);
   }
+}
+
+function renderAndSchedule<T, U>(
+  props: WidgetTaskHandlerProps,
+  widgetName: WidgetName,
+  widgetData: WidgetData<T, U>,
+  result: FetcherResult<T, U>
+) {
+  renderWidgetContent(props, widgetName, widgetData, result);
+  rescheduleNextUpdate(widgetName, widgetData, result);
 }
 
 function renderError<T, U>(
@@ -161,7 +176,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     case 'WIDGET_RESIZED':
       const cached = await loadWidgetCache(widgetName);
       if (cached) {
-        renderAndSchedule(props, widgetName, widgetData, {
+        renderWidgetContent(props, widgetName, widgetData, {
           data: cached.data,
           aditionalCache: cached.aditionalCache,
         });

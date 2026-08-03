@@ -42,7 +42,7 @@ async function fetcher(
       const theme = await getAppThemeColors();
 
       return {
-        data: { ...getTodaysLessons(ac.timetablePage, ac.supl), theme },
+        data: { ...(await getTodaysLessons(ac.timetablePage, ac.supl)), theme },
         aditionalCache: ac,
       };
     }
@@ -52,7 +52,7 @@ async function fetcher(
   const theme = await getAppThemeColors();
 
   return {
-    data: { ...getTodaysLessons(timetablePage, supl), theme },
+    data: { ...(await getTodaysLessons(timetablePage, supl)), theme },
     aditionalCache: { timetablePage, supl },
   };
 }

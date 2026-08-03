@@ -4,13 +4,16 @@ import {
   MenuPage,
 } from '@jzitnik/jecnaapi-react-native/canteen';
 
-export function findTodayMenu(page: MenuPage, now?: Date): DayMenu | undefined {
+export function findTodayMenu(
+  page?: MenuPage,
+  now?: Date
+): DayMenu | undefined {
   const ref = now ?? new Date();
   const day = ref.getDate();
   const month = ref.getMonth();
   const year = ref.getFullYear();
 
-  return Object.values(page.menu.menu).find(menu => {
+  return Object.values(page?.menu?.menu || []).find(menu => {
     const menuDate = new Date(menu.day);
     return (
       menuDate.getDate() === day &&
