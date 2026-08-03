@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import {
+  Pressable,
   RefreshControl,
   Text as RNText,
   ScrollView,
@@ -145,14 +146,20 @@ export default function TeacherScreen() {
         <View style={{ marginTop: 8, paddingHorizontal: 24, marginBottom: 18 }}>
           <View style={[styles.infoRow, { marginBottom: 6 }]}>
             <Text style={styles.infoLabel}>Kabinet:</Text>
-            <RNText
-              style={[
-                styles.infoValue,
-                { color: '#2196f3', textDecorationLine: 'underline' },
-              ]}
+            <Pressable
+              onPress={() => {
+                router.push(`/ucebna/${info.cabinet?.roomCode}`);
+              }}
             >
-              {info.cabinet}
-            </RNText>
+              <RNText
+                style={[
+                  styles.infoValue,
+                  { color: '#2196f3', textDecorationLine: 'underline' },
+                ]}
+              >
+                {info.cabinet?.name}
+              </RNText>
+            </Pressable>
           </View>
           {info.consultationHours && (
             <View style={[styles.infoRow, { marginBottom: 6 }]}>

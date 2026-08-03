@@ -1,7 +1,7 @@
 {
   "name": "jecnaapp",
   "main": "index.tsx",
-  "version": "1.4.1",
+  "version": "2.0.0-alpha.1",
   "scripts": {
     "prebuild": "expo prebuild",
     "start": "expo start",
@@ -19,7 +19,7 @@
     "@expo/ui": "~57.0.8",
     "@expo/vector-icons": "^15.0.2",
     "@jzitnik/jecna_supl_client_ts": "^0.1.1",
-    "@jzitnik/jecnaapi-react-native": "^10.3.6-alpha.4",
+    "@jzitnik/jecnaapi-react-native": "^10.3.7-beta.2",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
     "@react-native-picker/picker": "2.11.4",
@@ -75,6 +75,7 @@
     "react-native-web": "~0.21.2",
     "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1",
+    "reanimated-color-picker": "^5.1.2",
     "zustand": "^5.0.5"
   },
   "devDependencies": {

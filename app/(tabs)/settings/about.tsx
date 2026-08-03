@@ -2,6 +2,7 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import Constants from 'expo-constants';
 import { Linking, ScrollView, StyleSheet, Image, View } from 'react-native';
 import { Button, Card, Text, useTheme } from 'react-native-paper';
+import jecnaApiPackage from '@jzitnik/jecnaapi-react-native/package.json';
 
 export default function AboutScreen() {
   const theme = useTheme();
@@ -39,6 +40,18 @@ export default function AboutScreen() {
             style={[styles.version, { color: theme.colors.onSurfaceVariant }]}
           >
             Verze {Constants.expoConfig?.version || '1.0.0'}
+          </Text>
+          <Text
+            variant="bodyMedium"
+            style={[
+              styles.version,
+              {
+                color: theme.colors.onSurfaceVariant,
+                marginBottom: 16,
+              },
+            ]}
+          >
+            JečnáAPI verze {jecnaApiPackage.version}
           </Text>
           <Text
             variant="bodyMedium"
@@ -120,14 +133,27 @@ export default function AboutScreen() {
             Tato aplikace je neoficiální a není spojena se SPŠE Ječná. Vytvořena
             pro usnadnění přístupu ke školním informacím z mobilního zařízení.
           </Text>
+
           <Text
             variant="bodySmall"
-            style={[
-              styles.infoText,
-              { color: theme.colors.onSurfaceVariant, marginTop: 8 },
-            ]}
+            style={[{ color: theme.colors.onSurfaceVariant, marginTop: 16 }]}
           >
-            Made with{' '}
+            Knihovnu JečnáAPI vytvořil{' '}
+            <Text
+              style={{
+                color: theme.colors.primary,
+                textDecorationLine: 'underline',
+              }}
+              onPress={() => Linking.openURL('https://github.com/tomhula')}
+            >
+              Tomáš Hůla
+            </Text>
+          </Text>
+          <Text
+            variant="bodySmall"
+            style={[{ color: theme.colors.onSurfaceVariant }]}
+          >
+            Ječná App made with{' '}
             <MaterialCommunityIcons
               name="heart"
               size={14}
@@ -166,7 +192,6 @@ const styles = StyleSheet.create({
   },
   version: {
     textAlign: 'center',
-    marginBottom: 16,
   },
   description: {
     textAlign: 'center',

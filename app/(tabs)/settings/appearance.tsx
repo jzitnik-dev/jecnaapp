@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet, TextInput, View } from 'react-native';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   Button,
   Card,
@@ -11,6 +11,13 @@ import {
   Portal,
   Modal,
 } from 'react-native-paper';
+import ColorPicker, {
+  Panel1,
+  HueSlider,
+  Preview,
+  InputWidget,
+  Swatches,
+} from 'reanimated-color-picker';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 
 export default function AppearanceScreen() {
@@ -79,6 +86,32 @@ export default function AppearanceScreen() {
     setModalVisible(false);
     setEditingKey(null);
   };
+
+  const swatchColors = [
+    '#ffffff',
+    '#000000',
+    '#666666',
+    '#121212',
+    '#1c1e24',
+    '#b3b3b3',
+    '#333333',
+    '#f44336',
+    '#e91e63',
+    '#9c27b0',
+    '#673ab7',
+    '#3f51b5',
+    '#2196f3',
+    '#03a9f4',
+    '#00bcd4',
+    '#009688',
+    '#4caf50',
+    '#8bc34a',
+    '#cddc39',
+    '#ffeb3b',
+    '#ffc107',
+    '#ff9800',
+    '#ff5722',
+  ];
 
   return (
     <ScrollView
@@ -251,35 +284,59 @@ export default function AppearanceScreen() {
             { backgroundColor: theme.colors.surface },
           ]}
         >
-          <Text style={{ marginBottom: 10, color: theme.colors.onSurface }}>
+          <Text
+            variant="titleMedium"
+            style={[
+              styles.modalTitle,
+              { color: theme.colors.onSurface },
+            ]}
+          >
             Vyberte barvu pro: {editingKey}
           </Text>
 
-          <TextInput
+          <ColorPicker
+            style={styles.pickerContainer}
             value={pickerColor}
-            onChangeText={text => {
-              const formatted = text.startsWith('#') ? text : `#${text}`;
-              setPickerColor(formatted);
+            onChangeJS={colors => {
+              setPickerColor(colors.hex);
             }}
-            placeholder="#000000"
-            style={{
-              marginTop: 16,
-              color: theme.colors.onSurface,
-              borderBottomWidth: 1,
-              borderBottomColor: theme.colors.onSurfaceVariant,
-              paddingVertical: 8,
-            }}
-          />
-
-          {/* Manual HEX Input */}
-
-          <Button
-            mode="contained"
-            onPress={savePickedColor}
-            style={{ marginTop: 16 }}
           >
-            Uložit
-          </Button>
+            <Preview style={styles.preview} />
+            <Panel1 style={styles.panel} />
+            <HueSlider style={styles.slider} />
+            <Swatches
+              colors={swatchColors}
+              style={styles.swatches}
+            />
+            <InputWidget
+              disableAlphaChannel
+              inputStyle={{
+                color: theme.colors.onSurface,
+                borderColor: theme.colors.onSurfaceVariant,
+              }}
+              inputTitleStyle={{
+                color: theme.colors.onSurfaceVariant,
+              }}
+              iconColor={theme.colors.onSurface}
+            />
+          </ColorPicker>
+
+          <View style={styles.modalButtons}>
+            <Button
+              mode="outlined"
+              onPress={() => setModalVisible(false)}
+              style={styles.modalButton}
+            >
+              Zrušit
+            </Button>
+            <Button
+              mode="contained"
+              onPress={savePickedColor}
+              style={styles.modalButton}
+            >
+              Uložit
+            </Button>
+          </View>
         </Modal>
       </Portal>
     </ScrollView>
@@ -339,6 +396,37 @@ const styles = StyleSheet.create({
   modalContainer: {
     margin: 20,
     padding: 20,
+    borderRadius: 16,
+  },
+  modalTitle: {
+    fontWeight: 'bold',
+    marginBottom: 16,
+  },
+  pickerContainer: {
+    width: '100%',
+    gap: 12,
+  },
+  preview: {
+    height: 36,
+    borderRadius: 8,
+  },
+  panel: {
+    height: 160,
     borderRadius: 10,
+  },
+  slider: {
+    borderRadius: 8,
+  },
+  swatches: {
+    marginTop: 4,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: 20,
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
   },
 });

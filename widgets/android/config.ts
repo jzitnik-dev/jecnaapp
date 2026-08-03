@@ -14,9 +14,9 @@ export const widgetConfig = {
       minHeight: '120dp',
       targetCellWidth: 4,
       targetCellHeight: 2,
-      previewImage: './assets/widget-preview/current-timetable.png',
       updatePeriodMillis: 1_800_000,
       resizeMode: 'horizontal|vertical',
+      previewImage: './assets/widget-preview/nextclass.png',
     },
     {
       name: 'Grades',
@@ -28,6 +28,7 @@ export const widgetConfig = {
       targetCellHeight: 3,
       updatePeriodMillis: 1_800_000,
       resizeMode: 'horizontal|vertical',
+      previewImage: './assets/widget-preview/grades.png',
     },
     {
       name: 'Averages',
@@ -39,6 +40,7 @@ export const widgetConfig = {
       targetCellHeight: 2,
       updatePeriodMillis: 1_800_000,
       resizeMode: 'horizontal|vertical',
+      previewImage: './assets/widget-preview/gradesaverage.png',
     },
     {
       name: 'TodaysClasses',
@@ -50,6 +52,7 @@ export const widgetConfig = {
       targetCellHeight: 2,
       updatePeriodMillis: 1_800_000,
       resizeMode: 'horizontal|vertical',
+      previewImage: './assets/widget-preview/timetable.png',
     },
     {
       name: 'Canteen',
@@ -61,6 +64,7 @@ export const widgetConfig = {
       targetCellHeight: 2,
       updatePeriodMillis: 1_800_000,
       resizeMode: 'horizontal|vertical',
+      previewImage: './assets/widget-preview/canteen.png',
     },
   ],
 } as const satisfies WithAndroidWidgetsParams;
