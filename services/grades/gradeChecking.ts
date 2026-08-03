@@ -113,6 +113,7 @@ async function getChanges(
   const newHash = await generateHash(stringToHash);
 
   if (cached.hash === newHash) {
+    console.info('[BG_TASK] HASHES MATCH');
     return { changes: [] };
   }
 

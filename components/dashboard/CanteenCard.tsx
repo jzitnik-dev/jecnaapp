@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
 import { MenuPage } from '@jzitnik/jecnaapi-react-native/canteen';
+import { findOrderedLunch } from '@/utils/canteen/todayLunch';
 import Skeleton from '../ui/Skeleton';
 
 interface CanteenProps {
@@ -19,23 +20,8 @@ export function CanteenCard({
   const isLoading = isLoadingProp ?? !canteen;
 
   const todaysOrder = useMemo(() => {
-    if (!canteen?.menu?.menu) return undefined;
-
-    const today = new Date();
-    const todayDate = today.getDate();
-    const todayMonth = today.getMonth();
-    const todayYear = today.getFullYear();
-
-    const todaysMenu = Object.values(canteen.menu.menu).find(menu => {
-      const menuDate = new Date(menu.day);
-      return (
-        menuDate.getDate() === todayDate &&
-        menuDate.getMonth() === todayMonth &&
-        menuDate.getFullYear() === todayYear
-      );
-    });
-
-    return todaysMenu?.items.find(food => food.isOrdered);
+    if (!canteen) return undefined;
+    return findOrderedLunch(canteen);
   }, [canteen]);
 
   return (

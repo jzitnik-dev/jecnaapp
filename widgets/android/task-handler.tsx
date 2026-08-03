@@ -1,4 +1,8 @@
 import { CurrentTimetable } from './current-timetable/CurrentTimetable';
+import { Grades } from './grades/Grades';
+import { Averages } from './averages/Averages';
+import { TodaysClasses } from './todays-classes/TodaysClasses';
+import { Canteen } from './canteen/Canteen';
 import {
   cancelWidgetUpdate,
   scheduleWidgetUpdate,
@@ -11,6 +15,10 @@ import { WidgetName } from './config';
 
 const nameToWidgetData: Record<WidgetName, WidgetData<any, any>> = {
   CurrentTimetable,
+  Grades,
+  Averages,
+  TodaysClasses,
+  Canteen,
 };
 
 export interface WidgetData<T, U> {

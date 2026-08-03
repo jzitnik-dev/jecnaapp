@@ -20,45 +20,20 @@ import {
 import { HalfSelector, YearSelector } from '@/utils/selectors';
 
 import {
-  FinalGrade,
   Grade,
   SchoolYearHalf,
   Subject,
 } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import NotificationDetailModal from '@/components/ui/NotificationDetailModal';
 import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
+import { router } from 'expo-router';
 import { useLocalSearchParams } from 'expo-router/build/hooks';
 import { Change } from '@/services/grades/changeDetectionLogic';
-
-const gradeColor = (value: number) => {
-  const colors = [
-    [76, 175, 80], // 1: #4CAF50
-    [139, 195, 74], // 2: #8BC34A
-    [255, 193, 7], // 3: #FFC107
-    [255, 152, 0], // 4: #FF9800
-    [244, 67, 54], // 5: #F44336
-  ];
-  const idx = Math.round(value) - 1;
-  const c = colors[idx] || [189, 189, 189];
-  return `rgb(${c[0]},${c[1]},${c[2]})`;
-};
-
-const formatFinalGrade = (fg: FinalGrade): string => {
-  switch (fg.type) {
-    case 'Grade':
-      return fg.value.toString();
-    case 'GradesWarning':
-      return 'N (5)';
-    case 'AbsenceWarning':
-      return 'N';
-    case 'GradesAndAbsenceWarning':
-      return 'N (5/Abs)';
-    case 'Excused':
-      return 'U';
-    default:
-      return '-';
-  }
-};
+import {
+  formatFinalGrade,
+  getWeightedAverage,
+  gradeColor,
+} from '@/utils/grades/gradesFormatting';
 
 const GradeSquare = ({
   grade,
@@ -154,26 +129,19 @@ function GradeDetailModal({
   );
 }
 
-function getWeightedAverage(grades: Grade[]): number | null {
-  if (grades.length === 0) return null;
-  let sum = 0;
-  let weightSum = 0;
-  for (const g of grades) {
-    const weight = g.small ? 0.5 : 1;
-    sum += g.value * weight;
-    weightSum += weight;
-  }
-  if (weightSum === 0) return null;
-  return sum / weightSum;
-}
-
 // Special key used to track/scroll to the "Chování" (behaviour) block,
 // since it isn't a subject and doesn't have a subject name.
 const BEHAVIOUR_LAYOUT_KEY = '__behaviour__';
 
 export default function ZnamkyScreen() {
-  const { handleGradeChange } = useLocalSearchParams<{
+  const {
+    handleGradeChange,
+    gradeId: gradeIdParam,
+    subject: subjectParam,
+  } = useLocalSearchParams<{
     handleGradeChange?: string;
+    gradeId?: string;
+    subject?: string;
   }>();
 
   const theme = useTheme();
@@ -350,6 +318,25 @@ export default function ZnamkyScreen() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleGradeChange, data]);
+
+  useEffect(() => {
+    if (!subjectParam || !data) {
+      return;
+    }
+    if (gradeIdParam) {
+      const gradeId = Number(gradeIdParam);
+      if (!Number.isNaN(gradeId)) {
+        const grade = findCurrentGrade(subjectParam, gradeId);
+        if (grade) {
+          // eslint-disable-next-line react-hooks/set-state-in-effect
+          setModal({ grade, subjectName: subjectParam });
+        }
+      }
+    }
+    scrollToBlock(subjectParam);
+    router.setParams({ gradeId: undefined, subject: undefined });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gradeIdParam, subjectParam, data]);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
