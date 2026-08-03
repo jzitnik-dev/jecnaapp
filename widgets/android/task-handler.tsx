@@ -6,7 +6,7 @@ import { Canteen } from './canteen/Canteen';
 import {
   cancelWidgetUpdate,
   scheduleWidgetUpdate,
-} from '@/modules/widget-alarms/src/WidgetAlarms';
+} from '@/modules/widget-alarms';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
