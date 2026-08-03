@@ -54,7 +54,7 @@ async function fetchToLocalFile(url: string): Promise<string | undefined> {
       console.log('[useCachedImage] download threw:', err);
       try {
         if (file.exists) file.delete();
-      } catch { }
+      } catch {}
       return undefined;
     } finally {
       inFlightDownloads.delete(key);

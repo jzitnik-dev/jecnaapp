@@ -10,6 +10,13 @@ import {
   CurrentTimetable,
   CurrentTimetableWidgetInstance,
 } from './current-timetable/CurrentTimetable';
+import { Grades, GradesWidgetInstance } from './grades/Grades';
+import { Averages, AveragesWidgetInstance } from './averages/Averages';
+import {
+  TodaysClasses,
+  TodaysClassesWidgetInstance,
+} from './todays-classes/TodaysClasses';
+import { Canteen, CanteenWidgetInstance } from './canteen/Canteen';
 
 const CACHE_KEY_PREFIX = 'widget-cache';
 
@@ -40,13 +47,21 @@ export interface WidgetProps<T> {
 
 const nameToWidgetData: Record<IOSWidgetName, WidgetData<any, any>> = {
   CurrentTimetable,
+  Grades,
+  Averages,
+  TodaysClasses,
+  Canteen,
 };
 
 const widgetInstances: Record<IOSWidgetName, Widget<any, any>> = {
   CurrentTimetable: CurrentTimetableWidgetInstance,
+  Grades: GradesWidgetInstance,
+  Averages: AveragesWidgetInstance,
+  TodaysClasses: TodaysClassesWidgetInstance,
+  Canteen: CanteenWidgetInstance,
 };
 
-export const IOS_TIMETABLE_TASK = 'ios-timetable-widget-refresh';
+export const IOS_WIDGET_TASK = 'ios-widget-refresh';
 
 async function loadWidgetCache<T, U>(
   widgetName: IOSWidgetName
@@ -143,9 +158,26 @@ export async function widgetTaskHandler(widgetName: IOSWidgetName) {
   }
 }
 
-TaskManager.defineTask(IOS_TIMETABLE_TASK, async () => {
+export async function refreshAllIOSWidgets(): Promise<void> {
+  const widgetNames: IOSWidgetName[] = [
+    'CurrentTimetable',
+    'Grades',
+    'Averages',
+    'TodaysClasses',
+    'Canteen',
+  ];
+  for (const name of widgetNames) {
+    try {
+      await widgetTaskHandler(name);
+    } catch (err) {
+      console.error(`[widget] error updating ${name}:`, err);
+    }
+  }
+}
+
+TaskManager.defineTask(IOS_WIDGET_TASK, async () => {
   try {
-    await widgetTaskHandler('CurrentTimetable');
+    await refreshAllIOSWidgets();
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch (error) {
     console.error('[widget] background refresh failed:', error);
@@ -155,7 +187,7 @@ TaskManager.defineTask(IOS_TIMETABLE_TASK, async () => {
 
 export async function registerIOSWidgetUpdates(): Promise<void> {
   try {
-    await BackgroundTask.registerTaskAsync(IOS_TIMETABLE_TASK, {
+    await BackgroundTask.registerTaskAsync(IOS_WIDGET_TASK, {
       minimumInterval: 15,
     });
   } catch (error) {
@@ -164,7 +196,7 @@ export async function registerIOSWidgetUpdates(): Promise<void> {
 
   AppState.addEventListener('change', state => {
     if (state === 'active') {
-      widgetTaskHandler('CurrentTimetable');
+      refreshAllIOSWidgets();
     }
   });
 }

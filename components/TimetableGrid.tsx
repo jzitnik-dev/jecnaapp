@@ -228,15 +228,19 @@ export function TimetableGrid({
           // Date logic exactly from legacy
           const dayIndexInWeek = DAYS_ORDER.indexOf(dayKey);
           const addDays = dayIndexInWeek - dayNumberMondayStart;
-          const targetDate = new Date(date.getTime() + addDays * 24 * 60 * 60 * 1000);
-          
+          const targetDate = new Date(
+            date.getTime() + addDays * 24 * 60 * 60 * 1000
+          );
+
           const year = targetDate.getFullYear();
           const month = String(targetDate.getMonth() + 1).padStart(2, '0');
           const dayString = String(targetDate.getDate()).padStart(2, '0');
           const newDate = `${year}-${month}-${dayString}`;
 
           // Only retrieve extraordinary schedule if showExtraordinary is true
-          const dailySchedule = showExtraordinary ? extraordinary?.schedule?.[newDate] : undefined;
+          const dailySchedule = showExtraordinary
+            ? extraordinary?.schedule?.[newDate]
+            : undefined;
           const extraChanges = dailySchedule?.changes;
 
           const maxLessonsInSpot = Math.max(
@@ -287,7 +291,8 @@ export function TimetableGrid({
                           borderBottomRightRadius:
                             isLast && spotIdx === spots.length - 1 ? 18 : 0,
                           borderColor,
-                          borderRightWidth: spotIdx === spots.length - 1 ? 0 : 1,
+                          borderRightWidth:
+                            spotIdx === spots.length - 1 ? 0 : 1,
                           borderBottomWidth: isLast ? 0 : 1,
                         },
                       ]}

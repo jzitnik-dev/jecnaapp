@@ -169,10 +169,11 @@ export default function SubstitutionsAllScreen() {
                     icon="calendar"
                   >
                     {selectedDate
-                      ? `${formatCzechDate(selectedDate)}${data.schedule[selectedDate]?.info.inWork
-                        ? ' (příprava)'
-                        : ''
-                      }`
+                      ? `${formatCzechDate(selectedDate)}${
+                          data.schedule[selectedDate]?.info.inWork
+                            ? ' (příprava)'
+                            : ''
+                        }`
                       : 'Vyberte datum'}
                   </Button>
                 }
@@ -184,8 +185,9 @@ export default function SubstitutionsAllScreen() {
                       setSelectedDate(date);
                       setDateMenuVisible(false);
                     }}
-                    title={`${formatCzechDate(date)}${data.schedule[date]?.info.inWork ? ' (příprava)' : ''
-                      }`}
+                    title={`${formatCzechDate(date)}${
+                      data.schedule[date]?.info.inWork ? ' (příprava)' : ''
+                    }`}
                   />
                 ))}
               </Menu>

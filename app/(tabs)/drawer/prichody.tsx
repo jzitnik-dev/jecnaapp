@@ -13,7 +13,10 @@ import {
   MonthSelector,
   YearSelector,
 } from '@/utils/selectors';
-import { MONTH_NAMES, MonthName } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import {
+  MONTH_NAMES,
+  MonthName,
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { formatTime } from '@/utils/dateUtils';
 import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 

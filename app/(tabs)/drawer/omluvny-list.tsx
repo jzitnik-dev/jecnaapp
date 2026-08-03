@@ -9,7 +9,10 @@ import {
 } from 'react-native';
 import { Text } from 'react-native-paper';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { AbsenceInfo, AbsencesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import {
+  AbsenceInfo,
+  AbsencesPage,
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { getAvaliableYears } from '@/utils/selectors';
 import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
