@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import React, { useState } from 'react';
+import { Canteen, JecnaAPI } from '@jzitnik/jecnaapi-react-native';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import {
   Button,
@@ -9,8 +10,6 @@ import {
   Text,
   TextInput,
 } from 'react-native-paper';
-import { SpseJecnaClient } from '../api/SpseJecnaClient';
-import { useSpseJecnaClient } from '../hooks/useSpseJecnaClient';
 
 export default function LoginScreen() {
   const [username, setUsername] = useState('');
@@ -19,42 +18,25 @@ export default function LoginScreen() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const router = useRouter();
-  const setClient = useSpseJecnaClient(state => state.setClient);
-  const setCookies = useSpseJecnaClient(state => state.setCookies);
-  const client = new SpseJecnaClient();
 
-  const handleLogin = async (u?: string, p?: string, silent?: boolean) => {
+  const handleLogin = async (u?: string, p?: string) => {
     setLoading(true);
     setError(null);
     setSuccess(false);
     try {
-      const ok = await client.login(u ?? username, p ?? password);
+      const ok = await JecnaAPI.login(u ?? username, p ?? password);
+      await Canteen.login(u ?? username, p ?? password);
       if (ok) {
         setSuccess(true);
         await SecureStore.setItemAsync('username', u ?? username);
         await SecureStore.setItemAsync('password', p ?? password);
-        setClient(client);
-        setCookies(client.getCookies());
         setError(null);
         router.replace('/(tabs)/drawer');
       } else {
         setError('Uživatelské jméno nebo heslo není správné.');
-        if (!silent) {
-          await SecureStore.deleteItemAsync('username');
-          await SecureStore.deleteItemAsync('password');
-        }
       }
     } catch (e: any) {
-      if (e.message === 'Login token not found') {
-        await client.logout();
-        await SecureStore.deleteItemAsync('username');
-        await SecureStore.deleteItemAsync('password');
-      }
       setError(e.message || 'Unknown error');
-      if (!silent) {
-        await SecureStore.deleteItemAsync('username');
-        await SecureStore.deleteItemAsync('password');
-      }
     } finally {
       setLoading(false);
     }

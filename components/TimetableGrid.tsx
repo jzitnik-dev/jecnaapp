@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Dimensions, Platform, StyleSheet, View } from 'react-native';
 import { Pressable } from 'react-native-gesture-handler';
 import {
@@ -10,62 +10,74 @@ import {
   Text,
   useTheme,
 } from 'react-native-paper';
-import type {
-  ExtraordinaryTimetable,
-  TimetableDay,
-  TimetableLesson,
-  TimetablePeriod,
-} from '../api/SpseJecnaClient';
-import * as SecureStore from 'expo-secure-store';
 
-type BaseProps = {
-  periods: TimetablePeriod[];
-  days: TimetableDay[];
+import {
+  DayOfWeek,
+  Lesson,
+  LessonPeriod,
+  Timetable,
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { formatTime } from '@/utils/dateUtils';
+import { useSecureStore } from '@/hooks/useSecureStore';
+import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
+
+type TimetableGridProps = {
+  timetable: Timetable;
   style?: any;
   onTeacherPress?: (teacherCode: string, teacherFull?: string) => void;
   onRoomPress?: (roomCode: string) => void;
+  extraordinary?: SuplResult;
   showClass?: boolean;
+  showExtraordinary?: boolean;
 };
 
-type WithExtraordinary = BaseProps & {
-  extraordinary: ExtraordinaryTimetable;
-  class: string;
-};
+const DAYS_ORDER: DayOfWeek[] = [
+  'MONDAY',
+  'TUESDAY',
+  'WEDNESDAY',
+  'THURSDAY',
+  'FRIDAY',
+  'SATURDAY',
+  'SUNDAY',
+];
 
-type WithoutExtraordinary = BaseProps & {
-  extraordinary?: undefined | null;
-  class?: string;
+const DAY_LABELS: Record<DayOfWeek, string> = {
+  MONDAY: 'Po',
+  TUESDAY: 'Út',
+  WEDNESDAY: 'St',
+  THURSDAY: 'Čt',
+  FRIDAY: 'Pá',
+  SATURDAY: 'So',
+  SUNDAY: 'Ne',
 };
-
-type TimetableGridProps = WithExtraordinary | WithoutExtraordinary;
 
 export function TimetableGrid({
-  periods,
-  days,
+  timetable,
   style,
   onTeacherPress,
   onRoomPress,
   extraordinary,
   showClass = true,
-  class: className,
+  showExtraordinary = true,
 }: TimetableGridProps) {
   const theme = useTheme();
   const screenWidth = Dimensions.get('window').width;
+
+  const periods = timetable.lessonPeriods;
+  const presentDays = DAYS_ORDER.filter(day => timetable.timetable[day]);
+
   const periodCount = periods.length;
   const cellWidth = Math.max(
     120,
     Math.floor((screenWidth - 24) / (periodCount + 1))
   );
-  const [showCurrent, setShowCurrent] = useState(false);
-  useEffect(() => {
-    (async () => {
-      setShowCurrent(
-        (await SecureStore.getItemAsync('show-current-hour')) === 'true'
-      );
-    })();
-  }, []);
 
-  // Use theme colors instead of hardcoded dark/light colors
+  const [showCurrent] = useSecureStore<boolean>('show-current-hour', {
+    initialValue: true,
+    parse: val => val === 'true',
+    stringify: val => (val ? 'true' : 'false'),
+  });
+
   const tableBg = theme.colors.surface;
   const cellBg = theme.colors.surfaceVariant;
   const extraCellBg = theme.colors.primary;
@@ -76,27 +88,30 @@ export function TimetableGrid({
   const secondaryTextColor = theme.colors.onSurfaceVariant;
   const accentColor = theme.colors.primary;
 
-  // Modal state
   const [modalVisible, setModalVisible] = useState(false);
-  const [modalLesson, setModalLesson] = useState<TimetableLesson | null>(null);
+  const [modalLesson, setModalLesson] = useState<Lesson | null>(null);
 
-  const handleLessonPress = (lesson: TimetableLesson) => {
+  const handleLessonPress = (lesson: Lesson) => {
     setModalLesson(lesson);
     setModalVisible(true);
   };
 
   const handleTeacherPress = () => {
-    if (modalLesson && onTeacherPress && modalLesson.teacher) {
-      const code = modalLesson.teacher.trim().toUpperCase();
-      const fullName = modalLesson.teacherFull || '';
+    if (modalLesson && onTeacherPress && modalLesson.teacherName) {
+      const code = (
+        modalLesson.teacherName.short || modalLesson.teacherName.full
+      )
+        .trim()
+        .toUpperCase();
+      const fullName = modalLesson.teacherName.full || '';
       setModalVisible(false);
       setTimeout(() => onTeacherPress(code, fullName), 100);
     }
   };
 
   const handleRoomPress = () => {
-    if (modalLesson && onRoomPress && modalLesson.room) {
-      const code = modalLesson.room;
+    if (modalLesson && onRoomPress && modalLesson.classroom) {
+      const code = modalLesson.classroom;
       setModalVisible(false);
       setTimeout(() => onRoomPress(code), 100);
     }
@@ -106,25 +121,24 @@ export function TimetableGrid({
   const dayNumberMondayStart =
     date.getDay() === 0 ? -1 : date.getDay() === 6 ? -2 : date.getDay() - 1;
 
-  function isCurrentPeriod(periodTime: string, dayName: string) {
-    const dayMap: Record<string, number> = {
-      Po: 1,
-      Út: 2,
-      St: 3,
-      Čt: 4,
-      Pa: 5,
-      So: 6,
-      Ne: 0,
+  function isCurrentPeriod(period: LessonPeriod, dayName: DayOfWeek) {
+    const dayMap: Record<DayOfWeek, number> = {
+      MONDAY: 1,
+      TUESDAY: 2,
+      WEDNESDAY: 3,
+      THURSDAY: 4,
+      FRIDAY: 5,
+      SATURDAY: 6,
+      SUNDAY: 0,
     };
 
     const now = new Date();
-
-    // Check if today matches the given day
     if (now.getDay() !== dayMap[dayName]) return false;
 
-    const [startStr, endStr] = periodTime.split(' - ');
-    const [startHour, startMin] = startStr.split(':').map(Number);
-    const [endHour, endMin] = endStr.split(':').map(Number);
+    const startHour = period.from.hour;
+    const startMin = period.from.minute;
+    const endHour = period.to.hour;
+    const endMin = period.to.minute;
 
     const start = new Date();
     start.setHours(startHour, startMin, 0, 0);
@@ -133,6 +147,19 @@ export function TimetableGrid({
     end.setHours(endHour, endMin, 0, 0);
 
     return now >= start && now <= end;
+  }
+
+  function lightenHexColor(hex: string, percent: number) {
+    hex = hex.replace(/^#/, '');
+    if (hex.length === 8) hex = hex.slice(0, 6);
+    const num = parseInt(hex, 16);
+    let r = (num >> 16) + Math.round(255 * percent);
+    let g = ((num >> 8) & 0x00ff) + Math.round(255 * percent);
+    let b = (num & 0x0000ff) + Math.round(255 * percent);
+    r = r > 255 ? 255 : r;
+    g = g > 255 ? 255 : g;
+    b = b > 255 ? 255 : b;
+    return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
   }
 
   return (
@@ -184,45 +211,53 @@ export function TimetableGrid({
               ]}
             >
               <Text style={[styles.headerText, { color: textColor }]}>
-                {period.number}
+                {idx + 1}
               </Text>
               <Text style={[styles.timeText, { color: secondaryTextColor }]}>
-                {period.time}
+                {`${formatTime(period.from)} - ${formatTime(period.to)}`}
               </Text>
             </View>
           ))}
         </View>
         <Divider style={{ height: 1, backgroundColor: borderColor }} />
-        {/* Day rows */}
-        {days.map((day, dayIdx) => {
-          const isLast = dayIdx + 1 === days.length;
-          const addDays = dayIdx - dayNumberMondayStart;
-          const newDate = new Date(
+
+        {presentDays.map((dayKey, dayIdx) => {
+          const spots = timetable.timetable[dayKey];
+          const isLast = dayIdx + 1 === presentDays.length;
+
+          // Date logic exactly from legacy
+          const dayIndexInWeek = DAYS_ORDER.indexOf(dayKey);
+          const addDays = dayIndexInWeek - dayNumberMondayStart;
+          const targetDate = new Date(
             date.getTime() + addDays * 24 * 60 * 60 * 1000
-          )
-            .toISOString()
-            .slice(0, 10);
-
-          const isInExtra = Object.keys(extraordinary?.schedule || {}).includes(
-            newDate
           );
-          const extra = isInExtra
-            ? extraordinary?.schedule[newDate].changes[className]
-            : undefined;
 
-          const cellHeight =
-            Math.max(2, Math.max(...day.cells.map(cell => cell?.length || 1))) *
-            45;
+          const year = targetDate.getFullYear();
+          const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+          const dayString = String(targetDate.getDate()).padStart(2, '0');
+          const newDate = `${year}-${month}-${dayString}`;
+
+          // Only retrieve extraordinary schedule if showExtraordinary is true
+          const dailySchedule = showExtraordinary
+            ? extraordinary?.schedule?.[newDate]
+            : undefined;
+          const extraChanges = dailySchedule?.changes;
+
+          const maxLessonsInSpot = Math.max(
+            1,
+            ...spots.map(spot => spot.lessons.length)
+          );
+          const cellHeight = Math.max(2, maxLessonsInSpot) * 45;
 
           return (
-            <View key={day.day + dayIdx} style={styles.row}>
+            <View key={dayKey} style={styles.row}>
               <View
                 style={[
                   styles.dayCell,
                   {
                     width: cellWidth,
                     backgroundColor: headerBg,
-                    borderBottomLeftRadius: dayIdx === days.length - 1 ? 18 : 0,
+                    borderBottomLeftRadius: isLast ? 18 : 0,
                     minHeight: cellHeight,
                     borderColor,
                     borderBottomWidth: isLast ? 0 : 1,
@@ -230,86 +265,77 @@ export function TimetableGrid({
                 ]}
               >
                 <Text style={[styles.dayText, { color: textColor }]}>
-                  {day.day}
+                  {DAY_LABELS[dayKey]}
                 </Text>
-                {isInExtra && extraordinary?.schedule[newDate].info.inWork ? (
-                  <Text style={{ color: secondaryTextColor }}>(příprava)</Text>
-                ) : null}
               </View>
-              {day.cells.map((cell, periodIdx) => {
-                const isLastMult = periodIdx + 1 === day.cells.length;
 
-                if (extra && extra[periodIdx]) {
+              {spots.map((spot, spotIdx) => {
+                const isSplit = spot.lessons && spot.lessons.length > 1;
+                const periodIndexForSpot = spots
+                  .slice(0, spotIdx)
+                  .reduce((acc, s) => acc + s.periodSpan, 0);
+
+                // Handle extraordinary substitution for this specific period
+                const extraChange = extraChanges?.[periodIndexForSpot];
+
+                if (extraChange) {
                   return (
                     <View
-                      key={periodIdx}
+                      key={spotIdx}
                       style={[
                         styles.cell,
                         {
-                          width: cellWidth,
+                          width: cellWidth * spot.periodSpan,
                           height: cellHeight,
-                          backgroundColor: extraCellBg,
+                          backgroundColor: extraCellBg, // Ignored extraChange.backgroundColor
                           borderBottomRightRadius:
-                            dayIdx === days.length - 1 &&
-                            periodIdx === day.cells.length - 1
-                              ? 18
-                              : 0,
+                            isLast && spotIdx === spots.length - 1 ? 18 : 0,
                           borderColor,
                           borderRightWidth:
-                            periodIdx === day.cells.length - 1 ? 0 : 1,
-                          borderBottomWidth: isLastMult && isLast ? 0 : 1,
+                            spotIdx === spots.length - 1 ? 0 : 1,
+                          borderBottomWidth: isLast ? 0 : 1,
                         },
                       ]}
                     >
                       <Text
                         ellipsizeMode="tail"
-                        style={{ textAlign: 'center', color: extraCellBgOn }}
+                        style={{
+                          textAlign: 'center',
+                          color: extraCellBgOn, // Ignored extraChange.foregroundColor
+                          paddingHorizontal: 6,
+                        }}
                       >
-                        {extra[periodIdx].text}
+                        {extraChange.text}
                       </Text>
                     </View>
                   );
                 }
-                const isSplit = cell && cell.length > 1;
-                const isCurrent =
-                  cell &&
-                  cell.length > 0 &&
-                  isCurrentPeriod(periods[periodIdx].time, day.day);
-                function lightenHexColor(hex: string, percent: number) {
-                  hex = hex.replace(/^#/, '');
-                  const num = parseInt(hex, 16);
-                  let r = (num >> 16) + Math.round(255 * percent);
-                  let g = ((num >> 8) & 0x00ff) + Math.round(255 * percent);
-                  let b = (num & 0x0000ff) + Math.round(255 * percent);
-                  r = r > 255 ? 255 : r;
-                  g = g > 255 ? 255 : g;
-                  b = b > 255 ? 255 : b;
 
-                  return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
-                }
+                const period = periods[periodIndexForSpot];
+                const isCurrent =
+                  spot.lessons.length > 0 &&
+                  period &&
+                  isCurrentPeriod(period, dayKey);
+
                 return (
                   <View
-                    key={periodIdx}
+                    key={spotIdx}
                     style={[
                       styles.cell,
                       {
-                        width: cellWidth,
+                        width: cellWidth * spot.periodSpan,
                         height: cellHeight,
                         backgroundColor: cellBg,
                         borderBottomRightRadius:
-                          dayIdx === days.length - 1 &&
-                          periodIdx === day.cells.length - 1
-                            ? 18
-                            : 0,
+                          isLast && spotIdx === spots.length - 1 ? 18 : 0,
                         borderColor,
-                        borderRightWidth:
-                          periodIdx === day.cells.length - 1 ? 0 : 1,
+                        borderRightWidth: spotIdx === spots.length - 1 ? 0 : 1,
                         borderBottomWidth: isLast ? 0 : 1,
                       },
                     ]}
                   >
-                    {cell && cell.length > 0
-                      ? cell
+                    {spot.lessons && spot.lessons.length > 0
+                      ? spot.lessons
                           .sort(
                             (a, b) =>
                               parseInt(a.group?.split('/')?.[0] || '0') -
@@ -328,112 +354,68 @@ export function TimetableGrid({
                                       : cellBg,
                                   borderColor: borderColor,
                                   borderBottomWidth: isSplit && i === 0 ? 1 : 0,
-                                  borderRightWidth: 0,
-                                  borderLeftWidth: 0,
-                                  borderTopWidth: 0,
                                   height: isSplit ? cellHeight / 2 : cellHeight,
-                                  width: '100%',
                                   flex: 1,
-                                  margin: 0,
-                                  padding: 6,
-                                  borderRadius: 0,
-                                  justifyContent: 'flex-start',
-                                  alignItems: 'stretch',
                                 },
                               ]}
                             >
-                              <View
-                                style={{
-                                  position: 'absolute',
-                                  top: 6,
-                                  left: 6,
-                                  right: 6,
-                                  flexDirection: 'row',
-                                  justifyContent: 'space-between',
-                                  alignItems: 'flex-start',
-                                }}
-                              >
+                              <View style={styles.lessonHeaderRow}>
                                 <Text
                                   style={[
                                     styles.teacherSquare,
-                                    {
-                                      color: accentColor,
-                                      fontSize: 12,
-                                      flex: 1,
-                                      marginRight: 4,
-                                    },
+                                    { color: accentColor, flex: 1 },
                                   ]}
                                   numberOfLines={1}
                                   ellipsizeMode="tail"
                                 >
-                                  {lesson.teacher}
+                                  {lesson.teacherName?.short ||
+                                    lesson.teacherName?.full ||
+                                    ''}
                                 </Text>
-                                {lesson.room ? (
-                                  <View
-                                    style={{
-                                      justifyContent: 'center',
-                                      alignItems: 'center',
-                                    }}
-                                  >
+                                {lesson.classroom ? (
+                                  <View style={styles.roomContainer}>
                                     <Text
                                       style={[
                                         styles.roomSquare,
-                                        {
-                                          color: accentColor,
-                                          fontSize: 11,
-                                          fontWeight: '500',
-                                        },
+                                        { color: accentColor },
                                       ]}
                                       numberOfLines={1}
                                     >
-                                      {lesson.room}
+                                      {lesson.classroom}
                                     </Text>
                                   </View>
                                 ) : null}
                               </View>
 
-                              {showClass && (
+                              {showClass && lesson.clazz && (
                                 <Text
                                   style={[
                                     styles.groupSquare,
                                     {
                                       color: accentColor,
-                                      fontSize: 11,
-                                      fontWeight: '500',
                                       bottom: 6,
                                       left: 6,
-                                      textAlign: 'left',
                                       position: 'absolute',
                                     },
                                   ]}
                                   numberOfLines={1}
                                   ellipsizeMode="tail"
                                 >
-                                  {lesson.className}
+                                  {lesson.clazz}
                                 </Text>
                               )}
 
-                              <View
-                                style={{
-                                  flex: 1,
-                                  justifyContent: 'center',
-                                  alignItems: 'center',
-                                }}
-                              >
+                              <View style={styles.subjectContainer}>
                                 <Text
                                   style={[
                                     styles.subjectSquare,
-                                    {
-                                      color: textColor,
-                                      fontSize: 15,
-                                      fontWeight: '600',
-                                      textAlign: 'center',
-                                    },
+                                    { color: textColor },
                                   ]}
                                   numberOfLines={1}
                                   ellipsizeMode="tail"
                                 >
-                                  {lesson.subject}
+                                  {lesson.subjectName.short ||
+                                    lesson.subjectName.full}
                                 </Text>
                                 {lesson.group ? (
                                   <Text
@@ -441,9 +423,8 @@ export function TimetableGrid({
                                       styles.groupSquare,
                                       {
                                         color: secondaryTextColor,
-                                        fontSize: 11,
-                                        marginTop: 2,
                                         textAlign: 'center',
+                                        marginTop: 2,
                                       },
                                     ]}
                                     numberOfLines={1}
@@ -463,6 +444,7 @@ export function TimetableGrid({
           );
         })}
       </Surface>
+
       <Portal>
         <Modal
           visible={modalVisible}
@@ -475,12 +457,12 @@ export function TimetableGrid({
           {modalLesson && (
             <View>
               <Text variant="titleLarge" style={{ marginBottom: 8 }}>
-                {modalLesson.subjectLong}
+                {modalLesson.subjectName.full}
               </Text>
               <Text style={{ marginBottom: 8 }}>
                 Třída:{' '}
                 <Text style={{ fontWeight: 'bold' }}>
-                  {modalLesson.className || '-'}
+                  {modalLesson.clazz || '-'}
                 </Text>
               </Text>
               {modalLesson.group && (
@@ -495,15 +477,19 @@ export function TimetableGrid({
                 mode="contained"
                 onPress={() => handleRoomPress()}
                 style={{ marginBottom: 8 }}
+                disabled={!modalLesson.classroom}
               >
-                {modalLesson.room || 'Učebna'}
+                {modalLesson.classroom || 'Učebna'}
               </Button>
               <Button
                 mode="contained"
                 onPress={() => handleTeacherPress()}
                 style={{ marginBottom: 8 }}
+                disabled={!modalLesson.teacherName}
               >
-                {modalLesson.teacherFull || modalLesson.teacher || 'Učitel'}
+                {modalLesson.teacherName?.full ||
+                  modalLesson.teacherName?.short ||
+                  'Učitel'}
               </Button>
               <Button
                 onPress={() => setModalVisible(false)}
@@ -559,7 +545,6 @@ const styles = StyleSheet.create({
   dayCell: {
     padding: 8,
     borderRightWidth: 1,
-    borderColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -572,49 +557,52 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     padding: 0,
     margin: 0,
-    minHeight: 0,
-    backgroundColor: 'transparent',
   },
   lessonSquare: {
-    borderColor: '#333',
-    borderRadius: 0,
-    margin: 0,
     paddingLeft: 10,
     paddingVertical: 2,
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     alignItems: 'stretch',
-    minHeight: 0,
-    minWidth: 0,
-    backgroundColor: 'transparent',
-    shadowColor: 'transparent',
     width: '100%',
+    padding: 6,
+  },
+  lessonHeaderRow: {
+    position: 'absolute',
+    top: 6,
+    left: 6,
+    right: 6,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    zIndex: 1,
+  },
+  subjectContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   teacherSquare: {
     fontSize: 12,
     fontWeight: '500',
-    marginBottom: 0,
-    textAlign: 'left',
-    width: '100%',
+    marginRight: 4,
   },
   subjectSquare: {
     fontWeight: 'bold',
-    fontSize: 17,
-    marginBottom: 0,
-    textAlign: 'left',
-    width: '100%',
+    fontSize: 15,
+    textAlign: 'center',
+  },
+  roomContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   roomSquare: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    marginRight: 2,
     textAlign: 'right',
-    width: '100%',
   },
   groupSquare: {
-    fontSize: 12,
+    fontSize: 11,
     fontWeight: '500',
-    textAlign: 'left',
-    width: '100%',
   },
   modal: {
     margin: 24,

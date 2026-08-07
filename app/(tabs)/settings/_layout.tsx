@@ -63,9 +63,23 @@ export default function SettingsLayout() {
         }}
       />
       <Stack.Screen
+        name="sdeleni"
+        options={{
+          title: 'Sdělení',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
         name="about"
         options={{
           title: 'O aplikaci',
+          headerShown: true,
+        }}
+      />
+      <Stack.Screen
+        name="debug"
+        options={{
+          title: 'Debug',
           headerShown: true,
         }}
       />

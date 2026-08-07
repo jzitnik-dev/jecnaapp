@@ -1,6 +1,5 @@
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
@@ -10,31 +9,24 @@ import {
   useTheme,
 } from 'react-native-paper';
 import { useQuery } from '@tanstack/react-query';
-
-interface Teacher {
-  name: string;
-  shortcut: string;
-}
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export default function TeachersListScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
   const router = useRouter();
   const [search, setSearch] = useState('');
 
-  const teachersQuery = useQuery<Teacher[], Error>({
+  const teachersQuery = useQuery({
     queryKey: ['teachers'],
     queryFn: async () => {
-      if (!client) throw new Error('Client not available');
-      return client.getTeachersList();
+      return JecnaAPI.getTeachersPage();
     },
-    enabled: !!client,
   });
 
-  const filtered = teachersQuery.data?.filter(
+  const filtered = teachersQuery.data?.teachersReferences.filter(
     t =>
-      t.name.toLowerCase().includes(search.toLowerCase()) ||
-      t.shortcut.toLowerCase().includes(search.toLowerCase())
+      t.fullName.toLowerCase().includes(search.toLowerCase()) ||
+      t.tag.toLowerCase().includes(search.toLowerCase())
   );
 
   return (
@@ -72,12 +64,12 @@ export default function TeachersListScreen() {
           ) : (
             filtered?.map(t => (
               <Surface
-                key={t.shortcut}
+                key={t.tag}
                 style={[
                   styles.teacherCard,
                   { backgroundColor: theme.colors.surfaceVariant },
                 ]}
-                onTouchEnd={() => router.push(`/teachers/${t.shortcut}`)}
+                onTouchEnd={() => router.push(`/teachers/${t.tag}`)}
               >
                 <Text
                   style={[
@@ -85,7 +77,7 @@ export default function TeachersListScreen() {
                     { color: theme.colors.onSurface },
                   ]}
                 >
-                  {t.name}
+                  {t.fullName}
                 </Text>
                 <Text
                   style={[
@@ -93,7 +85,7 @@ export default function TeachersListScreen() {
                     { color: theme.colors.primary },
                   ]}
                 >
-                  {t.shortcut}
+                  {t.tag}
                 </Text>
               </Surface>
             ))

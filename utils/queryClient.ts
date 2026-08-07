@@ -2,6 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { persistQueryClient } from '@tanstack/react-query-persist-client';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { parseJson } from '@jzitnik/jecnaapi-react-native';
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,6 +19,7 @@ export const queryClient = new QueryClient({
 // Persist queries in AsyncStorage
 const asyncStoragePersister = createAsyncStoragePersister({
   storage: AsyncStorage,
+  deserialize: parseJson,
 });
 
 persistQueryClient({

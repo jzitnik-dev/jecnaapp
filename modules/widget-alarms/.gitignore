@@ -1,0 +1,4 @@
+android/build/
+android/.gradle/
+android/kls_database.db
+android/local.properties

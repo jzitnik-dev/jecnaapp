@@ -1,10 +1,12 @@
 import { Link } from 'expo-router';
-import React from 'react';
 import { StyleSheet, View, ScrollView } from 'react-native';
 import { Divider, List, useTheme } from 'react-native-paper';
 
 export default function SettingsScreen() {
   const theme = useTheme();
+
+  const isDebugMode =
+    process.env.EXPO_PUBLIC_ENABLE_DEBUG_MENU === 'true' || __DEV__;
 
   return (
     <View
@@ -76,6 +78,18 @@ export default function SettingsScreen() {
               right={props => <List.Icon {...props} icon="chevron-right" />}
             />
           </Link>
+          {isDebugMode && (
+            <>
+              <Divider />
+              <Link href="/(tabs)/settings/debug" asChild>
+                <List.Item
+                  title="Debug"
+                  description="Debug menu"
+                  right={props => <List.Icon {...props} icon="chevron-right" />}
+                />
+              </Link>
+            </>
+          )}
         </List.Section>
       </ScrollView>
     </View>

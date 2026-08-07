@@ -1,5 +1,5 @@
 import { router } from 'expo-router';
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import {
   Alert,
   RefreshControl,
@@ -19,23 +19,22 @@ import {
 import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
 import { useAppTheme } from '../../../hooks/useAppTheme';
-import { useSpseJecnaClient } from '../../../hooks/useSpseJecnaClient';
+import { useSecureStore } from '@/hooks/useSecureStore';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as SecureStore from 'expo-secure-store';
 
 export default function AccountScreen() {
   const theme = useTheme();
   const { currentTheme: appTheme } = useAppTheme();
   const { accountInfo, loading, error, refresh } = useAccountInfo();
-  const { logout } = useSpseJecnaClient();
-  const [showProfilePicture, setShowProfilePicture] = useState(false);
+  const [hideProfilePicture] = useSecureStore<boolean>('hide-profilepicture', {
+    initialValue: false,
+    parse: val => val === 'true',
+    stringify: val => (val ? 'true' : 'false'),
+  });
 
-  useEffect(() => {
-    (async () => {
-      setShowProfilePicture(
-        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
-      );
-    })();
-  }, []);
+  const showProfilePicture = !hideProfilePicture;
 
   const handleLogout = () => {
     Alert.alert('Odhlásit se', 'Opravdu se chcete odhlásit?', [
@@ -48,7 +47,12 @@ export default function AccountScreen() {
         style: 'destructive',
         onPress: async () => {
           try {
-            await logout();
+            await JecnaAPI.logout();
+            await SecureStore.deleteItemAsync('account_info');
+            await SecureStore.deleteItemAsync('account_info_timestamp');
+            await SecureStore.deleteItemAsync('username');
+            await SecureStore.deleteItemAsync('password');
+            await AsyncStorage.clear();
             router.replace('/login');
           } catch (err) {
             console.error('Logout error:', err);
@@ -57,14 +61,6 @@ export default function AccountScreen() {
         },
       },
     ]);
-  };
-
-  const formatPhone = (phone: string) => {
-    // Format phone number for better readability
-    if (phone.length === 9) {
-      return `${phone.slice(0, 3)} ${phone.slice(3, 6)} ${phone.slice(6)}`;
-    }
-    return phone;
   };
 
   if (loading && !accountInfo) {
@@ -125,7 +121,7 @@ export default function AccountScreen() {
             {showProfilePicture && (
               <View style={{ marginRight: 16 }}>
                 <ImageViewer
-                  imageUrl={accountInfo?.photoUrl}
+                  imageUrl={accountInfo?.profilePicturePath}
                   size={80}
                   fallbackSource={require('../../../assets/images/icon.png')}
                 />
@@ -142,7 +138,7 @@ export default function AccountScreen() {
                 variant="bodyMedium"
                 style={{ color: appTheme.colors.onSurfaceVariant }}
               >
-                {accountInfo?.class || ''} • {accountInfo?.username || ''}
+                {accountInfo?.className || ''} • {accountInfo?.username || ''}
               </Text>
             </View>
           </View>
@@ -173,7 +169,7 @@ export default function AccountScreen() {
           <Divider />
           <List.Item
             title="Datum narození"
-            description={accountInfo?.birthDate || '-'}
+            description={accountInfo?.birthDate?.toLocaleDateString('cs-CZ')}
             left={props => <List.Icon {...props} icon="calendar" />}
           />
           <Divider />
@@ -185,33 +181,31 @@ export default function AccountScreen() {
           <Divider />
           <List.Item
             title="Telefon"
-            description={
-              accountInfo?.phone ? formatPhone(accountInfo.phone) : '-'
-            }
+            description={accountInfo?.phoneNumbers.join(', ')}
             left={props => <List.Icon {...props} icon="phone" />}
           />
           <Divider />
           <List.Item
             title="Adresa"
-            description={accountInfo?.address || '-'}
+            description={accountInfo?.permanentAddress || '-'}
             left={props => <List.Icon {...props} icon="home" />}
           />
           <Divider />
           <List.Item
             title="Třída"
-            description={accountInfo?.class || '-'}
+            description={accountInfo?.className || '-'}
             left={props => <List.Icon {...props} icon="school" />}
           />
           <Divider />
           <List.Item
             title="Skupiny"
-            description={accountInfo?.groups || '-'}
+            description={accountInfo?.classGroups || '-'}
             left={props => <List.Icon {...props} icon="account-group" />}
           />
           <Divider />
           <List.Item
             title="Číslo v třídním výkazu"
-            description={accountInfo?.classNumber || '-'}
+            description={accountInfo?.classRegistryId || '-'}
             left={props => <List.Icon {...props} icon="numeric" />}
           />
         </Card.Content>
@@ -223,20 +217,20 @@ export default function AccountScreen() {
         <Card.Content>
           <List.Item
             title="Soukromý e-mail"
-            description={accountInfo?.privateEmail || '-'}
+            description={accountInfo?.privateMail || '-'}
             left={props => <List.Icon {...props} icon="email" />}
           />
           <Divider />
           <List.Item
             title="Školní e-mail"
-            description={accountInfo?.schoolEmail || '-'}
+            description={accountInfo?.schoolMail || '-'}
             left={props => <List.Icon {...props} icon="email-outline" />}
           />
         </Card.Content>
       </Card>
 
       {/* Parents Information */}
-      {accountInfo?.parents && accountInfo.parents.length > 0 && (
+      {accountInfo?.guardians && accountInfo.guardians.length > 0 && (
         <Card
           style={[styles.card, { backgroundColor: appTheme.colors.surface }]}
         >
@@ -245,14 +239,14 @@ export default function AccountScreen() {
             titleVariant="titleMedium"
           />
           <Card.Content>
-            {accountInfo.parents.map((parent, index) => (
+            {accountInfo.guardians.map((parent, index) => (
               <React.Fragment key={index}>
                 <List.Item
                   title={parent.name}
-                  description={`${parent.phone} • ${parent.email}`}
+                  description={`${parent.phoneNumber} • ${parent.email}`}
                   left={props => <List.Icon {...props} icon="account-child" />}
                 />
-                {index < accountInfo.parents.length - 1 && <Divider />}
+                {index < accountInfo.guardians.length - 1 && <Divider />}
               </React.Fragment>
             ))}
           </Card.Content>
@@ -260,26 +254,29 @@ export default function AccountScreen() {
       )}
 
       {/* SPOSA Information */}
-      {accountInfo?.sposa && (
-        <Card
-          style={[styles.card, { backgroundColor: appTheme.colors.surface }]}
-        >
-          <Card.Title title="SPOSA" titleVariant="titleMedium" />
-          <Card.Content>
-            <List.Item
-              title="Variabilní symbol"
-              description={accountInfo.sposa.variableSymbol || '-'}
-              left={props => <List.Icon {...props} icon="credit-card" />}
-            />
-            <Divider />
-            <List.Item
-              title="Bankovní účet"
-              description={accountInfo.sposa.bankAccount || '-'}
-              left={props => <List.Icon {...props} icon="bank" />}
-            />
-          </Card.Content>
-        </Card>
-      )}
+      <Card style={[styles.card, { backgroundColor: appTheme.colors.surface }]}>
+        <Card.Title title="SPOSA" titleVariant="titleMedium" />
+        <Card.Content>
+          <List.Item
+            title="Variabilní symbol"
+            description={accountInfo?.sposaVariableSymbol || '-'}
+            left={props => <List.Icon {...props} icon="credit-card" />}
+          />
+        </Card.Content>
+      </Card>
+
+      {/* Sdělení */}
+      <Card style={[styles.card, { backgroundColor: appTheme.colors.surface }]}>
+        <Card.Content>
+          <List.Item
+            title="Zobrazit sdělení"
+            description="Pochvaly, důtky a informace"
+            left={props => <List.Icon {...props} icon="bell-outline" />}
+            right={props => <List.Icon {...props} icon="arrow-right" />}
+            onPress={() => router.push('/(tabs)/settings/sdeleni')}
+          />
+        </Card.Content>
+      </Card>
 
       {/* Logout Button */}
       <View style={styles.logoutContainer}>

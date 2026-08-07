@@ -1,25 +1,25 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React from 'react';
+import { AbsencesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
-import { OmluvnyListResult } from '@/api/SpseJecnaClient';
+import Skeleton from '../ui/Skeleton';
 
-function parse(data: OmluvnyListResult | null) {
+function parse(data: AbsencesPage | null) {
   let totalExcused = 0;
   let totalUnexcused = 0;
   let totalAbsences = 0;
   let totalLateArrivals = 0;
 
   if (data && data.absences) {
-    for (const absence of data.absences) {
-      totalAbsences += absence.count;
-      if (absence.countUnexcused) {
-        totalUnexcused += absence.countUnexcused;
-        totalExcused += absence.count - absence.countUnexcused;
+    for (const absence of Object.values(data.absences)) {
+      totalAbsences += absence.hoursAbsent;
+      if (absence.unexcusedHours > 0) {
+        totalUnexcused += absence.unexcusedHours;
+        totalExcused += absence.hoursAbsent - absence.unexcusedHours;
       } else {
-        totalExcused += absence.count;
+        totalExcused += absence.hoursAbsent;
       }
-      totalLateArrivals += absence.countLate || 0;
+      totalLateArrivals += absence.lateEntryCount;
     }
   }
 
@@ -31,10 +31,57 @@ function parse(data: OmluvnyListResult | null) {
   };
 }
 
-export function AbsenceCard({ data }: { data: OmluvnyListResult | null }) {
+interface AbsenceCardProps {
+  data: AbsencesPage | null | never[];
+}
+
+export function AbsenceCard({ data }: AbsenceCardProps) {
   const theme = useTheme();
-  const { totalExcused, totalUnexcused, totalAbsences, totalLateArrivals } =
-    parse(data);
+  const isDark = theme.dark;
+
+  const isLoading = !data || (Array.isArray(data) && data.length === 0);
+
+  if (isLoading) {
+    return (
+      <Card
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={2}
+      >
+        <Card.Content>
+          <View style={styles.titleContainer}>
+            <MaterialCommunityIcons
+              name="clipboard-text"
+              size={24}
+              color={theme.colors.onSurface}
+              style={{ marginRight: 8 }}
+            />
+            <Text
+              variant="titleLarge"
+              style={[styles.title, { color: theme.colors.onSurface }]}
+            >
+              Omluvené hodiny
+            </Text>
+          </View>
+
+          <View style={styles.statsContainer}>
+            {[1, 2, 3].map(key => (
+              <View key={key} style={styles.statItem}>
+                <Skeleton
+                  style={{ width: 40, height: 32, marginBottom: 4 }}
+                  isDark={isDark}
+                />
+                <Skeleton style={{ width: 70, height: 14 }} isDark={isDark} />
+              </View>
+            ))}
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  }
+
+  const { totalExcused, totalUnexcused, totalLateArrivals } = parse(
+    data as AbsencesPage
+  );
 
   return (
     <Card

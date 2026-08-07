@@ -1,14 +1,14 @@
 import * as SecureStore from 'expo-secure-store';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect } from 'react';
-import type { AccountInfo } from '../api/SpseJecnaClient';
-import { useSpseJecnaClient } from './useSpseJecnaClient';
+import { StudentProfile } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { JecnaAPI, parseJson } from '@jzitnik/jecnaapi-react-native';
 
 const ACCOUNT_INFO_KEY = 'account_info';
 const ACCOUNT_INFO_TIMESTAMP_KEY = 'account_info_timestamp';
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutes
 
-async function loadFromCache(): Promise<AccountInfo | null> {
+async function loadFromCache(): Promise<StudentProfile | null> {
   try {
     const cachedData = await SecureStore.getItemAsync(ACCOUNT_INFO_KEY);
     const timestampStr = await SecureStore.getItemAsync(
@@ -18,7 +18,7 @@ async function loadFromCache(): Promise<AccountInfo | null> {
     if (cachedData && timestampStr) {
       const age = Date.now() - parseInt(timestampStr, 10);
       if (age < CACHE_DURATION) {
-        return JSON.parse(cachedData);
+        return parseJson(cachedData);
       }
     }
   } catch (err) {
@@ -27,7 +27,7 @@ async function loadFromCache(): Promise<AccountInfo | null> {
   return null;
 }
 
-async function saveToCache(data: AccountInfo) {
+async function saveToCache(data: StudentProfile) {
   try {
     await SecureStore.setItemAsync(ACCOUNT_INFO_KEY, JSON.stringify(data));
     await SecureStore.setItemAsync(
@@ -49,46 +49,31 @@ async function clearCache() {
 }
 
 export function useAccountInfo() {
-  const { client } = useSpseJecnaClient();
   const queryClient = useQueryClient();
 
-  // This function fetches fresh data from the client
-  const fetchAccountInfo = async (): Promise<AccountInfo> => {
-    if (!client) throw new Error('Client not available');
-    const isLoggedIn = await client.isLoggedIn();
-    if (!isLoggedIn) throw new Error('Not logged in');
-    const data = await client.getAccountInfo();
-    await saveToCache(data); // Save fresh data to SecureStore
+  const fetchAccountInfo = async () => {
+    const data = await JecnaAPI.getStudentProfile();
+    await saveToCache(data);
     return data;
   };
 
-  // Load cached data from SecureStore once on mount
-  // We use this to initialize query data without refetching if valid cache exists
-  // We update the React Query cache with the SecureStore data
   useEffect(() => {
-    if (!client) {
-      queryClient.removeQueries({ queryKey: ['accountInfo'] });
-      return;
-    }
     loadFromCache().then(cachedData => {
       if (cachedData) {
         queryClient.setQueryData(['accountInfo'], cachedData);
       }
     });
-  }, [client, queryClient]);
+  }, [queryClient]);
 
-  const query = useQuery<AccountInfo, Error>({
+  const query = useQuery<StudentProfile, Error>({
     queryKey: ['accountInfo'],
     queryFn: fetchAccountInfo,
-    enabled: !!client,
-    staleTime: CACHE_DURATION, // mark data fresh for 15 mins
+    staleTime: CACHE_DURATION,
     refetchOnWindowFocus: false,
   });
 
-  // Manual refresh method invalidates & refetches the query
   const refresh = async () => {
     await queryClient.invalidateQueries({ queryKey: ['accountInfo'] });
-    // queryClient.refetchQueries({ queryKey: ['accountInfo'] }); // alternatively
   };
 
   return {

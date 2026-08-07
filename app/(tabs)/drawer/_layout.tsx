@@ -6,42 +6,38 @@ import {
   DrawerItemList,
 } from 'expo-router/drawer';
 import { useRouter } from 'expo-router';
-import React, { useEffect, useState } from 'react';
 import { Linking, TouchableOpacity, View } from 'react-native';
 import { Text, TouchableRipple, useTheme } from 'react-native-paper';
 import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 import MoodleIcon from '@/components/icons/Moodle';
-import * as SecureStore from 'expo-secure-store';
 import useIsUpdateAvailable from '@/utils/updates';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSecureStore } from '@/hooks/useSecureStore';
 
 export default function DrawerLayout() {
   const { navigationTheme } = useAppTheme();
   const theme = useTheme();
   const { accountInfo } = useAccountInfo();
   const router = useRouter();
-  const [showProfilePicture, setShowProfilePicture] = useState(false);
+  const [hideProfilePicture] = useSecureStore<boolean>('hide-profilepicture', {
+    initialValue: false,
+    parse: val => val === 'true',
+    stringify: val => (val ? 'true' : 'false'),
+  });
+  const showProfilePicture = !hideProfilePicture;
+
   const insets = useSafeAreaInsets();
 
-  const [extraEnabled, setExtraEnabled] = useState(false);
-  useEffect(() => {
-    (async () => {
-      const enabled =
-        (await SecureStore.getItemAsync('extraordinary_schedule_enabled')) ===
-        'true';
-      setExtraEnabled(enabled);
-    })();
-  }, []);
-
-  useEffect(() => {
-    (async () => {
-      setShowProfilePicture(
-        !((await SecureStore.getItemAsync('hide-profilepicture')) === 'true')
-      );
-    })();
-  }, []);
+  const [extraEnabled] = useSecureStore<boolean>(
+    'extraordinary_schedule_enabled',
+    {
+      initialValue: true,
+      parse: val => val === 'true',
+      stringify: val => (val ? 'true' : 'false'),
+    }
+  );
 
   const handleAccountPress = () => {
     router.push('/settings/account');
@@ -267,7 +263,7 @@ export default function DrawerLayout() {
                 {showProfilePicture && (
                   <View style={{ marginRight: 12 }}>
                     <ImageViewer
-                      imageUrl={accountInfo?.photoUrl}
+                      imageUrl={accountInfo?.profilePicturePath}
                       size={48}
                       fallbackSource={require('../../../assets/images/icon.png')}
                     />
@@ -290,8 +286,8 @@ export default function DrawerLayout() {
                       opacity: 0.7,
                     }}
                   >
-                    {accountInfo?.username || ''} • {accountInfo?.class || ''} •{' '}
-                    {accountInfo?.groups}
+                    {accountInfo?.username || ''} •{' '}
+                    {accountInfo?.className || ''} • {accountInfo?.classGroups}
                   </Text>
                 </View>
                 <MaterialCommunityIcons
@@ -324,6 +320,16 @@ export default function DrawerLayout() {
         }}
       />
       <Drawer.Screen
+        name="substitution"
+        options={{
+          title: 'Mimořádný rozvrh',
+          drawerItemStyle: extraEnabled ? {} : { display: 'none' },
+          drawerIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="calendar" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
         name="znamky"
         options={{
           title: 'Známky',
@@ -345,21 +351,6 @@ export default function DrawerLayout() {
           ),
         }}
       />
-      {extraEnabled && (
-        <Drawer.Screen
-          name="teacher-absences"
-          options={{
-            title: 'Absence učitelů',
-            drawerIcon: ({ color, size }) => (
-              <MaterialCommunityIcons
-                name="account-multiple"
-                color={color}
-                size={size}
-              />
-            ),
-          }}
-        />
-      )}
       <Drawer.Screen
         name="rooms-list"
         options={{
@@ -411,6 +402,16 @@ export default function DrawerLayout() {
           headerShown: true,
           drawerIcon: ({ color, size }) => (
             <Ionicons name="newspaper" color={color} size={size} />
+          ),
+        }}
+      />
+      <Drawer.Screen
+        name="dokumenty"
+        options={{
+          title: 'Dokumenty',
+          headerShown: false,
+          drawerIcon: ({ color, size }) => (
+            <Ionicons name="folder-outline" size={size} color={color} />
           ),
         }}
       />

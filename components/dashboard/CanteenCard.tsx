@@ -1,25 +1,28 @@
+import { useMemo } from 'react';
 import { Ionicons } from '@expo/vector-icons';
-import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
-import { CanteenMenuResult } from '@/api/iCanteenClient';
+import { MenuPage } from '@jzitnik/jecnaapi-react-native/canteen';
+import { findOrderedLunch } from '@/utils/canteen/todayLunch';
+import Skeleton from '../ui/Skeleton';
 
 interface CanteenProps {
-  canteen?: CanteenMenuResult;
+  canteen?: MenuPage;
+  isLoading?: boolean;
 }
 
-export function CanteenCard({ canteen }: CanteenProps) {
+export function CanteenCard({
+  canteen,
+  isLoading: isLoadingProp,
+}: CanteenProps) {
   const theme = useTheme();
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
 
-  const todaysMenu = canteen?.menus.find(menu => {
-    const [day, month, year] = menu.date.trim().split('.').map(Number);
-    const parsedDate = new Date(year, month - 1, day);
-    return parsedDate.getTime() === today.getTime();
-  });
+  const isLoading = isLoadingProp ?? !canteen;
 
-  const todaysOrder = todaysMenu?.items.find(food => food.ordered);
+  const todaysOrder = useMemo(() => {
+    if (!canteen) return undefined;
+    return findOrderedLunch(canteen);
+  }, [canteen]);
 
   return (
     <Card
@@ -41,9 +44,9 @@ export function CanteenCard({ canteen }: CanteenProps) {
             Dnešní jídlo
           </Text>
         </View>
-        {todaysOrder ? (
+
+        {isLoading ? (
           <View
-            key={todaysOrder.name}
             style={{
               backgroundColor: theme.colors.surfaceVariant,
               borderRadius: 4,
@@ -51,33 +54,75 @@ export function CanteenCard({ canteen }: CanteenProps) {
               paddingHorizontal: 15,
             }}
           >
-            <Text style={[styles.foodTitle, { color: theme.colors.onSurface }]}>
-              Polévka
-            </Text>
-            <Text
-              style={[
-                styles.foodDescription,
-                { color: theme.colors.onSurface },
-              ]}
-            >
-              {todaysMenu?.polevka}
-            </Text>
+            <Skeleton
+              style={{ width: 60, height: 16, marginBottom: 6 }}
+              isDark={theme.dark}
+            />
+            <Skeleton
+              style={{ width: '70%', height: 20 }}
+              isDark={theme.dark}
+            />
+
+            <Skeleton
+              style={{ width: 80, height: 16, marginTop: 20, marginBottom: 6 }}
+              isDark={theme.dark}
+            />
+            <Skeleton
+              style={{ width: '100%', height: 20, marginBottom: 6 }}
+              isDark={theme.dark}
+            />
+            <Skeleton
+              style={{ width: '85%', height: 20 }}
+              isDark={theme.dark}
+            />
+          </View>
+        ) : todaysOrder ? (
+          <View
+            key={todaysOrder.number}
+            style={{
+              backgroundColor: theme.colors.surfaceVariant,
+              borderRadius: 4,
+              paddingVertical: 15,
+              paddingHorizontal: 15,
+            }}
+          >
+            {todaysOrder.description.soup && (
+              <>
+                <Text
+                  style={[styles.foodTitle, { color: theme.colors.onSurface }]}
+                >
+                  Polévka
+                </Text>
+                <Text
+                  style={[
+                    styles.foodDescription,
+                    { color: theme.colors.onSurface },
+                  ]}
+                >
+                  {todaysOrder.description.soup}
+                </Text>
+              </>
+            )}
 
             <Text
               style={[
                 styles.foodTitle,
-                { color: theme.colors.onSurface, marginTop: 20 },
+                {
+                  color: theme.colors.onSurface,
+                  marginTop: todaysOrder.description.soup ? 20 : 0,
+                },
               ]}
             >
-              Jídlo
+              Jídlo {todaysOrder.number}
             </Text>
+
             <Text
               style={[
                 styles.foodDescription,
                 { color: theme.colors.onSurface },
               ]}
             >
-              {todaysOrder.name}
+              {todaysOrder.description.rest}
             </Text>
           </View>
         ) : (

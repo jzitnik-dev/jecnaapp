@@ -9,19 +9,21 @@ import {
   TextInput,
   useTheme,
   ActivityIndicator,
+  SegmentedButtons,
 } from 'react-native-paper';
 
 export default function ExtraReport({
   modalVisible,
   setModalVisible,
-  reportLocation,
 }: {
   modalVisible: boolean;
   setModalVisible: (value: boolean) => void;
-  reportLocation: 'TIMETABLE' | 'ABSENCES';
 }) {
   const theme = useTheme();
   const [description, setDescription] = useState('');
+  const [reportLocation, setReportLocation] = useState<
+    'TIMETABLE' | 'ABSENCES' | 'TAKES_PLACE'
+  >('TIMETABLE');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -44,17 +46,18 @@ export default function ExtraReport({
         body: JSON.stringify({
           location: reportLocation,
           content: description,
-          class: accountInfo?.class,
+          class: accountInfo?.className,
         }),
       });
 
       if (!response.ok) {
-        console.log(response);
         throw new Error('Nepodařilo se odeslat nahlášení.');
       }
 
       setSuccess(true);
       setDescription('');
+      // Optional: reset location back to default after success
+      setReportLocation('TIMETABLE');
       setTimeout(() => setModalVisible(false), 1500);
     } catch (err: any) {
       setError(err.message || 'Chyba při odesílání.');
@@ -89,12 +92,27 @@ export default function ExtraReport({
             textAlign: 'center',
             fontSize: 14,
             color: theme.colors.onSurfaceVariant,
+            marginBottom: 16,
           }}
         >
           Nahlášení chyby parseru v mimořádném rozvrhu
         </Text>
 
-        <Text style={{ marginTop: 8, marginBottom: 16 }}>
+        {/* Location Selector */}
+        <SegmentedButtons
+          value={reportLocation}
+          onValueChange={value =>
+            setReportLocation(value as typeof reportLocation)
+          }
+          buttons={[
+            { value: 'TIMETABLE', label: 'Rozvrh' },
+            { value: 'ABSENCES', label: 'Absence' },
+            { value: 'TAKES_PLACE', label: 'Koná se' },
+          ]}
+          style={{ marginBottom: 16 }}
+        />
+
+        <Text style={{ marginBottom: 16 }}>
           Stručně vysvětlete, kde se v mimořádném rozvrhu nachází chyba. Jedná
           se o nahlášení chyby parseru nikoliv samotného obsahu mimořádného
           rozvrhu.
@@ -116,7 +134,13 @@ export default function ExtraReport({
           </Text>
         )}
 
-        <Text style={{ color: theme.colors.onSurfaceVariant, marginTop: 16 }}>
+        <Text
+          style={{
+            color: theme.colors.onSurfaceVariant,
+            marginTop: 16,
+            marginBottom: 8,
+          }}
+        >
           Při odeslání nahlášení chyby se zároveň se zprávou odešle Vaše třída a
           odkud jste chybu nahlásil/a.
         </Text>

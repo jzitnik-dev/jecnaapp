@@ -1,57 +1,77 @@
-import { useSpseJecnaClient } from '@/hooks/useSpseJecnaClient';
-import React, { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import {
   ActivityIndicator,
   Button,
-  Menu,
   Surface,
   Text,
   useTheme,
 } from 'react-native-paper';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
+import {
+  getCurrentSchoolYearStart,
+  MonthSelector,
+  YearSelector,
+} from '@/utils/selectors';
+import {
+  MONTH_NAMES,
+  MonthName,
+} from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { formatTime } from '@/utils/dateUtils';
+import { JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export default function PrichodyScreen() {
-  const { client } = useSpseJecnaClient();
   const theme = useTheme();
-  const queryClient = useQueryClient();
 
-  const [yearMenuVisible, setYearMenuVisible] = useState(false);
-  const [monthMenuVisible, setMonthMenuVisible] = useState(false);
-
-  // selected filters (controlled locally, but invalidate queries when they change)
-  const [selectedYearId, setSelectedYearId] = useState<string | undefined>();
-  const [selectedMonthId, setSelectedMonthId] = useState<string | undefined>();
+  const [selectedYear, setSelectedYear] = useState<number | undefined>();
+  const [selectedMonth, setSelectedMonth] = useState<MonthName | undefined>();
 
   const { data, error, isLoading, isFetching, refetch } = useQuery({
-    queryKey: ['prichody', selectedYearId, selectedMonthId],
+    queryKey: ['prichody', selectedYear, selectedMonth],
     queryFn: async () => {
-      if (!client) return null;
-      return await client.getPrichody(selectedYearId, selectedMonthId);
+      const date = new Date();
+      let final:
+        | { firstCalendarYear: number; month: MonthName }
+        | { firstCalendarYear: undefined; month: undefined } = {
+        firstCalendarYear: undefined,
+        month: undefined,
+      };
+
+      if (selectedYear === undefined && selectedMonth !== undefined) {
+        final = {
+          firstCalendarYear: getCurrentSchoolYearStart(),
+          month: selectedMonth,
+        };
+      } else if (selectedMonth === undefined && selectedYear !== undefined) {
+        final = {
+          firstCalendarYear: selectedYear,
+          month: MONTH_NAMES[date.getMonth()],
+        };
+      } else if (selectedYear !== undefined && selectedMonth !== undefined) {
+        final = {
+          firstCalendarYear: selectedYear,
+          month: selectedMonth,
+        };
+      }
+
+      return await JecnaAPI.getAttendances(final);
     },
-    enabled: !!client,
     staleTime: 1000 * 60 * 5,
-    retry: 2,
+    retry: 0,
   });
 
-  const handleSelectYear = (yearId: string) => {
-    setYearMenuVisible(false);
-    setSelectedYearId(yearId);
-    // proactively warm up cache for all months of this year
-    queryClient.prefetchQuery({
-      queryKey: ['prichody', yearId, selectedMonthId],
-      queryFn: () => client?.getPrichody(yearId, selectedMonthId),
-    });
-  };
+  const daysArray = useMemo(() => {
+    if (!data?.attendances) return [];
+    return Object.entries(data.attendances).map(([date, events]) => ({
+      date,
+      events,
+    }));
+  }, [data]);
 
-  const handleSelectMonth = (monthId: string) => {
-    setMonthMenuVisible(false);
-    setSelectedMonthId(monthId);
-  };
+  console.log(error);
 
   return (
     <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
-      {/* Filters */}
       <View
         style={{
           flexDirection: 'row',
@@ -60,51 +80,15 @@ export default function PrichodyScreen() {
           paddingBottom: 0,
         }}
       >
-        <Menu
-          visible={yearMenuVisible}
-          onDismiss={() => setYearMenuVisible(false)}
-          anchor={
-            <Button
-              mode="outlined"
-              onPress={() => setYearMenuVisible(true)}
-              style={styles.selector}
-            >
-              {data?.years?.find((y: any) => y.id === data.selectedYearId)
-                ?.label || 'Školní rok'}
-            </Button>
-          }
-        >
-          {data?.years?.map((y: any) => (
-            <Menu.Item
-              key={y.id}
-              onPress={() => handleSelectYear(y.id)}
-              title={y.label}
-            />
-          ))}
-        </Menu>
+        <YearSelector
+          handleSelectYear={setSelectedYear}
+          selected={selectedYear}
+        />
 
-        <Menu
-          visible={monthMenuVisible}
-          onDismiss={() => setMonthMenuVisible(false)}
-          anchor={
-            <Button
-              mode="outlined"
-              onPress={() => setMonthMenuVisible(true)}
-              style={styles.selector}
-            >
-              {data?.months?.find((m: any) => m.id === data.selectedMonthId)
-                ?.label || 'Měsíc'}
-            </Button>
-          }
-        >
-          {data?.months?.map((m: any) => (
-            <Menu.Item
-              key={m.id}
-              onPress={() => handleSelectMonth(m.id)}
-              title={m.label}
-            />
-          ))}
-        </Menu>
+        <MonthSelector
+          handleSelectMonth={setSelectedMonth}
+          selected={selectedMonth}
+        />
       </View>
 
       {isFetching && !isLoading && (
@@ -126,7 +110,7 @@ export default function PrichodyScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, paddingTop: 8 }}>
-          {data?.days?.length === 0 ? (
+          {daysArray.length === 0 ? (
             <Text
               style={{
                 color: theme.colors.onSurfaceVariant,
@@ -137,68 +121,80 @@ export default function PrichodyScreen() {
               Žádné záznamy.
             </Text>
           ) : (
-            data?.days.map((day: any, i: number) => (
-              <Surface
-                key={i}
-                style={[
-                  styles.dayCard,
-                  { backgroundColor: theme.colors.surfaceVariant },
-                ]}
-              >
-                <Text style={[styles.dayDate, { color: theme.colors.primary }]}>
-                  {day.date}
-                </Text>
-                <View
-                  style={{
-                    flexDirection: 'row',
-                    flexWrap: 'wrap',
-                    marginTop: 6,
-                  }}
+            daysArray.map((day, i) => {
+              const formattedDate = new Date(day.date).toLocaleDateString(
+                'cs-CZ'
+              );
+
+              return (
+                <Surface
+                  key={day.date}
+                  style={[
+                    styles.dayCard,
+                    { backgroundColor: theme.colors.surfaceVariant },
+                  ]}
                 >
-                  {day.events.length === 0 ? (
-                    <Text style={{ color: theme.colors.onSurfaceVariant }}>
-                      Žádné záznamy
-                    </Text>
-                  ) : (
-                    day.events.map((ev: any, j: number) => (
-                      <View
-                        key={j}
-                        style={[
-                          styles.event,
-                          {
-                            backgroundColor:
-                              ev.type === 'Příchod' ? '#c8e6c9' : '#ffcdd2',
-                          },
-                        ]}
-                      >
-                        <Text
-                          style={[
-                            styles.eventType,
-                            {
-                              color:
-                                ev.type === 'Příchod' ? '#388e3c' : '#b71c1c',
-                            },
-                          ]}
-                        >
-                          {ev.type}
-                        </Text>
-                        <Text
-                          style={[
-                            styles.eventTime,
-                            {
-                              color:
-                                ev.type === 'Příchod' ? '#388e3c' : '#b71c1c',
-                            },
-                          ]}
-                        >
-                          {ev.time}
-                        </Text>
-                      </View>
-                    ))
-                  )}
-                </View>
-              </Surface>
-            ))
+                  <Text
+                    style={[styles.dayDate, { color: theme.colors.primary }]}
+                  >
+                    {formattedDate}
+                  </Text>
+                  <View
+                    style={{
+                      flexDirection: 'row',
+                      flexWrap: 'wrap',
+                      marginTop: 6,
+                    }}
+                  >
+                    {day.events.length === 0 ? (
+                      <Text style={{ color: theme.colors.onSurfaceVariant }}>
+                        Žádné záznamy
+                      </Text>
+                    ) : (
+                      day.events.map((ev, j) => {
+                        const isEnter = ev.type === 'ENTER';
+                        const displayType = isEnter ? 'Příchod' : 'Odchod';
+
+                        return (
+                          <View
+                            key={j}
+                            style={[
+                              styles.event,
+                              {
+                                backgroundColor: isEnter
+                                  ? '#c8e6c9'
+                                  : '#ffcdd2',
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.eventType,
+                                {
+                                  color: isEnter ? '#388e3c' : '#b71c1c',
+                                },
+                              ]}
+                            >
+                              {displayType}
+                            </Text>
+                            <Text
+                              style={[
+                                styles.eventTime,
+                                {
+                                  color: isEnter ? '#388e3c' : '#b71c1c',
+                                },
+                              ]}
+                            >
+                              {formatTime(ev.time)}
+                            </Text>
+                          </View>
+                        );
+                      })
+                    )}
+                  </View>
+                </Surface>
+              );
+            })
           )}
         </ScrollView>
       )}
@@ -212,11 +208,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     padding: 32,
-  },
-  selector: {
-    borderRadius: 16,
-    marginRight: 8,
-    marginBottom: 8,
   },
   dayCard: {
     borderRadius: 18,

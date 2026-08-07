@@ -1,45 +1,118 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Dimensions, ScrollView, StyleSheet, View } from 'react-native';
 import { BarChart, LineChart } from 'react-native-chart-kit';
 import { Card, Text, useTheme } from 'react-native-paper';
-import type { SubjectGrades } from '../../api/SpseJecnaClient';
-import type { GradeStats } from '../../utils/dashboardUtils';
+import type { GradeStats } from '@/utils/dashboard/grades';
 import {
   getGradeChartData,
   getGradeTrendChartData,
-} from '../../utils/dashboardUtils';
+} from '@/utils/dashboard/grades';
+import { GradesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import Skeleton from '../ui/Skeleton';
 
 interface GradeCardProps {
-  gradeStats: GradeStats;
-  grades: SubjectGrades[];
+  gradeStats?: GradeStats;
+  grades?: GradesPage | null;
 }
 
-const screenWidth = Dimensions.get('window').width - 32; // Full width minus margins
+const screenWidth = Dimensions.get('window').width - 32;
 
 export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const theme = useTheme();
+  const isDark = theme.dark;
 
   const chartData = useMemo(() => getGradeChartData(gradeStats), [gradeStats]);
   const trendData = useMemo(() => getGradeTrendChartData(grades), [grades]);
+
+  if (!gradeStats || !grades || !chartData || !trendData) {
+    return (
+      <Card
+        style={[styles.card, { backgroundColor: theme.colors.surface }]}
+        elevation={3}
+      >
+        <Card.Content>
+          <View
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              gap: 8,
+              marginBottom: 16,
+            }}
+          >
+            <Skeleton
+              style={{ width: 24, height: 24, borderRadius: 12 }}
+              isDark={isDark}
+            />
+            <Skeleton style={{ width: 120, height: 24 }} isDark={isDark} />
+          </View>
+
+          <View style={styles.metricsContainer}>
+            {[1, 2, 3].map(key => (
+              <View key={key} style={styles.metric}>
+                <Skeleton
+                  style={{ width: 40, height: 32, marginBottom: 8 }}
+                  isDark={isDark}
+                />
+                <Skeleton style={{ width: 60, height: 16 }} isDark={isDark} />
+              </View>
+            ))}
+          </View>
+
+          <View style={styles.chartContainer}>
+            <Skeleton
+              style={{ width: 140, height: 20, marginBottom: 12 }}
+              isDark={isDark}
+            />
+            <Skeleton
+              style={{ width: screenWidth - 32, height: 180, borderRadius: 16 }}
+              isDark={isDark}
+            />
+          </View>
+
+          <View style={styles.chartContainer}>
+            <Skeleton
+              style={{ width: 160, height: 20, marginBottom: 12 }}
+              isDark={isDark}
+            />
+            <Skeleton
+              style={{ width: screenWidth - 32, height: 180, borderRadius: 16 }}
+              isDark={isDark}
+            />
+          </View>
+
+          <View style={styles.subjectsContainer}>
+            {[1, 2].map(key => (
+              <View
+                key={key}
+                style={[
+                  styles.subjectCard,
+                  { backgroundColor: 'transparent', padding: 0 },
+                ]}
+              >
+                <Skeleton
+                  style={{ width: '100%', height: 75, borderRadius: 12 }}
+                  isDark={isDark}
+                />
+              </View>
+            ))}
+          </View>
+        </Card.Content>
+      </Card>
+    );
+  }
 
   function hexToRgba(hex: string, opacity = 1) {
     let r = 0,
       g = 0,
       b = 0;
 
-    // Remove leading #
-    if (hex[0] === '#') {
-      hex = hex.slice(1);
-    }
+    if (hex[0] === '#') hex = hex.slice(1);
 
-    // 3 digits hex
     if (hex.length === 3) {
       r = parseInt(hex[0] + hex[0], 16);
       g = parseInt(hex[1] + hex[1], 16);
       b = parseInt(hex[2] + hex[2], 16);
-
-      // 6 digits hex
     } else if (hex.length === 6) {
       r = parseInt(hex.substring(0, 2), 16);
       g = parseInt(hex.substring(2, 4), 16);
@@ -56,14 +129,10 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
     decimalPlaces: 0,
     color: (opacity = 1) => hexToRgba(theme.colors.primary, opacity),
     labelColor: (opacity = 1) => theme.colors.onSurface,
-    style: {
-      borderRadius: 16,
-    },
+    style: { borderRadius: 16 },
     yAxisLabel: '',
     yAxisSuffix: '',
-    propsForLabels: {
-      fontSize: 12,
-    },
+    propsForLabels: { fontSize: 12 },
   };
 
   const lineChartConfig = {
@@ -75,7 +144,6 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
   const renderBarChart = () => {
     try {
       const chartWidth = Math.max(screenWidth, chartData.labels.length * 60);
-
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <BarChart
@@ -131,12 +199,9 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
     try {
       if (
         !trendData ||
-        !trendData.labels ||
-        trendData.labels.length === 0 ||
-        !trendData.datasets ||
-        trendData.datasets.length === 0 ||
-        !trendData.datasets[0].data ||
-        trendData.datasets[0].data.length === 0
+        !trendData.labels?.length ||
+        !trendData.datasets?.length ||
+        !trendData.datasets[0].data?.length
       ) {
         return (
           <View
@@ -166,7 +231,6 @@ export function GradeCard({ gradeStats, grades }: GradeCardProps) {
       }
 
       const chartWidth = Math.max(screenWidth, trendData.labels.length * 60);
-
       return (
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           <LineChart

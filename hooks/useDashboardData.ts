@@ -1,55 +1,20 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import type {
-  AccountInfo,
-  LockerData,
-  OmluvnyListResult,
-  SubjectGrades,
-  Timetable,
-} from '../api/SpseJecnaClient';
-import { useSpseJecnaClient } from './useSpseJecnaClient';
-import { getTimetableSelections } from '@/utils/timetableStorage';
-import { getZnamkySelections } from '@/utils/znamkyStorage';
-import { CanteenMenuResult } from '@/api/iCanteenClient';
-
-function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
-  return new Promise<T>((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Request timed out')), ms);
-
-    promise
-      .then(value => {
-        clearTimeout(timer);
-        resolve(value);
-      })
-      .catch(err => {
-        clearTimeout(timer);
-        reject(err);
-      });
-  });
-}
+import { useJecnaRozvrhClient } from './useJecnaRozvrhClient';
+import { useAccountInfo } from './useAccountInfo';
+import { GradesPage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
+import { Canteen, JecnaAPI } from '@jzitnik/jecnaapi-react-native';
 
 export function useDashboardData() {
-  const { client } = useSpseJecnaClient();
+  const { client: extraordClient } = useJecnaRozvrhClient();
   const queryClient = useQueryClient();
-
-  const isLoggedIn = async () => {
-    if (!client) return false;
-    return await client.isLoggedIn();
-  };
+  const { accountInfo } = useAccountInfo();
 
   // ---------------------- Grades ----------------------
-  const gradesQuery = useQuery<SubjectGrades[], Error>({
+  const gradesQuery = useQuery<GradesPage, Error>({
     queryKey: ['grades'],
     queryFn: async () => {
-      if (!(await isLoggedIn())) throw new Error('Not logged in');
-      if (!client) throw new Error('Client not available');
-
-      const selections = await getZnamkySelections();
-      if (selections?.year || selections?.period) {
-        return client.getZnamky(selections.year, selections.period);
-      }
-      return client.getZnamky();
+      return await JecnaAPI.getGradesPage();
     },
-    enabled: !!client,
     staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -58,31 +23,34 @@ export function useDashboardData() {
   });
 
   // ---------------------- Timetable ----------------------
-  const timetableQuery = useQuery<Timetable | null, Error>({
+  const timetableQuery = useQuery({
     queryKey: ['timetable'],
     queryFn: async () => {
-      if (!(await isLoggedIn())) throw new Error('Not logged in');
-      if (!client) throw new Error('Client not available');
-
-      const selections = await getTimetableSelections();
-      if (selections?.year || selections?.period) {
-        return client.getTimetable(selections.year, selections.period);
-      }
-      return client.getTimetable();
+      return await JecnaAPI.getTimetablePage();
     },
-    enabled: !!client,
     staleTime: 30 * 60 * 1000,
   });
 
+  const extraordinary = useQuery({
+    queryKey: ['extraordinarytimetable', accountInfo?.className],
+    queryFn: async () => {
+      const res = await extraordClient?.getSchedule(
+        accountInfo?.className || ''
+      );
+      return res;
+    },
+    enabled: !!extraordClient && !!accountInfo,
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: 'always',
+  });
+
   // ---------------------- Account Info ----------------------
-  const accountInfoQuery = useQuery<AccountInfo | null, Error>({
+  const accountInfoQuery = useQuery({
     queryKey: ['accountInfo'],
     queryFn: async () => {
-      if (!(await isLoggedIn())) throw new Error('Not logged in');
-      if (!client) throw new Error('Client not available');
-      return client.getAccountInfo();
+      return await JecnaAPI.getStudentProfile();
     },
-    enabled: !!client,
     staleTime: 3 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -91,14 +59,11 @@ export function useDashboardData() {
   });
 
   // ---------------------- Locker ----------------------
-  const lockerQuery = useQuery<LockerData | null, Error>({
+  const lockerQuery = useQuery({
     queryKey: ['locker'],
     queryFn: async () => {
-      if (!(await isLoggedIn())) throw new Error('Not logged in');
-      if (!client) throw new Error('Client not available');
-      return client.getLocker();
+      return await JecnaAPI.getLocker();
     },
-    enabled: !!client,
     staleTime: 3 * 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -107,15 +72,11 @@ export function useDashboardData() {
   });
 
   // ---------------------- Canteen Menu ----------------------
-  const canteenMenuQuery = useQuery<CanteenMenuResult, Error>({
+  const canteenMenuQuery = useQuery({
     queryKey: ['canteenMenu'],
     queryFn: async () => {
-      if (!(await isLoggedIn())) throw new Error('Not logged in');
-      if (!client) throw new Error('Client not available');
-      const canteenClient = await withTimeout(client.getCanteenClient(), 25000);
-      return withTimeout(canteenClient.getMonthlyMenu(), 25000);
+      return await Canteen.getMenuPage();
     },
-    enabled: !!client,
     staleTime: 10 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -124,14 +85,11 @@ export function useDashboardData() {
   });
 
   // ---------------------- Absences ----------------------
-  const absenceQuery = useQuery<OmluvnyListResult | null, Error>({
+  const absenceQuery = useQuery({
     queryKey: ['absences'],
     queryFn: async () => {
-      if (!(await isLoggedIn())) throw new Error('Not logged in');
-      if (!client) throw new Error('Client not available');
-      return client.getOmluvnyList();
+      return JecnaAPI.getAbsencesPage();
     },
-    enabled: !!client,
     staleTime: 5 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnMount: false,
@@ -150,19 +108,21 @@ export function useDashboardData() {
   };
 
   return {
-    grades: gradesQuery.data ?? [],
+    grades: gradesQuery.data ?? null,
     timetable: timetableQuery.data ?? null,
     accountInfo: accountInfoQuery.data ?? null,
     locker: lockerQuery.data ?? null,
     canteen: canteenMenuQuery.data ?? null,
     absences: absenceQuery.data ?? null,
+    extraord: extraordinary.data ?? null,
     loading:
       gradesQuery.isFetching ||
       timetableQuery.isFetching ||
       accountInfoQuery.isFetching ||
       lockerQuery.isFetching ||
       canteenMenuQuery.isFetching ||
-      absenceQuery.isFetching,
+      absenceQuery.isFetching ||
+      extraordinary.isFetching,
     error:
       gradesQuery.error?.message ??
       timetableQuery.error?.message ??
@@ -170,6 +130,7 @@ export function useDashboardData() {
       lockerQuery.error?.message ??
       canteenMenuQuery.error?.message ??
       absenceQuery.error?.message ??
+      extraordinary.isFetching ??
       null,
     refresh,
   };
