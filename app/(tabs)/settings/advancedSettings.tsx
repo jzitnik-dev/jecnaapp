@@ -38,6 +38,17 @@ const SETTINGS: SettingItem[] = [
     description: 'Aktuálně probíhající hodina změní backgrond v rozvrhu hodin.',
     defaultValue: true,
   },
+  {
+    type: 'radio',
+    key: 'drawer-layout',
+    title: 'Typ navigace',
+    description: 'Vyberte si mezi nativní tab navigací a Drawer navigací',
+    options: [
+      { label: 'Drawer', value: 'drawer' },
+      { label: 'Native tabs (doporučeno pouze pro iOS)', value: 'tab' },
+    ],
+    defaultValue: 'drawer',
+  },
 ];
 
 const SettingCard = ({ setting }: { setting: SettingItem }) => {

@@ -1,34 +1,38 @@
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import {
   Drawer,
   DrawerContentScrollView,
   DrawerItemList,
 } from 'expo-router/drawer';
+import { NativeTabs } from 'expo-router/unstable-native-tabs';
 import { useRouter } from 'expo-router';
 import { Linking, TouchableOpacity, View } from 'react-native';
 import { Text, TouchableRipple, useTheme } from 'react-native-paper';
+import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { ImageViewer } from '../../../components/ImageViewer';
 import { useAccountInfo } from '../../../hooks/useAccountInfo';
 import { useAppTheme } from '../../../hooks/useAppTheme';
 import MoodleIcon from '@/components/icons/Moodle';
 import useIsUpdateAvailable from '@/utils/updates';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import {
+  useSafeAreaInsets,
+  SafeAreaView,
+} from 'react-native-safe-area-context';
 import { useSecureStore } from '@/hooks/useSecureStore';
 
-export default function DrawerLayout() {
+export default function DynamicLayout() {
   const { navigationTheme } = useAppTheme();
   const theme = useTheme();
   const { accountInfo } = useAccountInfo();
   const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const isUpdateAvailable = useIsUpdateAvailable();
+
   const [hideProfilePicture] = useSecureStore<boolean>('hide-profilepicture', {
     initialValue: false,
     parse: val => val === 'true',
     stringify: val => (val ? 'true' : 'false'),
   });
   const showProfilePicture = !hideProfilePicture;
-
-  const insets = useSafeAreaInsets();
 
   const [extraEnabled] = useSecureStore<boolean>(
     'extraordinary_schedule_enabled',
@@ -38,6 +42,12 @@ export default function DrawerLayout() {
       stringify: val => (val ? 'true' : 'false'),
     }
   );
+
+  const [layoutType] = useSecureStore<'drawer' | 'tab'>('drawer-layout', {
+    initialValue: 'drawer',
+    parse: val => (val === 'tab' ? 'tab' : 'drawer'),
+    stringify: val => (val === 'tab' ? 'tab' : 'drawer'),
+  });
 
   const handleAccountPress = () => {
     router.push('/settings/account');
@@ -84,8 +94,71 @@ export default function DrawerLayout() {
     },
   ];
 
-  const isUpdateAvailable = useIsUpdateAvailable();
+  // ==========================================
+  // NATIVE TABS LAYOUT
+  // ==========================================
+  if (layoutType === 'tab') {
+    return (
+      <SafeAreaView
+        edges={['top']}
+        style={{ flex: 1, backgroundColor: navigationTheme.colors.background }}
+      >
+        <NativeTabs tabBarRespectsIMEInsets={false}>
+          <NativeTabs.Trigger name="index">
+            <NativeTabs.Trigger.Label>Domov</NativeTabs.Trigger.Label>
+            <NativeTabs.Trigger.Icon
+              sf={{ default: 'house', selected: 'house.fill' }}
+              md="home"
+            />
+          </NativeTabs.Trigger>
 
+          <NativeTabs.Trigger name="rozvrh">
+            <NativeTabs.Trigger.Label>Rozvrh</NativeTabs.Trigger.Label>
+            <NativeTabs.Trigger.Icon
+              sf={{ default: 'calendar', selected: 'calendar' }}
+              md="calendar_month"
+            />
+          </NativeTabs.Trigger>
+
+          <NativeTabs.Trigger name="znamky">
+            <NativeTabs.Trigger.Label>Známky</NativeTabs.Trigger.Label>
+            <NativeTabs.Trigger.Icon
+              sf={{ default: 'star', selected: 'star.fill' }}
+              md="star"
+            />
+          </NativeTabs.Trigger>
+
+          <NativeTabs.Trigger name="more">
+            <NativeTabs.Trigger.Label>Více</NativeTabs.Trigger.Label>
+            <NativeTabs.Trigger.Icon
+              sf={{
+                default: 'ellipsis.circle',
+                selected: 'ellipsis.circle.fill',
+              }}
+              md="more_horiz"
+            />
+          </NativeTabs.Trigger>
+
+          {/* Hide secondary screens from the tab bar */}
+          <NativeTabs.Trigger name="novinky" hidden />
+          <NativeTabs.Trigger name="omluvny-list" hidden />
+          <NativeTabs.Trigger name="prichody" hidden />
+          <NativeTabs.Trigger name="rooms-list" hidden />
+          <NativeTabs.Trigger name="teacher-absences" hidden />
+          <NativeTabs.Trigger name="teachers-list" hidden />
+          <NativeTabs.Trigger name="settings" hidden />
+          <NativeTabs.Trigger name="teachers" hidden />
+          <NativeTabs.Trigger name="ucebna" hidden />
+          <NativeTabs.Trigger name="substitution" hidden />
+          <NativeTabs.Trigger name="dokumenty" hidden />
+        </NativeTabs>
+      </SafeAreaView>
+    );
+  }
+
+  // ==========================================
+  // DRAWER LAYOUT (DEFAULT)
+  // ==========================================
   return (
     <Drawer
       initialRouteName="index"
@@ -306,7 +379,7 @@ export default function DrawerLayout() {
         options={{
           title: 'Domov',
           drawerIcon: ({ color, size }) => (
-            <IconSymbol size={size} name="house.fill" color={color} />
+            <Ionicons size={size} name="home" color={color} />
           ),
         }}
       />
@@ -423,6 +496,14 @@ export default function DrawerLayout() {
           drawerIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="cog" color={color} size={size} />
           ),
+        }}
+      />
+
+      <Drawer.Screen
+        name="more"
+        options={{
+          title: 'Více',
+          drawerItemStyle: { display: 'none' },
         }}
       />
     </Drawer>
