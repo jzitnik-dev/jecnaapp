@@ -13,7 +13,10 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build:dev-apk": "eas build --profile development --platform android",
-    "build:prod-apk": "eas build --platform android --profile production"
+    "build:prod-apk": "eas build --platform android --profile production",
+
+
+    "eas-build-post-install": "node ./node_modules/@jzitnik/jecnaapi-react-native/scripts/download-ios.mjs"
   },
   "dependencies": {
     "@expo/ui": "~57.0.8",
