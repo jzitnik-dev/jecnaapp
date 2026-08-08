@@ -216,7 +216,7 @@ export default function MoreScreen() {
               />
             }
             title="Novinky"
-            onPress={() => router.push('/drawer/novinky')}
+            onPress={() => router.push('/(tabs)/drawer/novinky')}
           />
           {extraEnabled && (
             <ListItem
@@ -228,7 +228,7 @@ export default function MoreScreen() {
                 />
               }
               title="Mimořádný rozvrh"
-              onPress={() => router.push('/drawer/substitution')}
+              onPress={() => router.push('/(tabs)/drawer/substitution')}
             />
           )}
           <ListItem
@@ -236,7 +236,7 @@ export default function MoreScreen() {
               <Ionicons name="people" size={24} color={theme.colors.primary} />
             }
             title="Učitelé"
-            onPress={() => router.push('/drawer/teachers-list')}
+            onPress={() => router.push('/(tabs)/drawer/teachers-list')}
           />
           <ListItem
             icon={
@@ -247,14 +247,14 @@ export default function MoreScreen() {
               />
             }
             title="Učebny"
-            onPress={() => router.push('/drawer/rooms-list')}
+            onPress={() => router.push('/(tabs)/drawer/rooms-list')}
           />
           <ListItem
             icon={
               <Ionicons name="log-in" size={24} color={theme.colors.primary} />
             }
             title="Příchody a odchody"
-            onPress={() => router.push('/drawer/prichody')}
+            onPress={() => router.push('/(tabs)/drawer/prichody')}
           />
           <ListItem
             icon={
@@ -265,15 +265,14 @@ export default function MoreScreen() {
               />
             }
             title="Omluvný list"
-            onPress={() => router.push('/drawer/omluvny-list')}
+            onPress={() => router.push('/(tabs)/drawer/omluvny-list')}
           />
           <ListItem
             icon={
               <Ionicons name="folder" size={24} color={theme.colors.primary} />
             }
             title="Dokumenty"
-            onPress={() => router.push('/drawer/dokumenty')}
-            isLast={Platform.OS === 'ios'}
+            onPress={() => router.push('/(tabs)/drawer/dokumenty')}
           />
         </ListGroup>
       </View>
