@@ -34,6 +34,10 @@ export const getWeightedAverage = (grades: Grade[]): number | null => {
   let sum = 0;
   let weightSum = 0;
   for (const g of grades) {
+    if (g.value === 0) {
+      continue;
+    }
+
     const weight = g.small ? 0.5 : 1;
     sum += g.value * weight;
     weightSum += weight;
@@ -41,3 +45,19 @@ export const getWeightedAverage = (grades: Grade[]): number | null => {
   if (weightSum === 0) return null;
   return sum / weightSum;
 };
+
+export function getGradeText(grade: Grade | number) {
+  let g = 0;
+
+  if (typeof grade === 'number') {
+    g = grade;
+  } else {
+    g = grade.value;
+  }
+
+  if (g === 0) {
+    return 'N';
+  }
+
+  return String(g);
+}

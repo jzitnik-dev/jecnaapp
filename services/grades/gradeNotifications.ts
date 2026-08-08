@@ -7,11 +7,12 @@ import {
 import { Change } from './changeDetectionLogic';
 import { getChangesWithCache } from './gradeChecking';
 import { GradeNotificationData } from '../notifications';
+import { getGradeText } from '@/utils/grades/gradesFormatting';
 
 function formatName(name: Name): string {
-  if (name.short && name.full) {
-    return `${name.full} (${name.short})`;
-  }
+  // if (name.short && name.full) {
+  //   return `${name.full} (${name.short})`;
+  // }
   return name.full || name.short || 'Neznámý předmět';
 }
 
@@ -47,25 +48,25 @@ async function sendGradeNotifications(changes: Change[]): Promise<void> {
         const desc = change.newGrade.description
           ? ` - ${change.newGrade.description}`
           : '';
-        const teacher = change.newGrade.teacher?.short
-          ? ` (${change.newGrade.teacher.short})`
+        const teacher = change.newGrade.teacher?.fullName
+          ? ` (${change.newGrade.teacher.fullName})`
           : '';
 
-        body = `Byla zapsána známka ${change.newGrade.value}${desc}${teacher}.`;
+        body = `Byla zapsána známka ${getGradeText(change.newGrade)}${desc}${teacher}.`;
         break;
       }
 
       case 'GradeDeletion': {
         const subject = formatName(change.subjectName);
         title = `Smazaná známka: ${subject}`;
-        body = `Známka ${change.oldGrade.value} byla odstraněna z evidence.`;
+        body = `Známka ${getGradeText(change.oldGrade)} byla odstraněna z evidence.`;
         break;
       }
 
       case 'GradeValueChange': {
         const subject = formatName(change.subjectName);
         title = `Změna známky: ${subject}`;
-        body = `Hodnota známky byla změněna z ${change.oldValue} na ${change.newGrade.value}.`;
+        body = `Hodnota známky byla změněna z ${getGradeText(change.oldValue)} na ${getGradeText(change.newGrade)}.`;
         break;
       }
 
@@ -73,13 +74,13 @@ async function sendGradeNotifications(changes: Change[]): Promise<void> {
         const subject = formatName(change.subjectName);
         title = `Změna váhy známky: ${subject}`;
         const weightText = change.nowSmall ? 'malou' : 'velkou';
-        body = `Známka ${change.newGrade.value} byla změněna na známku s ${weightText} váhou.`;
+        body = `Známka ${getGradeText(change.newGrade)} byla změněna na známku s ${weightText} váhou.`;
         break;
       }
 
       case 'FinalGradeChange': {
         const subject = formatName(change.subjectName);
-        title = `Změna výsledné známky: ${subject}`;
+        title = `Byla uzavřena známka: ${subject}`;
         const oldText = formatFinalGrade(change.oldGrade);
         const newText = formatFinalGrade(change.newGrade);
 

@@ -16,6 +16,7 @@ import type { WidgetData, WidgetProps } from '../task-handler';
 import { AditionalCache, WidgetContent, fetcher } from './fetcher';
 import {
   formatFinalGrade,
+  getGradeText,
   getWeightedAverage,
   gradeColor,
 } from '@/utils/grades/gradesFormatting';
@@ -34,7 +35,7 @@ function GradeSquare({ grade }: { grade: Grade }) {
         padding({ horizontal: 6, vertical: 3 }),
       ]}
     >
-      {String(grade.value)}
+      {getGradeText(grade)}
     </Text>
   );
 }

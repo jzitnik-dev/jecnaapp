@@ -44,13 +44,13 @@ export default function NotificationSettingsScreen() {
   });
 
   const [gradeLastCheckedTimestamp] = useAsyncStorage(KEY, {
-    initialValue: undefined,
+    initialValue: null,
     parse: string => {
       const parse = JSON.parse(string);
       if (parse?.timestamp) {
         return new Date(parse.timestamp);
       }
-      return undefined;
+      return null;
     },
   });
 

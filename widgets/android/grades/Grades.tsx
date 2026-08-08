@@ -18,6 +18,7 @@ import {
 } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import {
   formatFinalGrade,
+  getGradeText,
   getWeightedAverage,
   gradeColor,
 } from '@/utils/grades/gradesFormatting';
@@ -75,7 +76,7 @@ function GradeSquare({
       }}
     >
       <TextWidget
-        text={String(grade.value)}
+        text={getGradeText(grade)}
         style={{
           color: '#ffffff',
           fontWeight: 'bold',

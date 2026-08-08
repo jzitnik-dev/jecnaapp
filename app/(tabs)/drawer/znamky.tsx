@@ -31,6 +31,7 @@ import { useLocalSearchParams } from 'expo-router/build/hooks';
 import { Change } from '@/services/grades/changeDetectionLogic';
 import {
   formatFinalGrade,
+  getGradeText,
   getWeightedAverage,
   gradeColor,
 } from '@/utils/grades/gradesFormatting';
@@ -56,7 +57,7 @@ const GradeSquare = ({
       ]}
     >
       <Text style={[styles.gradeText, grade.small ? { fontSize: 14 } : {}]}>
-        {grade.value}
+        {getGradeText(grade)}
       </Text>
     </Pressable>
   );
@@ -93,7 +94,8 @@ function GradeDetailModal({
           </Text>
         )}
         <Text>
-          Známka: <Text style={{ fontWeight: 'bold' }}>{grade.value}</Text>
+          Známka:{' '}
+          <Text style={{ fontWeight: 'bold' }}>{getGradeText(grade)}</Text>
         </Text>
         <Text>
           Typ:{' '}
@@ -109,10 +111,10 @@ function GradeDetailModal({
             </Text>
           </Text>
         )}
-        {grade.teacher?.full && (
+        {grade.teacher?.fullName && (
           <Text>
             Učitel:{' '}
-            <Text style={{ fontWeight: 'bold' }}>{grade.teacher.full}</Text>
+            <Text style={{ fontWeight: 'bold' }}>{grade.teacher.fullName}</Text>
           </Text>
         )}
         {grade.description && (
@@ -625,7 +627,7 @@ export default function ZnamkyScreen() {
               styles.subjectBlock,
               { backgroundColor: theme.colors.surfaceVariant },
               highlightedBlock === BEHAVIOUR_LAYOUT_KEY &&
-                styles.subjectBlockHighlighted,
+              styles.subjectBlockHighlighted,
             ]}
           >
             <View style={styles.subjectHeader}>
