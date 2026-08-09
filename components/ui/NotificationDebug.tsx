@@ -18,8 +18,8 @@ async function setCustomCache() {
     description: 'Minutka Jamese Bonda',
     receiveDate: new Date('2026-06-19'),
     teacher: {
-      full: 'Ing. Jan Novotný, Ph.D.',
-      short: 'NV',
+      fullName: 'Ing. Jan Novotný, Ph.D.',
+      tag: 'NV',
     },
   });
 

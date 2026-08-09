@@ -1,11 +1,12 @@
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, TouchableOpacity, View } from 'react-native';
 import { Card, Text, useTheme } from 'react-native-paper';
 import type { LessonInfo, StaticLesson } from '@/utils/dashboard/nextClass';
 import { getCurrentAndNextLesson } from '@/utils/dashboard/nextClass';
 import { useAccountInfo } from '@/hooks/useAccountInfo';
+import { useLayoutPaths } from '@/lib/layoutPaths';
 import { TimetablePage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
 import Skeleton from '../ui/Skeleton';
@@ -19,6 +20,7 @@ export function NextLessonCard({ timetable, extraord }: NextLessonCardProps) {
   const theme = useTheme();
   const isDark = theme.dark;
   const router = useRouter();
+  const paths = useLayoutPaths();
   const [lessonInfo, setLessonInfo] = useState<{
     currentLessons: LessonInfo[];
     nextLessons: LessonInfo[];
@@ -42,11 +44,11 @@ export function NextLessonCard({ timetable, extraord }: NextLessonCardProps) {
   const { currentLessons, nextLessons } = lessonInfo;
 
   const handleTeacherPress = (teacherCode: string) => {
-    router.push(`/teachers/${teacherCode}`);
+    router.push(paths.teacher(teacherCode) as Href);
   };
 
   const handleRoomPress = (room: string) => {
-    router.push(`/ucebna/${room}`);
+    router.push(paths.room(room) as Href);
   };
 
   const isLoading = !timetable;

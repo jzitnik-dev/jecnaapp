@@ -3,6 +3,7 @@ import { Change } from './grades/changeDetectionLogic';
 import { useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import * as Notifications from 'expo-notifications';
+import { getItemAsync } from 'expo-secure-store';
 
 type Router = ReturnType<typeof useRouter>;
 
@@ -59,10 +60,13 @@ export function consumeNotifications(): boolean {
 // -----
 
 function handleGradeNotification(router: Router, data: GradeNotificationData) {
-  router.replace({
-    pathname: '/drawer/znamky',
-    params: {
-      handleGradeChange: JSON.stringify(data.data),
-    },
-  });
+  (async () => {
+    const layout = await getItemAsync('drawer-layout');
+    router.replace({
+      pathname: layout === 'tab' ? '/tabs/znamky' : '/drawer/znamky',
+      params: {
+        handleGradeChange: JSON.stringify(data.data),
+      },
+    });
+  })();
 }

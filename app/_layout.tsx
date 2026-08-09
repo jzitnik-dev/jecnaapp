@@ -47,7 +47,7 @@ export default function RootLayout() {
           if (loggedIn) {
             if (!consumeNotifications()) {
               // No notification so redirect to dashboard
-              router.replace('/(tabs)/drawer');
+              router.replace('/');
             }
           } else {
             router.replace('/login');
@@ -87,7 +87,9 @@ export default function RootLayout() {
             <JecnaRozvrhClientManager />
             <Stack>
               <Stack.Screen name="login" options={{ headerShown: false }} />
-              <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+              <Stack.Screen name="index" options={{ headerShown: false }} />
+              <Stack.Screen name="drawer" options={{ headerShown: false }} />
+              <Stack.Screen name="tabs" options={{ headerShown: false }} />
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style="auto" />
