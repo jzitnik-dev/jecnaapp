@@ -22,6 +22,7 @@ import {
   getWeightedAverage,
   gradeColor,
 } from '@/utils/grades/gradesFormatting';
+import { getWidgetPaths } from '../paths';
 
 type Data = { grades: GradesPage; theme: ThemeColorsWithColorProp };
 type AditionalCache = Record<string, never>;
@@ -49,7 +50,7 @@ const APP_SCHEME = Constants.expoConfig?.scheme
   : 'jecnaapp://';
 
 function gradeDetailUri(subjectName: string, gradeId: number): string {
-  return `${APP_SCHEME}drawer/znamky?gradeId=${gradeId}&subject=${encodeURIComponent(subjectName)}`;
+  return `${APP_SCHEME}${getWidgetPaths().znamky}?gradeId=${gradeId}&subject=${encodeURIComponent(subjectName)}`;
 }
 
 function GradeSquare({
@@ -196,7 +197,7 @@ function GradesWidget({ data }: WidgetProps<Data>) {
               <FlexWidget
                 clickAction="OPEN_URI"
                 clickActionData={{
-                  uri: `${APP_SCHEME}drawer/znamky?subject=${encodeURIComponent(subjectName)}`,
+                  uri: `${APP_SCHEME}${getWidgetPaths().znamky}?subject=${encodeURIComponent(subjectName)}`,
                 }}
                 style={{
                   width: 'match_parent',

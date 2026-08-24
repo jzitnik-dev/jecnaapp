@@ -17,6 +17,7 @@ import {
   TodaysClassesWidgetInstance,
 } from './todays-classes/TodaysClasses';
 import { Canteen, CanteenWidgetInstance } from './canteen/Canteen';
+import { loadWidgetPaths } from '../paths';
 
 const CACHE_KEY_PREFIX = 'widget-cache';
 
@@ -98,6 +99,8 @@ async function saveWidgetCache<T, U>(
   }
 }
 
+const DEFAULT_REFRESH_INTERVAL_MS = 15 * 60_000;
+
 function renderAndSchedule<T, U>(
   widgetName: IOSWidgetName,
   widgetData: WidgetData<T, U>,
@@ -109,15 +112,17 @@ function renderAndSchedule<T, U>(
     data: { type: 'data', content: result.data },
   };
 
-  const nextUpdateAt = widgetData.nextUpdate?.(result, new Date());
-  if (nextUpdateAt == null) {
-    widgetInstance.updateSnapshot(props);
-  } else {
-    widgetInstance.updateTimeline([
-      { date: new Date(), props },
-      { date: new Date(nextUpdateAt), props },
-    ]);
-  }
+  const calculatedNext = widgetData.nextUpdate?.(result, new Date());
+  const now = Date.now();
+  const nextUpdateAt =
+    calculatedNext && calculatedNext > now
+      ? calculatedNext
+      : now + DEFAULT_REFRESH_INTERVAL_MS;
+
+  widgetInstance.updateTimeline([
+    { date: new Date(now), props },
+    { date: new Date(nextUpdateAt), props },
+  ]);
 }
 
 function renderError<T, U>(
@@ -127,12 +132,20 @@ function renderError<T, U>(
 ) {
   const safeError = error instanceof Error ? error : new Error(String(error));
   console.error(`[widget] ${widgetName}: rendering error state:`, safeError);
-  widgetInstances[widgetName].updateSnapshot({
+  const now = Date.now();
+  const retryAt = now + 5 * 60_000;
+  const props: WidgetProps<T> = {
     data: { type: 'error', content: safeError },
-  } satisfies WidgetProps<T>);
+  };
+  widgetInstances[widgetName].updateTimeline([
+    { date: new Date(now), props },
+    { date: new Date(retryAt), props },
+  ]);
 }
 
 export async function widgetTaskHandler(widgetName: IOSWidgetName) {
+  await loadWidgetPaths();
+
   const widgetData = nameToWidgetData[widgetName];
   const cachedData = await loadWidgetCache(widgetName);
 
@@ -193,6 +206,9 @@ export async function registerIOSWidgetUpdates(): Promise<void> {
   } catch (error) {
     console.error('[widget] background task registration failed:', error);
   }
+
+  // Refresh immediately when app starts
+  refreshAllIOSWidgets();
 
   AppState.addEventListener('change', state => {
     if (state === 'active') {

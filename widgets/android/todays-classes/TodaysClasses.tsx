@@ -24,6 +24,7 @@ import {
   DaySchedule,
   getTodaysLessons,
 } from '@/utils/dashboard/dayLessons';
+import { getWidgetPaths } from '../paths';
 
 type Data = DaySchedule & { theme: ThemeColorsWithColorProp };
 type AditionalCache = { timetablePage: TimetablePage; supl: SuplResult | null };
@@ -82,7 +83,7 @@ function LessonRow({
     >
       <FlexWidget
         clickAction="OPEN_URI"
-        clickActionData={{ uri: `${APP_SCHEME}drawer/rozvrh` }}
+        clickActionData={{ uri: `${APP_SCHEME}${getWidgetPaths().rozvrh}` }}
         style={{
           width: 'match_parent',
           backgroundColor: theme.surfaceVariant,

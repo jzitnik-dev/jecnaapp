@@ -46,3 +46,10 @@ export async function fetcher(
     aditionalCache: { timetablePage, supl },
   };
 }
+
+export function nextUpdate(
+  _result: FetcherResult<WidgetContent, AditionalCache>,
+  now: Date
+): number | null {
+  return now.getTime() + 15 * 60_000;
+}

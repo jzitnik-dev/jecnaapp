@@ -1,6 +1,6 @@
 import { createWidget } from 'expo-widgets';
 import type { WidgetEnvironment } from 'expo-widgets';
-import { HStack, Image, Spacer, Text, VStack } from '@expo/ui/swift-ui';
+import { Link, HStack, Image, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import {
   background,
   containerBackground,
@@ -10,10 +10,13 @@ import {
   lineLimit,
   padding,
   shapes,
+  widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import type { JSX } from 'react/jsx-runtime';
 import type { WidgetData, WidgetProps } from '../task-handler';
-import { AditionalCache, WidgetContent, fetcher } from './fetcher';
+import { AditionalCache, WidgetContent, fetcher, nextUpdate } from './fetcher';
+import Constants from 'expo-constants';
+import { getWidgetPaths } from '../paths';
 import {
   formatFinalGrade,
   getGradeText,
@@ -22,8 +25,18 @@ import {
 } from '@/utils/grades/gradesFormatting';
 import { Grade } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 
-function GradeSquare({ grade }: { grade: Grade }) {
-  return (
+const APP_SCHEME = Constants.expoConfig?.scheme
+  ? `${Constants.expoConfig.scheme}://`
+  : 'jecnaapp://';
+
+function GradeSquare({
+  grade,
+  subjectName,
+}: {
+  grade: Grade;
+  subjectName: string;
+}) {
+  const content = (
     <Text
       modifiers={[
         font({ size: grade.small ? 11 : 13, weight: 'bold' }),
@@ -38,6 +51,18 @@ function GradeSquare({ grade }: { grade: Grade }) {
       {getGradeText(grade)}
     </Text>
   );
+
+  if (grade.gradeId) {
+    return (
+      <Link
+        destination={`${APP_SCHEME}${getWidgetPaths().znamky}?gradeId=${grade.gradeId}&subject=${encodeURIComponent(subjectName)}`}
+      >
+        {content}
+      </Link>
+    );
+  }
+
+  return content;
 }
 
 function GradesWidget(
@@ -81,7 +106,7 @@ function GradesWidget(
   }
 
   const { grades, theme } = data.content;
-  const subjectsEntries = Object.entries(grades.subjectsMap);
+  const subjectsEntries = Object.entries(grades?.subjectsMap || {});
   const maxSubjects = isSmall ? 2 : isMedium ? 3 : 7;
   const visibleSubjects = subjectsEntries.slice(0, maxSubjects);
 
@@ -89,7 +114,10 @@ function GradesWidget(
     <VStack
       alignment="leading"
       spacing={8}
-      modifiers={[containerBackground(theme.surface, 'widget')]}
+      modifiers={[
+        containerBackground(theme.surface, 'widget'),
+        widgetURL(`${APP_SCHEME}${getWidgetPaths().znamky}`),
+      ]}
     >
       <HStack spacing={6}>
         <Image systemName="bookmark.fill" size={18} color={theme.onSurface} />
@@ -106,9 +134,9 @@ function GradesWidget(
       <VStack alignment="leading" spacing={6}>
         {visibleSubjects.map(([subjectKey, subject]) => {
           const subjectName = subject.name.full;
-          const allGrades = Object.values(
-            subject.grades.subjectPartsGrades
-          ).flat();
+          const allGrades = subject.grades?.subjectPartsGrades
+            ? Object.values(subject.grades.subjectPartsGrades).flat()
+            : [];
           const avg = getWeightedAverage(allGrades);
           const recentGrades = isSmall
             ? allGrades.slice(-3)
@@ -128,53 +156,61 @@ function GradesWidget(
                 cornerRadius(10),
               ]}
             >
-              <HStack spacing={4}>
-                <Text
-                  modifiers={[
-                    font({ size: 13, weight: 'bold' }),
-                    foregroundStyle(theme.onSurface),
-                    lineLimit(1),
-                  ]}
-                >
-                  {subjectName}
-                </Text>
-                <Spacer />
-                {avg !== null && (
+              <Link
+                destination={`${APP_SCHEME}${getWidgetPaths().znamky}?subject=${encodeURIComponent(subjectName)}`}
+              >
+                <HStack spacing={4}>
                   <Text
                     modifiers={[
-                      font({ size: 11, weight: 'bold' }),
-                      foregroundStyle('#ffffff'),
-                      background(
-                        '#23272e',
-                        shapes.roundedRectangle({ cornerRadius: 4 })
-                      ),
-                      padding({ horizontal: 5, vertical: 2 }),
+                      font({ size: 13, weight: 'bold' }),
+                      foregroundStyle(theme.onSurface),
+                      lineLimit(1),
                     ]}
                   >
-                    {`⌀ ${avg.toFixed(2)}`}
+                    {subjectName}
                   </Text>
-                )}
-                {subject.finalGrade && (
-                  <Text
-                    modifiers={[
-                      font({ size: 11, weight: 'bold' }),
-                      foregroundStyle('#ffffff'),
-                      background(
-                        '#23272e',
-                        shapes.roundedRectangle({ cornerRadius: 4 })
-                      ),
-                      padding({ horizontal: 5, vertical: 2 }),
-                    ]}
-                  >
-                    {formatFinalGrade(subject.finalGrade)}
-                  </Text>
-                )}
-              </HStack>
+                  <Spacer />
+                  {avg !== null && (
+                    <Text
+                      modifiers={[
+                        font({ size: 11, weight: 'bold' }),
+                        foregroundStyle('#ffffff'),
+                        background(
+                          '#23272e',
+                          shapes.roundedRectangle({ cornerRadius: 4 })
+                        ),
+                        padding({ horizontal: 5, vertical: 2 }),
+                      ]}
+                    >
+                      {`⌀ ${avg.toFixed(2)}`}
+                    </Text>
+                  )}
+                  {subject.finalGrade && (
+                    <Text
+                      modifiers={[
+                        font({ size: 11, weight: 'bold' }),
+                        foregroundStyle('#ffffff'),
+                        background(
+                          '#23272e',
+                          shapes.roundedRectangle({ cornerRadius: 4 })
+                        ),
+                        padding({ horizontal: 5, vertical: 2 }),
+                      ]}
+                    >
+                      {formatFinalGrade(subject.finalGrade)}
+                    </Text>
+                  )}
+                </HStack>
+              </Link>
 
               {recentGrades.length > 0 && (
                 <HStack spacing={4}>
                   {recentGrades.map((g, idx) => (
-                    <GradeSquare key={g.gradeId || idx} grade={g} />
+                    <GradeSquare
+                      key={g.gradeId || idx}
+                      grade={g}
+                      subjectName={subjectName}
+                    />
                   ))}
                 </HStack>
               )}
@@ -189,6 +225,7 @@ function GradesWidget(
 export const Grades = {
   component: GradesWidget,
   fetcher,
+  nextUpdate,
 } satisfies WidgetData<WidgetContent, AditionalCache>;
 
 export const GradesWidgetInstance = createWidget<WidgetProps<WidgetContent>>(

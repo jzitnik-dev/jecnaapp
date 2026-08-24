@@ -3,6 +3,7 @@ import type { WidgetEnvironment } from 'expo-widgets';
 import {
   HStack,
   Image,
+  Link,
   Rectangle,
   Spacer,
   Text,
@@ -19,11 +20,18 @@ import {
   lineLimit,
   padding,
   shapes,
+  widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import type { JSX } from 'react/jsx-runtime';
 import type { WidgetData, WidgetProps } from '../task-handler';
 import { AditionalCache, WidgetContent, fetcher, nextUpdate } from './fetcher';
+import Constants from 'expo-constants';
+import { getWidgetPaths } from '../paths';
 import type { LessonInfo } from '@/utils/dashboard/nextClass';
+
+const APP_SCHEME = Constants.expoConfig?.scheme
+  ? `${Constants.expoConfig.scheme}://`
+  : 'jecnaapp://';
 
 function CurrentTimetableWidget(
   props: WidgetProps<WidgetContent>,
@@ -146,34 +154,59 @@ function CurrentTimetableWidget(
           {/* Lesson Details */}
           {!isExtraordinary && (
             <VStack alignment="leading" spacing={4}>
-              <HStack spacing={6}>
-                <Image systemName="person.fill" size={12} color={textColor} />
-                <Text
-                  modifiers={[
-                    font({ size: 12, weight: 'medium' }),
-                    foregroundStyle(textColor),
-                    lineLimit(1),
-                  ]}
+              {lesson.teacherCode ? (
+                <Link
+                  destination={`${APP_SCHEME}${getWidgetPaths().teacher(lesson.teacherCode)}`}
                 >
-                  {lesson.teacherFull}
-                </Text>
-              </HStack>
-              <HStack spacing={6}>
-                <Image
-                  systemName="door.left.hand.open"
-                  size={12}
-                  color={textVariant}
-                />
-                <Text
-                  modifiers={[
-                    font({ size: 12, weight: 'medium' }),
-                    foregroundStyle(textVariant),
-                    lineLimit(1),
-                  ]}
+                  <HStack spacing={6}>
+                    <Image systemName="person.fill" size={12} color={textColor} />
+                    <Text
+                      modifiers={[
+                        font({ size: 12, weight: 'medium' }),
+                        foregroundStyle(textColor),
+                        lineLimit(1),
+                      ]}
+                    >
+                      {lesson.teacherFull}
+                    </Text>
+                  </HStack>
+                </Link>
+              ) : (
+                <HStack spacing={6}>
+                  <Image systemName="person.fill" size={12} color={textColor} />
+                  <Text
+                    modifiers={[
+                      font({ size: 12, weight: 'medium' }),
+                      foregroundStyle(textColor),
+                      lineLimit(1),
+                    ]}
+                  >
+                    {lesson.teacherFull}
+                  </Text>
+                </HStack>
+              )}
+              {lesson.room ? (
+                <Link
+                  destination={`${APP_SCHEME}${getWidgetPaths().room(lesson.room)}`}
                 >
-                  {lesson.room}
-                </Text>
-              </HStack>
+                  <HStack spacing={6}>
+                    <Image
+                      systemName="door.left.hand.open"
+                      size={12}
+                      color={textVariant}
+                    />
+                    <Text
+                      modifiers={[
+                        font({ size: 12, weight: 'medium' }),
+                        foregroundStyle(textVariant),
+                        lineLimit(1),
+                      ]}
+                    >
+                      {lesson.room}
+                    </Text>
+                  </HStack>
+                </Link>
+              ) : null}
               {lesson.group ? (
                 <HStack spacing={6}>
                   <Image
@@ -249,7 +282,10 @@ function CurrentTimetableWidget(
     <VStack
       alignment="leading"
       spacing={10}
-      modifiers={[containerBackground(theme.surface, 'widget')]}
+      modifiers={[
+        containerBackground(theme.surface, 'widget'),
+        widgetURL(`${APP_SCHEME}${getWidgetPaths().rozvrh}`),
+      ]}
     >
       <HStack spacing={6}>
         <Image systemName="calendar" size={18} color={theme.onSurface} />

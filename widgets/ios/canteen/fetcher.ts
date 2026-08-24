@@ -35,3 +35,10 @@ export async function fetcher(
   const theme = await getAppThemeColors();
   return { data: { page, theme }, aditionalCache: {} };
 }
+
+export function nextUpdate(
+  _result: FetcherResult<WidgetContent, AditionalCache>,
+  now: Date
+): number | null {
+  return now.getTime() + 30 * 60_000;
+}

@@ -20,6 +20,7 @@ import {
   getWeightedAverage,
   gradeColor,
 } from '@/utils/grades/gradesFormatting';
+import { getWidgetPaths } from '../paths';
 
 type Data = { grades: GradesPage; theme: ThemeColorsWithColorProp };
 type AditionalCache = Record<string, never>;
@@ -144,7 +145,7 @@ function AveragesWidget({ data }: WidgetProps<Data>) {
               <FlexWidget
                 clickAction="OPEN_URI"
                 clickActionData={{
-                  uri: `${APP_SCHEME}drawer/znamky?subject=${encodeURIComponent(subjectName)}`,
+                  uri: `${APP_SCHEME}${getWidgetPaths().znamky}?subject=${encodeURIComponent(subjectName)}`,
                 }}
                 style={{
                   width: 'match_parent',

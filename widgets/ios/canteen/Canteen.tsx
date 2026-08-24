@@ -10,11 +10,18 @@ import {
   lineLimit,
   padding,
   shapes,
+  widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import type { JSX } from 'react/jsx-runtime';
 import type { WidgetData, WidgetProps } from '../task-handler';
-import { AditionalCache, WidgetContent, fetcher } from './fetcher';
+import { AditionalCache, WidgetContent, fetcher, nextUpdate } from './fetcher';
+import Constants from 'expo-constants';
+import { getWidgetPaths } from '../paths';
 import { findOrderedLunch } from '@/utils/canteen/todayLunch';
+
+const APP_SCHEME = Constants.expoConfig?.scheme
+  ? `${Constants.expoConfig.scheme}://`
+  : 'jecnaapp://';
 
 function CanteenWidget(
   props: WidgetProps<WidgetContent>,
@@ -55,13 +62,16 @@ function CanteenWidget(
   }
 
   const { page, theme } = data.content;
-  const ordered = findOrderedLunch(page);
+  const ordered = page ? findOrderedLunch(page) : undefined;
 
   return (
     <VStack
       alignment="leading"
       spacing={10}
-      modifiers={[containerBackground(theme.surface, 'widget')]}
+      modifiers={[
+        containerBackground(theme.surface, 'widget'),
+        widgetURL(`${APP_SCHEME}${getWidgetPaths().jidelna}`),
+      ]}
     >
       <HStack spacing={6}>
         <Image systemName="fork.knife" size={18} color={theme.onSurface} />
@@ -85,7 +95,7 @@ function CanteenWidget(
             padding({ horizontal: 8, vertical: 4 }),
           ]}
         >
-          {`${page.credit} Kč`}
+          {`${page?.credit ?? 0} Kč`}
         </Text>
       </HStack>
 
@@ -182,6 +192,7 @@ function CanteenWidget(
 export const Canteen = {
   component: CanteenWidget,
   fetcher,
+  nextUpdate,
 } satisfies WidgetData<WidgetContent, AditionalCache>;
 
 export const CanteenWidgetInstance = createWidget<WidgetProps<WidgetContent>>(

@@ -27,6 +27,7 @@ import {
 import Constants from 'expo-constants';
 import { TimetablePage } from '@jzitnik/jecnaapi-react-native/jecnaapi';
 import { SuplResult } from '@jzitnik/jecna_supl_client_ts';
+import { getWidgetPaths } from '../paths';
 
 type Data = { data: CurrentAndNextLesson; theme: ThemeColorsWithColorProp };
 type AditionalCache = { timetablePage: TimetablePage; supl: SuplResult | null };
@@ -130,7 +131,7 @@ function LessonBlock({
       <FlexWidget
         clickAction="OPEN_URI"
         clickActionData={{
-          uri: `${APP_SCHEME}rozvrh`,
+          uri: `${APP_SCHEME}${getWidgetPaths().rozvrh}`,
         }}
         style={{
           width: 'match_parent',
@@ -232,7 +233,7 @@ function LessonBlock({
               <FlexWidget
                 clickAction="OPEN_URI"
                 clickActionData={{
-                  uri: `${APP_SCHEME}teachers/${lesson.teacherCode}`,
+                  uri: `${APP_SCHEME}${getWidgetPaths().teacher(lesson.teacherCode)}`,
                 }}
                 style={{
                   flexDirection: 'row',
@@ -256,7 +257,7 @@ function LessonBlock({
               <FlexWidget
                 clickAction="OPEN_URI"
                 clickActionData={{
-                  uri: `${APP_SCHEME}ucebna/${lesson.room}`,
+                  uri: `${APP_SCHEME}${getWidgetPaths().room(lesson.room)}`,
                 }}
                 style={{
                   flexDirection: 'row',

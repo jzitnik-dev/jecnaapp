@@ -13,6 +13,7 @@ import { Canteen as CanteenAPI } from '@jzitnik/jecnaapi-react-native';
 import { MenuPage } from '@jzitnik/jecnaapi-react-native/canteen';
 import { getItemAsync } from 'expo-secure-store';
 import { findOrderedLunch } from '@/utils/canteen/todayLunch';
+import { getWidgetPaths } from '../paths';
 
 type Data = { page: MenuPage; theme: ThemeColorsWithColorProp };
 type AditionalCache = Record<string, never>;
@@ -137,7 +138,7 @@ function CanteenWidget({ data }: WidgetProps<Data>) {
       {ordered ? (
         <FlexWidget
           clickAction="OPEN_URI"
-          clickActionData={{ uri: `${APP_SCHEME}drawer/jidelna` }}
+          clickActionData={{ uri: `${APP_SCHEME}${getWidgetPaths().jidelna}` }}
           style={{
             width: 'match_parent',
             backgroundColor: theme.surfaceVariant,
@@ -187,7 +188,7 @@ function CanteenWidget({ data }: WidgetProps<Data>) {
       ) : (
         <FlexWidget
           clickAction="OPEN_URI"
-          clickActionData={{ uri: `${APP_SCHEME}drawer/jidelna` }}
+          clickActionData={{ uri: `${APP_SCHEME}${getWidgetPaths().jidelna}` }}
           style={{
             flex: 1,
             width: 'match_parent',

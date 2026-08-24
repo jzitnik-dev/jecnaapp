@@ -12,6 +12,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import type { WidgetTaskHandlerProps } from 'react-native-android-widget';
 import { JSX } from 'react/jsx-runtime';
 import { WidgetName } from './config';
+import { loadWidgetPaths } from './paths';
 
 const nameToWidgetData: Record<WidgetName, WidgetData<any, any>> = {
   CurrentTimetable,
@@ -147,6 +148,8 @@ function renderError<T, U>(
 }
 
 export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
+  await loadWidgetPaths();
+
   const widgetInfo = props.widgetInfo;
   const widgetName = widgetInfo.widgetName as WidgetName;
   const widgetData = nameToWidgetData[widgetInfo.widgetName as WidgetName];

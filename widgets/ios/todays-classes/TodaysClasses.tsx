@@ -11,11 +11,18 @@ import {
   lineLimit,
   padding,
   shapes,
+  widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import type { JSX } from 'react/jsx-runtime';
 import type { WidgetData, WidgetProps } from '../task-handler';
-import { AditionalCache, WidgetContent, fetcher } from './fetcher';
+import { AditionalCache, WidgetContent, fetcher, nextUpdate } from './fetcher';
+import Constants from 'expo-constants';
+import { getWidgetPaths } from '../paths';
 import type { DayLesson } from '@/utils/dashboard/dayLessons';
+
+const APP_SCHEME = Constants.expoConfig?.scheme
+  ? `${Constants.expoConfig.scheme}://`
+  : 'jecnaapp://';
 
 const ACCENT_EXTRAORDINARY = '#FF9800';
 
@@ -27,7 +34,7 @@ function LessonItem({
   theme: WidgetContent['theme'];
 }) {
   const isExtraordinary = lesson.kind === 'extraordinary';
-  const parts = isExtraordinary ? [] : lesson.parts;
+  const parts = isExtraordinary ? [] : (lesson.parts || []);
 
   return (
     <HStack
@@ -158,13 +165,16 @@ function TodaysClassesWidget(
   const { lessons, dayFull, dateLabel, isToday, theme } = data.content;
   const title = isToday ? `Dnes · ${dateLabel}` : `${dayFull} · ${dateLabel}`;
   const maxLessons = isSmall ? 2 : isMedium ? 4 : 8;
-  const visibleLessons = lessons.slice(0, maxLessons);
+  const visibleLessons = (lessons || []).slice(0, maxLessons);
 
   return (
     <VStack
       alignment="leading"
       spacing={8}
-      modifiers={[containerBackground(theme.surface, 'widget')]}
+      modifiers={[
+        containerBackground(theme.surface, 'widget'),
+        widgetURL(`${APP_SCHEME}${getWidgetPaths().rozvrh}`),
+      ]}
     >
       <HStack spacing={6}>
         <Image systemName="calendar" size={18} color={theme.onSurface} />
@@ -179,7 +189,7 @@ function TodaysClassesWidget(
         </Text>
       </HStack>
 
-      {lessons.length === 0 ? (
+      {(!lessons || lessons.length === 0) ? (
         <VStack alignment="center" spacing={8}>
           <Spacer />
           <Image
@@ -211,6 +221,7 @@ function TodaysClassesWidget(
 export const TodaysClasses = {
   component: TodaysClassesWidget,
   fetcher,
+  nextUpdate,
 } satisfies WidgetData<WidgetContent, AditionalCache>;
 
 export const TodaysClassesWidgetInstance = createWidget<

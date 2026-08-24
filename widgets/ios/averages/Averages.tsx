@@ -1,6 +1,6 @@
 import { createWidget } from 'expo-widgets';
 import type { WidgetEnvironment } from 'expo-widgets';
-import { HStack, Image, Spacer, Text, VStack } from '@expo/ui/swift-ui';
+import { Link, HStack, Image, Spacer, Text, VStack } from '@expo/ui/swift-ui';
 import {
   background,
   containerBackground,
@@ -10,15 +10,22 @@ import {
   lineLimit,
   padding,
   shapes,
+  widgetURL,
 } from '@expo/ui/swift-ui/modifiers';
 import type { JSX } from 'react/jsx-runtime';
 import type { WidgetData, WidgetProps } from '../task-handler';
-import { AditionalCache, WidgetContent, fetcher } from './fetcher';
+import { AditionalCache, WidgetContent, fetcher, nextUpdate } from './fetcher';
+import Constants from 'expo-constants';
+import { getWidgetPaths } from '../paths';
 import {
   formatFinalGrade,
   getWeightedAverage,
   gradeColor,
 } from '@/utils/grades/gradesFormatting';
+
+const APP_SCHEME = Constants.expoConfig?.scheme
+  ? `${Constants.expoConfig.scheme}://`
+  : 'jecnaapp://';
 
 function AveragesWidget(
   props: WidgetProps<WidgetContent>,
@@ -61,7 +68,7 @@ function AveragesWidget(
   }
 
   const { grades, theme } = data.content;
-  const subjectsEntries = Object.entries(grades.subjectsMap);
+  const subjectsEntries = Object.entries(grades?.subjectsMap || {});
   const maxSubjects = isSmall ? 3 : isMedium ? 5 : 10;
   const visibleSubjects = subjectsEntries.slice(0, maxSubjects);
 
@@ -69,7 +76,10 @@ function AveragesWidget(
     <VStack
       alignment="leading"
       spacing={8}
-      modifiers={[containerBackground(theme.surface, 'widget')]}
+      modifiers={[
+        containerBackground(theme.surface, 'widget'),
+        widgetURL(`${APP_SCHEME}${getWidgetPaths().znamky}`),
+      ]}
     >
       <HStack spacing={6}>
         <Image systemName="chart.bar.fill" size={18} color={theme.onSurface} />
@@ -86,65 +96,69 @@ function AveragesWidget(
       <VStack alignment="leading" spacing={4}>
         {visibleSubjects.map(([subjectKey, subject]) => {
           const subjectName = subject.name.full;
-          const allGrades = Object.values(
-            subject.grades.subjectPartsGrades
-          ).flat();
+          const allGrades = subject.grades?.subjectPartsGrades
+            ? Object.values(subject.grades.subjectPartsGrades).flat()
+            : [];
           const avg = getWeightedAverage(allGrades);
 
           return (
-            <HStack
+            <Link
               key={subjectKey}
-              spacing={6}
-              modifiers={[
-                background(
-                  theme.surfaceVariant,
-                  shapes.roundedRectangle({ cornerRadius: 8 })
-                ),
-                padding({ horizontal: 8, vertical: 6 }),
-                cornerRadius(8),
-              ]}
+              destination={`${APP_SCHEME}${getWidgetPaths().znamky}?subject=${encodeURIComponent(subjectName)}`}
             >
-              <Text
+              <HStack
+                spacing={6}
                 modifiers={[
-                  font({ size: 13, weight: 'semibold' }),
-                  foregroundStyle(theme.onSurface),
-                  lineLimit(1),
+                  background(
+                    theme.surfaceVariant,
+                    shapes.roundedRectangle({ cornerRadius: 8 })
+                  ),
+                  padding({ horizontal: 8, vertical: 6 }),
+                  cornerRadius(8),
                 ]}
               >
-                {subjectName}
-              </Text>
-              <Spacer />
-              {avg !== null && (
                 <Text
                   modifiers={[
-                    font({ size: 12, weight: 'bold' }),
-                    foregroundStyle('#ffffff'),
-                    background(
-                      gradeColor(avg),
-                      shapes.roundedRectangle({ cornerRadius: 6 })
-                    ),
-                    padding({ horizontal: 6, vertical: 2 }),
+                    font({ size: 13, weight: 'semibold' }),
+                    foregroundStyle(theme.onSurface),
+                    lineLimit(1),
                   ]}
                 >
-                  {avg.toFixed(2)}
+                  {subjectName}
                 </Text>
-              )}
-              {subject.finalGrade && (
-                <Text
-                  modifiers={[
-                    font({ size: 11, weight: 'bold' }),
-                    foregroundStyle('#ffffff'),
-                    background(
-                      '#23272e',
-                      shapes.roundedRectangle({ cornerRadius: 6 })
-                    ),
-                    padding({ horizontal: 6, vertical: 2 }),
-                  ]}
-                >
-                  {formatFinalGrade(subject.finalGrade)}
-                </Text>
-              )}
-            </HStack>
+                <Spacer />
+                {avg !== null && (
+                  <Text
+                    modifiers={[
+                      font({ size: 12, weight: 'bold' }),
+                      foregroundStyle('#ffffff'),
+                      background(
+                        gradeColor(avg),
+                        shapes.roundedRectangle({ cornerRadius: 6 })
+                      ),
+                      padding({ horizontal: 6, vertical: 2 }),
+                    ]}
+                  >
+                    {avg.toFixed(2)}
+                  </Text>
+                )}
+                {subject.finalGrade && (
+                  <Text
+                    modifiers={[
+                      font({ size: 11, weight: 'bold' }),
+                      foregroundStyle('#ffffff'),
+                      background(
+                        '#23272e',
+                        shapes.roundedRectangle({ cornerRadius: 6 })
+                      ),
+                      padding({ horizontal: 6, vertical: 2 }),
+                    ]}
+                  >
+                    {formatFinalGrade(subject.finalGrade)}
+                  </Text>
+                )}
+              </HStack>
+            </Link>
           );
         })}
       </VStack>
@@ -155,6 +169,7 @@ function AveragesWidget(
 export const Averages = {
   component: AveragesWidget,
   fetcher,
+  nextUpdate,
 } satisfies WidgetData<WidgetContent, AditionalCache>;
 
 export const AveragesWidgetInstance = createWidget<WidgetProps<WidgetContent>>(
