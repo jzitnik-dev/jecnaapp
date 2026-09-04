@@ -14,14 +14,13 @@
     "format:check": "prettier --check .",
     "build:dev-apk": "eas build --profile development --platform android",
     "build:prod-apk": "eas build --platform android --profile production",
-
     "postinstall": "node ./node_modules/@jzitnik/jecnaapi-react-native/scripts/download-ios.mjs"
   },
   "dependencies": {
     "@expo/ui": "~57.0.8",
     "@expo/vector-icons": "^15.0.2",
     "@jzitnik/jecna_supl_client_ts": "^0.1.1",
-    "@jzitnik/jecnaapi-react-native": "^10.3.7-beta.2",
+    "@jzitnik/jecnaapi-react-native": "^10.3.7-beta.4",
     "@react-native-async-storage/async-storage": "^2.2.0",
     "@react-native-community/datetimepicker": "9.1.0",
     "@react-native-picker/picker": "2.11.4",
