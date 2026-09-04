@@ -2,7 +2,7 @@
   <img src="./assets/images/icon.svg" alt="App Icon" width="100"/>
 </p>
 <h1 align="center">Ječná App</h1>
-<p align="center"><b>Neoficiální mobilní aplikace pro studenty SPŠE Ječná</b></p>
+<p align="center"><b>Neoficiální cross-platform mobilní aplikace pro studenty SPŠE Ječná</b></p>
 
 <p align="center">
   Rychlý přístup k rozvrhu, známkám, učitelům, jídelníčku a dalším školním informacím.<br/>
@@ -25,6 +25,12 @@
 
 ---
 
+## Hlavní výhody oproti Ječná Mobile
+
+[Ječná Mobile](https://github.com/tomhula/JecnaMobile) je aktuálně lépe strukturovaná, více mature a hlavně optimalizovanější aplikace. Obě tyto aplikace sdílejí stejný scraper/API. Můj hlavní důvod k vývoji této aplikace je cross-platform podpora pro iOS. Přesto aplikace funguje i na Android. Obě aplikace mají de-facto stejné funkce a aktivně se podílím na vývoji i Ječná Mobile.
+
+---
+
 ## Funkce
 
 - Zobrazení rozvrhu
@@ -43,47 +49,12 @@
 
 ## Instalace
 
-### Android
+Více info na [jecnaapp.jzitnik.dev](https://jecnaapp.jzitnik.dev)
 
-📦 [Stáhněte si nejnovější APK z Releases](https://github.com/jzitnik-dev/jecnaapp/releases)
+## Známé chyby
 
-### iOS
-
-Aplikace je technicky cross-platform, ale pro iOS není distribuovaná, protože:
-
-- Apple vyžaduje placenou vývojářskou licenci (99 USD ročně), kterou si nemohu dovolit.
-- Nemám zájem to momentálně řešit.
-
-Pokud si ji ale někdo vykompiluje a signe sám, rád opravím případné chyby.
-
-### Linux
-
-Pokud někdo používá Linux na telefonu, klidně mi dejte vědět – přepíšu to celé do Rustu jen kvůli vám. *(možná)*
-
----
-
-## Vývoj
-
-**Aplikace je ve velmi rané fázi.**  
-Neočekávejte, že vše bude fungovat bez problémů. Nemám přístup ke všem typům účtů na testování.
-
-Chyby hlaste jako Issue. Ideálně přiložte logy aplikace.
-
----
-
-### Neotestované funkce
-
-- Důtky a napomenutí – nemám jak otestovat, nevím o lidech, kteří je mají.
-
-### Známé chyby
-
-- **Notifikace nechodí**  
-  Notifikace často neběží na pozadí, nevím proč. Nemám tolik času na to notifikace testovat. Kdyby někdo byl schopen je opravit budu rád :)
-  Logika na získávání notifikací je správná a background task se spustí po spuštění aplikace, ale z nějakého důvodu ne na pozadí. Aspoň mi.
-
-- **Odhlašování**  
-  Občas někoho odhlásí bez důvodu. Je to vzácné.
-  _(toto je z velké části omezeno, už by se stávat nemělo se stabilním připojením k internetu)_
+- **Widgety na iOS**  
+  Widgety na iOS aktuálně často nefungují. Kdyby se někdo našel kdo umí dobře `expo-widgets` a nebo měl čas si pročíst dokumentaci a přepsat iOS widgety v této aplikaci, uvítám to. Klidně vytvořte PR, každá pomoc se cení.
 
 ---
 
