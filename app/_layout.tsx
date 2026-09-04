@@ -47,7 +47,8 @@ export default function RootLayout() {
           if (loggedIn) {
             if (!consumeNotifications()) {
               // No notification so redirect to dashboard
-              router.replace('/');
+              const layout = await getItemAsync('drawer-layout');
+              router.replace(layout === 'tab' ? '/tabs' : '/drawer');
             }
           } else {
             router.replace('/login');

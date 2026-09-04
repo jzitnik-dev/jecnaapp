@@ -31,7 +31,8 @@ export default function LoginScreen() {
         await SecureStore.setItemAsync('username', u ?? username);
         await SecureStore.setItemAsync('password', p ?? password);
         setError(null);
-        router.replace('/');
+        const layout = await SecureStore.getItemAsync('drawer-layout');
+        router.replace(layout === 'tab' ? '/tabs' : '/drawer');
       } else {
         setError('Uživatelské jméno nebo heslo není správné.');
       }
