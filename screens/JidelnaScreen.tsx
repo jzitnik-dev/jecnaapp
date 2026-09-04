@@ -21,38 +21,11 @@ import {
 import { Canteen } from '@jzitnik/jecnaapi-react-native';
 import { DayMenu, MenuItem } from '@jzitnik/jecnaapi-react-native/canteen';
 
-const allergenColors: { [key: string]: string } = {
-  '1': '#FF6B6B',
-  '2': '#4ECDC4',
-  '3': '#45B7D1',
-  '4': '#96CEB4',
-  '5': '#FFEAA7',
-  '6': '#DDA0DD',
-  '7': '#98D8C8',
-  '8': '#F7DC6F',
-  '9': '#BB8FCE',
-  '10': '#F8C471',
-  '11': '#85C1E9',
-  '12': '#F1948A',
-  '13': '#82E0AA',
-  '14': '#F9E79F',
-};
-
 const allergenNames: { [key: string]: string } = {
-  '1': 'Obiloviny',
-  '2': 'Korýši',
-  '3': 'Vejce',
-  '4': 'Ryby',
-  '5': 'Arašídy',
-  '6': 'Sója',
-  '7': 'Mléko',
-  '8': 'Ořechy',
-  '9': 'Celer',
-  '10': 'Hořčice',
-  '11': 'Sezam',
-  '12': 'Oxid siřičitý',
-  '13': 'Vlčí bob',
-  '14': 'Měkkýši',
+  '1': 'Obiloviny', '2': 'Korýši', '3': 'Vejce', '4': 'Ryby',
+  '5': 'Arašídy', '6': 'Sója', '7': 'Mléko', '8': 'Ořechy',
+  '9': 'Celer', '10': 'Hořčice', '11': 'Sezam', '12': 'Oxid siřičitý',
+  '13': 'Vlčí bob', '14': 'Měkkýši',
 };
 
 const DAYS_PER_PAGE = 7;
@@ -70,15 +43,7 @@ function getDaysForPage(pageParam: number): Date[] {
 
 function formatDateToCzech(dateString: Date | string) {
   const d = new Date(dateString);
-  const days = [
-    'Neděle',
-    'Pondělí',
-    'Úterý',
-    'Středa',
-    'Čtvrtek',
-    'Pátek',
-    'Sobota',
-  ];
+  const days = ['Neděle', 'Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek', 'Sobota'];
   return `${days[d.getDay()]} ${d.getDate()}. ${d.getMonth() + 1}.`;
 }
 
@@ -105,9 +70,7 @@ export default function Jidelna() {
       headerRight: () => (
         <View style={styles.headerRightContainer}>
           <Ionicons name="wallet-outline" size={20} color={textColor} />
-          <Text
-            style={[styles.headerCreditText, { color: theme.colors.onSurface }]}
-          >
+          <Text style={[styles.headerCreditText, { color: theme.colors.onSurface }]}>
             {creditData !== undefined ? `${creditData} Kč` : '...'}
           </Text>
         </View>
@@ -116,13 +79,8 @@ export default function Jidelna() {
   }, [navigation, creditData, theme, textColor]);
 
   const {
-    data,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isFetching,
-    isLoading,
-    refetch,
+    data, fetchNextPage, hasNextPage, isFetchingNextPage,
+    isFetching, isLoading, refetch,
   } = useInfiniteQuery({
     queryKey: ['canteenMenuFlow'],
     queryFn: async ({ pageParam = 0 }) => {
@@ -132,11 +90,7 @@ export default function Jidelna() {
     initialPageParam: 0,
     getNextPageParam: (lastPage, allPages) => {
       const hasFoodInLastPage = lastPage?.some(day => day.items?.length > 0);
-
-      if (!hasFoodInLastPage && allPages.length > 3) {
-        return undefined;
-      }
-
+      if (!hasFoodInLastPage && allPages.length > 3) return undefined;
       return allPages.length;
     },
     staleTime: 10 * 60 * 1000,
@@ -153,9 +107,7 @@ export default function Jidelna() {
     try {
       const response = await Canteen.order(item);
       if (response.success) {
-        if (response.credit !== undefined) {
-          queryClient.setQueryData(['canteenCredit'], response.credit);
-        }
+        if (response.credit !== undefined) queryClient.setQueryData(['canteenCredit'], response.credit);
         await refetch();
       } else {
         Alert.alert('Chyba', 'Akci se nepodařilo provést.');
@@ -180,6 +132,13 @@ export default function Jidelna() {
     }
   };
 
+  const showAllergens = (allergens: string[]) => {
+    const message = allergens
+      .map(a => `${a}: ${allergenNames[a] || 'Neznámý'}`)
+      .join('\n');
+    Alert.alert('Alergeny', message);
+  };
+
   const renderMenuItem = ({ item: dayMenu }: { item: DayMenu }) => (
     <View style={[styles.menuCard, { backgroundColor: cardBackground }]}>
       <View style={styles.dateHeader}>
@@ -188,7 +147,7 @@ export default function Jidelna() {
         </Text>
       </View>
 
-      <View style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <View style={styles.foodItemsWrapper}>
         {dayMenu.items.map(el => {
           const itemKey = `${dayMenu.day.toString()}-${el.number}`;
           const isProcessing = ordering === itemKey;
@@ -197,88 +156,49 @@ export default function Jidelna() {
           return (
             <View
               key={el.number}
-              style={[
-                styles.foodItemContainer,
-                { backgroundColor: theme.colors.surfaceVariant },
-              ]}
+              style={[styles.foodItemContainer, { backgroundColor: theme.colors.surfaceVariant }]}
             >
-              {el.isOrdered && (
-                <Badge style={styles.orderedBadge} size={25}>
-                  Objednáno
-                </Badge>
-              )}
-              {el.isInExchange && (
-                <Badge style={styles.exchangeBadge} size={25}>
-                  V burze
-                </Badge>
-              )}
-
-              {el.description.soup && (
-                <View style={styles.foodSection}>
-                  <Text style={[styles.foodTitle, { color: textColor }]}>
-                    Polévka
-                  </Text>
-                  <Text style={[styles.foodDescription, { color: textColor }]}>
-                    {el.description.soup}
-                  </Text>
+              <View style={styles.topRow}>
+                <View style={styles.titlePriceRow}>
+                  <Text style={[styles.foodTitle, { color: textColor }]}>Jídlo {el.number}</Text>
+                  <Text style={[styles.priceText, { color: textColor }]}>{el.price} Kč</Text>
                 </View>
-              )}
-
-              <View style={styles.foodSection}>
-                <Text style={[styles.foodTitle, { color: textColor }]}>
-                  Jídlo {el.number}
-                </Text>
-                <Text style={[styles.foodDescription, { color: textColor }]}>
-                  {el.description.rest}
-                </Text>
-              </View>
-
-              <View style={styles.priceSection}>
-                <Text style={[styles.priceText, { color: textColor }]}>
-                  {el.price} Kč
-                </Text>
-              </View>
-
-              {el.allergens && el.allergens.length > 0 && (
-                <View style={styles.allergenSection}>
-                  <Text style={[styles.allergenTitle, { color: textColor }]}>
-                    Alergeny
-                  </Text>
-                  <View style={styles.allergenList}>
-                    {el.allergens.map((allergen, index) => (
-                      <TouchableOpacity
-                        key={index}
-                        style={[
-                          styles.allergenBadge,
-                          {
-                            backgroundColor: allergenColors[allergen] || '#999',
-                          },
-                        ]}
-                        onPress={() =>
-                          Alert.alert(
-                            'Alergen',
-                            allergenNames[allergen] || 'Neznámý'
-                          )
-                        }
-                      >
-                        <Text style={styles.allergenText}>{allergen}</Text>
-                      </TouchableOpacity>
-                    ))}
+                <View style={styles.topRightActions}>
+                  <View style={styles.badgeContainer}>
+                    {el.isOrdered && <Badge style={styles.orderedBadge} size={22}>Objednáno</Badge>}
+                    {el.isInExchange && <Badge style={styles.exchangeBadge} size={22}>V burze</Badge>}
                   </View>
+                  {el.allergens && el.allergens.length > 0 && (
+                    <TouchableOpacity
+                      onPress={() => showAllergens(el.allergens)}
+                      hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                      style={styles.infoButton}
+                    >
+                      <Ionicons name="information-circle-outline" size={22} color={textColor} />
+                    </TouchableOpacity>
+                  )}
                 </View>
-              )}
+              </View>
+
+              <View style={styles.descriptionBlock}>
+                {!!el.description?.soup && (
+                  <Text style={[styles.foodDescription, { color: textColor }]}>
+                    <Text style={styles.label}>Polévka: </Text>{el.description.soup}
+                  </Text>
+                )}
+                {!!el.description?.rest && (
+                  <Text style={[styles.foodDescription, { color: textColor }]}>
+                    <Text style={styles.label}>Hlavní: </Text>{el.description.rest}
+                  </Text>
+                )}
+              </View>
 
               <View style={styles.actionRow}>
                 {el.isEnabled && (
                   <TouchableOpacity
                     style={[
                       styles.orderButton,
-                      {
-                        backgroundColor: el.isOrdered ? '#E53935' : '#4CAF50',
-                        opacity: isProcessing || isFetching ? 0.7 : 1,
-                        flex: 1,
-                        justifyContent: 'center',
-                      },
+                      { backgroundColor: el.isOrdered ? '#E53935' : '#4CAF50', opacity: isProcessing || isFetching ? 0.7 : 1 }
                     ]}
                     onPress={() => handleOrder(el, dayMenu.day)}
                     disabled={ordering !== undefined || isFetching}
@@ -287,18 +207,8 @@ export default function Jidelna() {
                       <ActivityIndicator size="small" color="white" />
                     ) : (
                       <>
-                        <Ionicons
-                          name={
-                            el.isOrdered
-                              ? 'close-circle-outline'
-                              : 'cart-outline'
-                          }
-                          size={20}
-                          color="white"
-                        />
-                        <Text style={styles.orderButtonText}>
-                          {el.isOrdered ? 'Zrušit' : 'Objednat'}
-                        </Text>
+                        <Ionicons name={el.isOrdered ? 'close-circle-outline' : 'cart-outline'} size={18} color="white" />
+                        <Text style={styles.orderButtonText}>{el.isOrdered ? 'Zrušit' : 'Objednat'}</Text>
                       </>
                     )}
                   </TouchableOpacity>
@@ -307,14 +217,8 @@ export default function Jidelna() {
                 {el.isOrdered && el.putOnExchangePath && !el.isInExchange && (
                   <TouchableOpacity
                     style={[
-                      styles.orderButton,
-                      {
-                        backgroundColor: '#FF9800',
-                        opacity: isProcessingExchange || isFetching ? 0.7 : 1,
-                        marginLeft: 8,
-                        paddingHorizontal: 12,
-                        justifyContent: 'center',
-                      },
+                      styles.orderButton, styles.exchangeButton,
+                      { opacity: isProcessingExchange || isFetching ? 0.7 : 1 }
                     ]}
                     onPress={() => handleExchange(el, dayMenu.day)}
                     disabled={ordering !== undefined || isFetching}
@@ -336,49 +240,23 @@ export default function Jidelna() {
 
   const renderHeader = () => (
     <TouchableOpacity
-      style={[
-        styles.orderButton,
-        {
-          backgroundColor: theme.colors.surface,
-          marginBottom: 16,
-          justifyContent: 'space-between',
-        },
-      ]}
+      style={[styles.burzaHeaderButton, { backgroundColor: theme.colors.surface }]}
       onPress={() => router.push(paths.burza as Href)}
     >
-      <Text
-        style={{
-          color: theme.colors.onSurface,
-          fontWeight: 'bold',
-          fontSize: 16,
-        }}
-      >
-        Burza
-      </Text>
-      <MaterialCommunityIcons
-        name="chevron-right"
-        size={16}
-        color={theme.colors.onSurfaceVariant}
-      />
+      <Text style={[styles.burzaHeaderText, { color: theme.colors.onSurface }]}>Burza</Text>
+      <MaterialCommunityIcons name="chevron-right" size={20} color={theme.colors.onSurfaceVariant} />
     </TouchableOpacity>
   );
 
-  const renderFooter = () => {
-    if (!isFetchingNextPage) return null;
-    return (
-      <View style={styles.footerLoader}>
-        <ActivityIndicator size="small" color={textColor} />
-      </View>
-    );
-  };
+  const renderFooter = () => isFetchingNextPage ? (
+    <View style={styles.footerLoader}><ActivityIndicator size="small" color={textColor} /></View>
+  ) : null;
 
   if (isLoading) {
     return (
       <View style={[styles.container, styles.centerAlign, { backgroundColor }]}>
         <ActivityIndicator size="large" color={textColor} />
-        <Text style={[styles.loadingText, { color: textColor }]}>
-          Načítání jídelníčku...
-        </Text>
+        <Text style={[styles.loadingText, { color: textColor }]}>Načítání jídelníčku...</Text>
       </View>
     );
   }
@@ -392,21 +270,13 @@ export default function Jidelna() {
         ListHeaderComponent={renderHeader}
         ListFooterComponent={renderFooter}
         ListEmptyComponent={
-          <View
-            style={[styles.emptyState, { backgroundColor: cardBackground }]}
-          >
+          <View style={[styles.emptyState, { backgroundColor: cardBackground }]}>
             <Ionicons name="restaurant-outline" size={64} color={textColor} />
-            <Text style={[styles.emptyText, { color: textColor }]}>
-              Žádné jídlo k dispozici
-            </Text>
+            <Text style={[styles.emptyText, { color: textColor }]}>Žádné jídlo k dispozici</Text>
           </View>
         }
         contentContainerStyle={styles.listContent}
-        onEndReached={() => {
-          if (hasNextPage && !isFetchingNextPage) {
-            fetchNextPage();
-          }
-        }}
+        onEndReached={() => { if (hasNextPage && !isFetchingNextPage) fetchNextPage(); }}
         onEndReachedThreshold={0.5}
         refreshControl={
           <RefreshControl
@@ -423,145 +293,93 @@ export default function Jidelna() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  listContent: {
-    padding: 16,
-  },
-  centerAlign: {
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-  },
-  headerRightContainer: {
-    display: 'flex',
-    gap: 8,
-    alignItems: 'center',
+  container: { flex: 1 },
+  listContent: { padding: 12 },
+  centerAlign: { alignItems: 'center', justifyContent: 'center' },
+  loadingText: { marginTop: 16, fontSize: 16 },
+  headerRightContainer: { display: 'flex', gap: 8, alignItems: 'center', flexDirection: 'row' },
+  headerCreditText: { marginRight: 15, fontWeight: 'bold' },
+  
+  burzaHeaderButton: {
     flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 10,
+    marginBottom: 12,
+    justifyContent: 'space-between',
+    elevation: 1,
   },
-  headerCreditText: {
-    marginRight: 15,
-    fontWeight: 'bold',
-  },
+  burzaHeaderText: { fontWeight: 'bold', fontSize: 16 },
+  
   menuCard: {
     borderRadius: 12,
-    padding: 16,
-    marginBottom: 16,
+    padding: 14,
+    marginBottom: 14,
     elevation: 2,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.1,
-    shadowRadius: 4,
+    shadowRadius: 3,
   },
-  dateHeader: {
-    marginBottom: 12,
-  },
-  dateText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
+  dateHeader: { marginBottom: 10 },
+  dateText: { fontSize: 17, fontWeight: 'bold' },
+  foodItemsWrapper: { display: 'flex', flexDirection: 'column', gap: 10 },
+  
   foodItemContainer: {
-    borderRadius: 4,
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    position: 'relative',
+    borderRadius: 8,
+    padding: 12,
   },
-  orderedBadge: {
-    backgroundColor: 'green',
-    color: 'white',
-    position: 'absolute',
-    right: 10,
-    top: 10,
-    zIndex: 1,
-  },
-  exchangeBadge: {
-    backgroundColor: '#FF9800',
-    color: 'white',
-    position: 'absolute',
-    right: 10,
-    top: 38,
-    zIndex: 1,
-  },
-  foodSection: {
-    marginBottom: 12,
-  },
-  foodTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 4,
-    opacity: 0.7,
-  },
-  foodDescription: {
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  priceSection: {
-    marginBottom: 12,
-  },
-  priceText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#4CAF50',
-  },
-  allergenSection: {
-    marginBottom: 12,
-  },
-  allergenTitle: {
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    opacity: 0.7,
-  },
-  allergenList: {
+  topRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 6,
+  },
+  titlePriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
     flexWrap: 'wrap',
     gap: 8,
   },
-  allergenBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    minWidth: 24,
-    alignItems: 'center',
-  },
-  allergenText: {
-    color: 'white',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  actionRow: {
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  orderButton: {
+  foodTitle: { fontSize: 15, fontWeight: 'bold' },
+  priceText: { fontSize: 14, fontWeight: 'bold', color: '#4CAF50' },
+  
+  topRightActions: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 12,
-    borderRadius: 8,
+    gap: 8,
   },
-  orderButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-    marginLeft: 8,
+  badgeContainer: {
+    flexDirection: 'column',
+    gap: 4,
+    alignItems: 'flex-end',
   },
-  footerLoader: {
-    paddingVertical: 20,
-    alignItems: 'center',
-  },
-  emptyState: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 32,
-    borderRadius: 12,
-  },
-  emptyText: {
-    fontSize: 16,
-    marginTop: 16,
+  orderedBadge: { backgroundColor: 'green', color: 'white' },
+  exchangeBadge: { backgroundColor: '#FF9800', color: 'white' },
+  infoButton: {
     opacity: 0.7,
   },
+  
+  descriptionBlock: { marginBottom: 12 },
+  label: { fontWeight: 'bold', fontSize: 13, opacity: 0.8 },
+  foodDescription: { fontSize: 14, lineHeight: 20, marginBottom: 4 },
+  
+  actionRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  orderButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  exchangeButton: { backgroundColor: '#FF9800', flex: 0.4 },
+  orderButtonText: { color: 'white', fontSize: 14, fontWeight: 'bold', marginLeft: 6 },
+  
+  footerLoader: { paddingVertical: 16, alignItems: 'center' },
+  emptyState: { alignItems: 'center', justifyContent: 'center', padding: 24, borderRadius: 12 },
+  emptyText: { fontSize: 15, marginTop: 12, opacity: 0.7 },
 });
