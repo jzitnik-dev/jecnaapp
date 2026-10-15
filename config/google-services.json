@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "533760407359",
+    "project_id": "jecnarozvrh",
+    "storage_bucket": "jecnarozvrh.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:533760407359:android:6e65a0e0aa887db5c1058a",
+        "android_client_info": {
+          "package_name": "cz.jzitnik.JecnaApp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD69CsmQZsv9j4k2RPsNu7qbD-KzkngLFw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

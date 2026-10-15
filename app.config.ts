@@ -33,6 +33,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     },
     permissions: ['RECEIVE_BOOT_COMPLETED', 'WAKE_LOCK', 'VIBRATE', 'INTERNET'],
     package: 'cz.jzitnik.JecnaApp',
+    googleServicesFile: './config/google-services.json',
   },
   web: {
     bundler: 'metro',

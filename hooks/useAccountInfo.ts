@@ -78,6 +78,8 @@ export function useAccountInfo() {
 
   return {
     accountInfo: query.data ?? null,
+    username: query.data?.username,
+    className: query.data?.className,
     loading: query.isLoading,
     error: query.error?.message ?? null,
     refresh,
